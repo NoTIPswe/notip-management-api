@@ -2,9 +2,6 @@
 	"name": "NoTIP Nest Dev",
 	"image": "ghcr.io/notipswe/notip-nest-dev:v0.0.1",
 	"remoteUser": "node",
-	"mounts": [
-		"source=notip-nest-node_modules,target=/app/node_modules,type=volume"
-	],
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -15,7 +12,7 @@
 			]
 		}
 	},
-	"workspaceFolder": "/app",
 	"forwardPorts": [3000],
+	"workspaceFolder": "/workspace/notip-management-api",
 	"init": true
 }
