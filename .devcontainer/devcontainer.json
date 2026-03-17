@@ -2,9 +2,6 @@
 	"name": "NoTIP Nest Dev",
 	"image": "ghcr.io/notipswe/notip-nest-dev:v0.0.1",
 	"remoteUser": "node",
-	"mounts": [
-		"source=notip-nest-node_modules,target=/workspaces/notip-management-api/node_modules,type=volume"
-	],
 	"postCreateCommand": "[ -f package.json ] && npm install; pre-commit install --install-hooks",
 	"customizations": {
 		"vscode": {
@@ -12,7 +9,8 @@
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"firsttris.vscode-jest-runner",
-				"streetsidesoftware.code-spell-checker"
+				"streetsidesoftware.code-spell-checker",
+				"SonarSource.sonarlint-vscode"
 			]
 		}
 	},
