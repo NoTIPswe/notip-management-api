@@ -30,30 +30,7 @@ jobs:
         run: npm ci
 
   lint:
-    name: Lint & Format
-    needs: setup
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/notipswe/notip-nest-dev:v0.0.1
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Restore node_modules
-        uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: ESLint
-        run: npm run lint:check
-
-      - name: Prettier
-        run: npm run format:check
-
-  typecheck:
-    name: Type Check
+    name: Lint, Format & Typecheck
     needs: setup
     runs-on: ubuntu-latest
     container:
@@ -72,9 +49,15 @@ jobs:
       - name: TypeScript typecheck
         run: npm run typecheck
 
+      - name: ESLint
+        run: npm run lint:check
+
+      - name: Prettier
+        run: npm run format:check
+
   test:
     name: Tests & Coverage
-    needs: [lint, typecheck]
+    needs: [lint]
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/notipswe/notip-nest-dev:v0.0.1

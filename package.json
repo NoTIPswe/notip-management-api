@@ -38,6 +38,8 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
@@ -47,7 +49,9 @@
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
     "jest": "^30.0.0",
+    "jest-sonar": "^0.2.16",
     "prettier": "^3.4.2",
+    "semantic-release": "^25.0.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -55,10 +59,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "jest-sonar-reporter": "^2.0.0",
-    "semantic-release": "^25.0.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
@@ -76,13 +76,22 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "coverageReporters": ["lcov", "text", "text-summary"],
-    "reporters": ["default", "jest-sonar-reporter"],
+    "coverageReporters": [
+      "lcov",
+      "text",
+      "text-summary"
+    ],
+    "reporters": [
+      "default",
+      [
+        "jest-sonar",
+        {
+          "outputDirectory": "coverage",
+          "outputName": "test-reporter.xml",
+          "reportedFilePath": "relative"
+        }
+      ]
+    ],
     "testEnvironment": "node"
-  },
-  "jestSonar": {
-    "reportPath": "coverage",
-    "reportFile": "test-reporter.xml",
-    "indent": 2
   }
 }
