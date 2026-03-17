@@ -6,7 +6,6 @@
 		"source=notip-nest-node_modules,target=/workspaces/notip-management-api/node_modules,type=volume"
 	],
 	"postCreateCommand": "[ -f package.json ] && npm install; pre-commit install --install-hooks",
-	"postStartCommand": "pre-commit install --install-hooks",
 	"customizations": {
 		"vscode": {
 			"extensions": [
