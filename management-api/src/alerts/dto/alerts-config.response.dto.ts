@@ -1,18 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AlertsController } from './alerts.controller';
+import { Expose } from 'class-transformer';
 
-describe('AlertsController', () => {
-  let controller: AlertsController;
+export class AlertsConfigResponseDto {
+  defaultTimeoutMs: number;
+  gatewayOverrides: AlertsGatewayOverridesResponseDto[];
+}
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AlertsController],
-    }).compile();
-
-    controller = module.get<AlertsController>(AlertsController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+export class AlertsGatewayOverridesResponseDto {
+  gatewayId: string;
+  timeoutMs: number;
+}

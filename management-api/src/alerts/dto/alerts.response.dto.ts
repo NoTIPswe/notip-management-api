@@ -1,18 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AlertsController } from './alerts.controller';
+import { AlertType } from '../alerts.enum';
+import { AlertsDetails } from '../interfaces/alerts.interfaces';
 
-describe('AlertsController', () => {
-  let controller: AlertsController;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AlertsController],
-    }).compile();
-
-    controller = module.get<AlertsController>(AlertsController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+export class AlertsResponseDto {
+  id: string;
+  gatewayId: string;
+  type: AlertType;
+  details: AlertsDetails;
+  createdAt: Date;
+}

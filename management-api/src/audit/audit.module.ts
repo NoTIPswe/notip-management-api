@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AuditService } from './audit.service';
 import { AuditController } from './audit.controller';
+import { AuditService } from './audit.service';
+import { AuditPersistenceService } from './audit.persistence.service';
 
 @Module({
-  providers: [AuditService],
-  controllers: [AuditController]
+  controllers: [AuditController],
+  providers: [AuditService, AuditPersistenceService]
 })
 export class AuditModule {}

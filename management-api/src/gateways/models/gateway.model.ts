@@ -1,18 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AdminController } from './admin.controller';
+import { GatewayStatus } from '../gateway.enum';
 
-describe('AdminController', () => {
-  let controller: AdminController;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AdminController],
-    }).compile();
-
-    controller = module.get<AdminController>(AdminController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+export class GatewayModel {
+  id: string;
+  name: string;
+  status: GatewayStatus;
+  lastSeenAt: Date | null;
+  sendFrequencyMs: number | null;
+  factoryKey: string;
+  factoryId: string;
+  createdAt: Date;
+  firmwareVersion: string;
+  model: string;
+  tenantId: string;
+  provisioned: boolean;
+}

@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CommandService } from './command.service';
+import { CommandPersistenceService } from './command.persistence.service';
 
-describe('CommandService', () => {
-  let service: CommandService;
+describe('CommandPersistenceService', () => {
+  let service: CommandPersistenceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CommandService],
+      providers: [CommandPersistenceService],
     }).compile();
 
-    service = module.get<CommandService>(CommandService);
+    service = module.get<CommandPersistenceService>(CommandPersistenceService);
   });
 
   it('should be defined', () => {

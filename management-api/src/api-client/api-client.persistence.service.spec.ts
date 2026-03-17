@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiClientService } from './api-client.service';
+import { ApiClientPersistenceService } from './api-client.persistence.service';
 
-describe('ApiClientService', () => {
-  let service: ApiClientService;
+describe('ApiClientPersistenceService', () => {
+  let service: ApiClientPersistenceService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ApiClientService],
+      providers: [ApiClientPersistenceService],
     }).compile();
 
-    service = module.get<ApiClientService>(ApiClientService);
+    service = module.get<ApiClientPersistenceService>(ApiClientPersistenceService);
   });
 
   it('should be defined', () => {

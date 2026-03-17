@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ThresholdsService } from './thresholds.service';
 import { ThresholdsController } from './thresholds.controller';
+import { ThresholdsService } from './thresholds.service';
+import { ThresholdsPersistenceService } from './thresholds.persistence.service';
 
 @Module({
-  providers: [ThresholdsService],
-  controllers: [ThresholdsController]
+  controllers: [ThresholdsController],
+  providers: [ThresholdsService, ThresholdsPersistenceService]
 })
 export class ThresholdsModule {}
