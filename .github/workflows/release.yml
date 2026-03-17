@@ -39,14 +39,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: true # required for @semantic-release/git to push back to main
 
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache npm cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-cache-${{ runner.os }}-
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Prepare git metadata for semantic-release
-        run: |
-          git rev-parse --is-inside-work-tree
-          git remote set-url origin https://github.com/${{ github.repository }}.git
-          git remote -v
 
       - name: Run Semantic Release
         id: semantic
@@ -125,6 +130,14 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: v${{ needs.release.outputs.version }}
+
+      - name: Cache npm cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.npm
+          key: npm-cache-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            npm-cache-${{ runner.os }}-
 
       - name: Install dependencies
         run: npm ci
