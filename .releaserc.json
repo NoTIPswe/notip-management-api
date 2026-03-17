@@ -1,4 +1,5 @@
 {
+  "repositoryUrl": "https://github.com/NoTIPswe/notip-management-api.git",
   "branches": ["main"],
   "plugins": [
     [
