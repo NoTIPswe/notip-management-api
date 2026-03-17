@@ -81,7 +81,9 @@ jobs:
         run: npm run lint:report || true
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v5
+        run: |
+          command -v sonar-scanner
+          sonar-scanner -Dsonar.host.url=https://sonarcloud.io
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
