@@ -12,7 +12,8 @@
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"firsttris.vscode-jest-runner",
-				"SonarSource.sonarlint-vscode"
+				"SonarSource.sonarlint-vscode",
+				"ms-azuretools.vscode-containers"
 			]
 		}
 	},
