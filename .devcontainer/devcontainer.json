@@ -5,11 +5,13 @@
 	"postCreateCommand": "[ -f package.json ] && npm install; pre-commit install --install-hooks",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"sonarlint.ls.javaHome": "/usr/lib/jvm/java-25-openjdk-arm64"
+			},
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"firsttris.vscode-jest-runner",
-				"streetsidesoftware.code-spell-checker",
 				"SonarSource.sonarlint-vscode"
 			]
 		}

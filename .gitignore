@@ -6,6 +6,8 @@ dist/
 out/
 build/
 bin/
+eslint-report.json
+coverage/
 
 # --- Logs ---
 logs
