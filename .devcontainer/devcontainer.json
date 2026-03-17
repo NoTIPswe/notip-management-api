@@ -1,13 +1,13 @@
 {
 	"name": "NoTIP Nest Dev",
+
 	"image": "ghcr.io/notipswe/notip-nest-dev:v0.0.1",
-	"remoteUser": "node",
+
 	"postCreateCommand": "[ -f package.json ] && npm install; pre-commit install --install-hooks",
+	"init": true,
+
 	"customizations": {
 		"vscode": {
-			"settings": {
-				"sonarlint.ls.javaHome": "/usr/lib/jvm/java-25-openjdk-arm64"
-			},
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
@@ -16,7 +16,10 @@
 			]
 		}
 	},
+
 	"forwardPorts": [3000],
+
 	"workspaceFolder": "/workspaces/notip-management-api",
-	"init": true
+	"updateRemoteUserUID": true,
+	"remoteUser": "node"
 }
