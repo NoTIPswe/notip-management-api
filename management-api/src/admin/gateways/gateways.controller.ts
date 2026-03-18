@@ -4,7 +4,10 @@ import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { GatewaysService } from './gateways.service';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
 import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
+import { AdminOnly } from 'src/common/decorators/access-policy.decorator';
+import { GatewaysMapper } from './gateways.mapper';
 
+@AdminOnly()
 @Controller('admin/gateways')
 export class GatewaysController {
   constructor(private readonly gs: GatewaysService) {}
@@ -14,7 +17,7 @@ export class GatewaysController {
   async getGateways(
     @Query('tenant_id') tenantId?: string,
   ): Promise<GatewayResponseDto[]> {
-    return this.gs.getGateways(tenantId);
+    return this.gs.getGateways({ tenantId });
   }
   @Post()
   @ApiOperation({ summary: 'Add Gateway to a Tenant' })
@@ -23,6 +26,6 @@ export class GatewaysController {
   async addGateway(
     @Body() input: AddGatewayRequestDto,
   ): Promise<AddGatewayResponseDto> {
-    return this.gs.addGateway(input);
+    return this.gs.addGateway(GatewaysMapper.toAddGatewayInput(input));
   }
 }

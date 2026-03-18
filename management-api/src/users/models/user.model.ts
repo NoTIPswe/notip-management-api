@@ -3,11 +3,11 @@ import { UsersRole } from '../enums/users.enum';
 export class UserModel {
   id: string;
   tenantId: string;
-  keycloakId: string | null;
-  name: string | null;
-  email: string | null;
+  keycloakId: string;
+  name: string;
+  email: string;
   role: UsersRole;
-  permissions: string | null;
+  permissions: string;
   lastAccess: Date;
   createdAt: Date;
 }

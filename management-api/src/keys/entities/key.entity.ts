@@ -1,4 +1,4 @@
-import { GatewaysEntity } from 'src/admin/entities/gateways.entity';
+import { GatewayEntity } from 'src/common/entities/gateway.entity';
 import {
   Column,
   CreateDateColumn,
@@ -14,9 +14,9 @@ export class KeyEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => GatewaysEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => GatewayEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'gateway_id' })
-  gateway: GatewaysEntity;
+  gateway: GatewayEntity;
 
   @Column({ name: 'gateway_id', type: 'uuid', nullable: true })
   gatewayId: string | null;

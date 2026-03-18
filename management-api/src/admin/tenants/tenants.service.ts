@@ -1,11 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { TenantsPersistenceService } from './tenants.persistence.service';
 import { TenantsModel } from './tenant.model';
 import { TenantsMapper } from './tenants.mapper';
 import {
   CreateTenantInput,
+  DeleteTenantInput,
   UpdateTenantInput,
 } from './interfaces/controller-service.interfaces';
+import {
+  CreateTenantPersistenceInput,
+  DeleteTenantPersistenceInput,
+  UpdateTenantPersistenceInput,
+} from './interfaces/service-persistence.interfaces';
 
 @Injectable()
 export class TenantsService {
@@ -16,16 +26,42 @@ export class TenantsService {
     return entities.map(TenantsMapper.toModel);
   }
   async createTenant(input: CreateTenantInput): Promise<TenantsModel> {
-    const entity = await this.tps.createTenant(input);
-    return TenantsMapper.toModel(entity);
+    const persistenceInput: CreateTenantPersistenceInput = {
+      name: input.name,
+    };
+    try {
+      const entity = await this.tps.createTenant(persistenceInput);
+      return TenantsMapper.toModel(entity);
+    } catch (e) {
+      if (e.code === '23505') {
+        throw new ConflictException('Tenant name already exists');
+      }
+      throw e;
+    }
   }
   async updateTenant(input: UpdateTenantInput): Promise<TenantsModel> {
-    const entity = await this.tps.updateTenant(input);
-    if (!entity) throw new NotFoundException('Tenant not found');
-    return TenantsMapper.toModel(entity);
+    const persistenceInput: UpdateTenantPersistenceInput = {
+      id: input.id,
+      name: input.name,
+      status: input.status,
+      suspensionIntervalDays: input.suspensionIntervalDays,
+    };
+    try {
+      const entity = await this.tps.updateTenant(persistenceInput);
+      if (!entity) throw new NotFoundException('Tenant not found');
+      return TenantsMapper.toModel(entity);
+    } catch (e) {
+      if (e.code === '23505') {
+        throw new ConflictException('Tenant name already exists');
+      }
+      throw e;
+    }
   }
-  async deleteTenant(id: string): Promise<void> {
-    const deletedEntity = await this.tps.deleteTenant(id);
+  async deleteTenant(input: DeleteTenantInput): Promise<void> {
+    const persistenceInput: DeleteTenantPersistenceInput = {
+      id: input.id,
+    };
+    const deletedEntity = await this.tps.deleteTenant(persistenceInput);
     if (!deletedEntity) throw new NotFoundException('Tenant not found');
   }
 }

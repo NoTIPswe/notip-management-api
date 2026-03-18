@@ -1,4 +1,3 @@
-import { UsersEntity } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -7,11 +6,13 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { GatewaysEntity } from './gateways.entity';
+
 import { TenantStatus } from '../enums/tenants.enum';
+import { UserEntity } from 'src/users/entities/user.entity';
+import { GatewayEntity } from './gateway.entity';
 
 @Entity('admin/tenants')
-export class TenantsEntity {
+export class TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -30,8 +31,8 @@ export class TenantsEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => UsersEntity, (user) => user.tenant)
-  users: UsersEntity[];
-  @OneToMany(() => GatewaysEntity, (gateways) => gateways.tenant)
-  gateways: GatewaysEntity[];
+  @OneToMany(() => UserEntity, (user) => user.tenant)
+  users: UserEntity[];
+  @OneToMany(() => GatewayEntity, (gateways) => gateways.tenant)
+  gateways: GatewayEntity[];
 }

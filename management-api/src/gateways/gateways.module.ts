@@ -5,6 +5,7 @@ import { GatewaysPersistenceService } from './gateways.persistence.service';
 
 @Module({
   controllers: [GatewaysController],
-  providers: [GatewaysService, GatewaysPersistenceService]
+  providers: [GatewaysService, GatewaysPersistenceService],
+  exports: [GatewaysService],
 })
 export class GatewaysModule {}

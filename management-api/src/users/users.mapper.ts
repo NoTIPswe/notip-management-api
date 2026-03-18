@@ -18,8 +18,8 @@ export class UsersMapper {
   static toUpdateUserResponseDto(model: UserModel): UpdateUserResponseDto {
     const dto = new UpdateUserResponseDto();
     dto.id = model.id;
-    dto.email = model.email ?? '';
-    dto.name = model.name ?? '';
+    dto.email = model.email;
+    dto.name = model.name;
     dto.role = model.role;
     dto.updateAt = new Date();
     return dto;

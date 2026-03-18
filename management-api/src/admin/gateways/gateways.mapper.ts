@@ -1,4 +1,4 @@
-import { GatewaysEntity } from 'src/common/entities/gateways.entity';
+import { GatewayEntity } from 'src/common/entities/gateway.entity';
 import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
@@ -6,7 +6,7 @@ import { AddGatewayInput } from './interfaces/controller-service.interfaces';
 import { GatewayModel } from './gateway.model';
 
 export class GatewaysMapper {
-  static toModel(entity: GatewaysEntity): GatewayModel {
+  static toModel(entity: GatewayEntity): GatewayModel {
     const model = new GatewayModel();
     model.id = entity.id;
     model.factoryId = entity.factoryId;

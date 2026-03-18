@@ -2,6 +2,10 @@ export interface CreateTenantPersistenceInput {
   name: string;
 }
 
+export interface DeleteTenantPersistenceInput {
+  id: string;
+}
+
 export interface UpdateTenantPersistenceInput {
   name?: string;
   status?: string;

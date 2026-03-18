@@ -14,7 +14,9 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateTenantRequestDto } from './dto/create-tenant.request.dto';
 import { UpdateTenantRequestDto } from './dto/update-tenant.request.dto';
 import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
+import { AdminOnly } from 'src/common/decorators/access-policy.decorator';
 
+@AdminOnly()
 @Controller('admin/tenants')
 export class TenantsController {
   constructor(private readonly ts: TenantsService) {}
@@ -74,6 +76,6 @@ export class TenantsController {
   @ApiResponse({ status: 204, description: 'Tenant deleted successfully' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async deleteTenant(@Param('id') id: string): Promise<void> {
-    await this.ts.deleteTenant(id);
+    await this.ts.deleteTenant({ id });
   }
 }

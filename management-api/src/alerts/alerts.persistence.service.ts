@@ -22,7 +22,9 @@ export class AlertsPersistenceService {
       },
       ['gatewayId'],
     );
-    return this.rac.findOne({ where: { gatewayId: input.gatewayId } });
+    return (await this.rac.findOne({
+      where: { gatewayId: input.gatewayId },
+    })) as AlertsConfigEntity;
   }
 
   async getAlertsConfig(tenantId: string): Promise<AlertsConfigEntity[]> {

@@ -5,6 +5,6 @@ import { UsersPersistenceService } from './users.persistence.service';
 
 @Module({
   controllers: [UsersController],
-  providers: [UsersService, UsersPersistenceService]
+  providers: [UsersService, UsersPersistenceService],
 })
 export class UsersModule {}

@@ -1,6 +1,6 @@
 // common/entities/gateway.entity.ts
-import { TenantsEntity } from './tenants.entity';
-import { GatewayMetadataEntity } from './gateways-metadata.entity';
+import { TenantEntity } from './tenant.entity';
+import { GatewayMetadataEntity } from './gateway-metadata.entity';
 import {
   Column,
   CreateDateColumn,
@@ -13,16 +13,16 @@ import {
 } from 'typeorm';
 
 @Entity('gateways')
-export class GatewaysEntity {
+export class GatewayEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({ name: 'tenant_id' })
   tenantId: string;
 
-  @ManyToOne(() => TenantsEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TenantEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })
-  tenant: TenantsEntity;
+  tenant: TenantEntity;
 
   @Column({ name: 'factory_id', unique: true })
   factoryId: string;

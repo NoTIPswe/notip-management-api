@@ -1,5 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
-import { TenantStatus } from 'src/admin/admin.enum';
+import { TenantStatus } from 'src/common/enums/tenants.enum';
 
 export class UpdateTenantsResponseDto {
   id: string;

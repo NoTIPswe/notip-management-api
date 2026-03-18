@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UsersRole } from '../enums/users.enum';
-import { TenantsEntity } from 'src/common/entities/tenants.entity';
+import { TenantEntity } from 'src/common/entities/tenant.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -38,9 +38,9 @@ export class UserEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => TenantsEntity, (tenant) => tenant.users, {
+  @ManyToOne(() => TenantEntity, (tenant) => tenant.users, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'tenant_id' })
-  tenant: TenantsEntity;
+  tenant: TenantEntity;
 }

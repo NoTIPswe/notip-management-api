@@ -1,1 +1,3 @@
-export class CreateApiClientRequestDto {}
+export class CreateApiClientRequestDto {
+  name: string;
+}

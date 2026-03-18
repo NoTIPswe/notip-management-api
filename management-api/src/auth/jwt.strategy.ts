@@ -3,6 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
 import { ConfigService } from '@nestjs/config';
+import { UsersRole } from 'src/users/enums/users.enum';
+import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,20 +23,46 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       algorithms: ['RS256'],
     });
   }
-  async validate(payload: any) {
+  async validate(payload: any): Promise<AuthenticatedUser> {
     if (!payload.sub) {
       throw new UnauthorizedException();
     }
-    if (!payload.tenant_id)
-      throw new UnauthorizedException('Missing tenant_id');
     if (!payload.role) throw new UnauthorizedException('Missing role');
 
+    if (
+      payload.role !== UsersRole.SYSTEM_ADMIN &&
+      !payload.tenant_id
+    ) {
+      throw new UnauthorizedException('Missing tenant_id');
+    }
+
+    const isImpersonating = payload.is_impersonating === true;
+    const actorUserId = isImpersonating
+      ? payload.actor_user_id
+      : payload.sub;
+    const actorEmail = isImpersonating ? payload.actor_email : payload.email;
+    const actorName = isImpersonating ? payload.actor_name : payload.name;
+    const actorRole = isImpersonating ? payload.actor_role : payload.role;
+    const actorTenantId = isImpersonating
+      ? payload.actor_tenant_id
+      : payload.tenant_id;
+
+    if (!actorUserId || !actorRole) {
+      throw new UnauthorizedException('Missing impersonation actor claims');
+    }
+
     return {
-      userId: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      tenantId: payload.tenant_id,
-      role: payload.role,
+      actorUserId,
+      actorEmail,
+      actorName,
+      actorRole,
+      actorTenantId,
+      effectiveUserId: payload.sub,
+      effectiveEmail: payload.email,
+      effectiveName: payload.name,
+      effectiveRole: payload.role,
+      effectiveTenantId: payload.tenant_id,
+      isImpersonating,
     };
   }
 }

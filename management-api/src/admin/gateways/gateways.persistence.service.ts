@@ -1,18 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { GatewaysEntity } from 'src/common/entities/gateways.entity';
+import { GatewayEntity } from 'src/common/entities/gateway.entity';
 import { Repository } from 'typeorm';
-import { AddGatewayPersistenceInput } from './interfaces/service-persistence.interfaces';
+import {
+  AddGatewayPersistenceInput,
+  GetGatewaysPersistenceInput,
+} from './interfaces/service-persistence.interfaces';
 @Injectable()
 export class GatewaysPersistenceService {
-  constructor(private readonly r: Repository<GatewaysEntity>) {}
+  constructor(private readonly r: Repository<GatewayEntity>) {}
 
-  async getGateways(tenantId?: string): Promise<GatewaysEntity[]> {
+  async getGateways(
+    input: GetGatewaysPersistenceInput,
+  ): Promise<GatewayEntity[]> {
     return this.r.find({
-      where: tenantId ? { tenantId } : {},
+      where: input.tenantId ? { tenantId: input.tenantId } : {},
     });
   }
 
-  async addGateway(input: AddGatewayPersistenceInput): Promise<GatewaysEntity> {
+  async addGateway(input: AddGatewayPersistenceInput): Promise<GatewayEntity> {
     const entity = this.r.create({
       tenant: { id: input.tenantId },
       factoryId: input.factoryId,

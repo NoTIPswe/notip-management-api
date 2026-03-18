@@ -6,7 +6,7 @@ import {
   Min,
   IsEnum,
 } from 'class-validator';
-import { TenantStatus } from 'src/admin/admin.enum';
+import { TenantStatus } from 'src/common/enums/tenants.enum';
 
 export class UpdateTenantRequestDto {
   @IsOptional()

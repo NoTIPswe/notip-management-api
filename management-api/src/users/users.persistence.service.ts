@@ -14,7 +14,7 @@ export class UsersPersistenceService {
     return this.r.find({ where: { tenantId } });
   }
 
-  async createUsers(input: CreateUserPersistenceInput): Promise<UserEntity> {
+  async createUser(input: CreateUserPersistenceInput): Promise<UserEntity> {
     const user = this.r.create({ ...input, tenantId: input.tenantId });
     return this.r.save(user);
   }
@@ -30,7 +30,7 @@ export class UsersPersistenceService {
     return this.r.save(user);
   }
 
-  async deleteUsers(ids: string[]): Promise<number> {
+  async deleteUsersByIds(ids: string[]): Promise<number> {
     const result = await this.r.delete({ id: In(ids) });
     return result.affected ?? 0;
   }

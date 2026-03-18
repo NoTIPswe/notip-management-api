@@ -35,13 +35,23 @@ export class AlertsMapper {
     return plainToInstance(SetAlertsConfigDefaultResponseDto, model);
   }
   static toSetGatewayAlertsConfigResponseDto(
-    model: AlertsModel,
+    model: AlertsConfigModel,
   ): SetGatewayAlertsConfigResponseDto {
-    return plainToInstance(SetGatewayAlertsConfigResponseDto, model);
+    const override = model.gatewayOverrides[0];
+    return plainToInstance(SetGatewayAlertsConfigResponseDto, {
+      gatewayId: override?.gatewayId ?? '',
+      timeoutMs: override?.gatewayTimeoutMs ?? model.defaultTimeoutMs,
+    });
   }
   static toAlertsConfigResponseDto(
-    model: AlertsModel,
+    model: AlertsConfigModel,
   ): AlertsConfigResponseDto {
-    return plainToInstance(AlertsConfigResponseDto, model);
+    return plainToInstance(AlertsConfigResponseDto, {
+      defaultTimeoutMs: model.defaultTimeoutMs,
+      gatewayOverrides: model.gatewayOverrides.map((override) => ({
+        gatewayId: override.gatewayId,
+        timeoutMs: override.gatewayTimeoutMs,
+      })),
+    });
   }
 }

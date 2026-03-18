@@ -1,7 +1,7 @@
 export class AlertsConfigModel {
-  id: string;
-  tenantId: string;
-  gatewayId: string[];
-  gatewayTimeoutMs: number[];
-  tenantTimeoutMs: number;
+  defaultTimeoutMs: number;
+  gatewayOverrides: {
+    gatewayId: string;
+    gatewayTimeoutMs: number;
+  }[];
 }
