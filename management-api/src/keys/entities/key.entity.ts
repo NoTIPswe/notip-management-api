@@ -18,8 +18,8 @@ export class KeyEntity {
   @JoinColumn({ name: 'gateway_id' })
   gateway: GatewayEntity;
 
-  @Column({ name: 'gateway_id', type: 'uuid', nullable: true })
-  gatewayId: string | null;
+  @Column({ name: 'gateway_id', type: 'uuid' })
+  gatewayId: string;
 
   @Column({ name: 'key_material', type: 'bytea' })
   keyMaterial: Buffer;
