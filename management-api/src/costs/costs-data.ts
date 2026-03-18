@@ -1,4 +1,4 @@
-export class CostResponseDto {
+export class CostData {
   storageGb: number;
   bandwidthGb: number;
 }
