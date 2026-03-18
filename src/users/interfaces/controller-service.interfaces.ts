@@ -1,0 +1,25 @@
+import { UsersRole } from '../enums/users.enum';
+
+export interface GetUsersInput {
+  tenantId: string;
+}
+
+export interface CreateUserInput {
+  email: string;
+  name: string;
+  role: UsersRole;
+  tenantId: string;
+  password: string;
+}
+
+export interface UpdateUserInput {
+  id: string;
+  email?: string;
+  name?: string;
+  role?: UsersRole;
+  password?: string;
+}
+
+export interface DeleteUsersInput {
+  ids: string[];
+}
