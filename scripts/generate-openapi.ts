@@ -13,7 +13,11 @@ async function generateOpenApi(): Promise<void> {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  writeFileSync('openapi.json', JSON.stringify(document, null, 2), 'utf8');
+  writeFileSync(
+    'openapi.json',
+    JSON.stringify(document, null, 2) + '\n',
+    'utf8',
+  );
 
   await app.close();
   console.log('OpenAPI spec written to openapi.json');

@@ -2,6 +2,7 @@
 FROM ghcr.io/notipswe/notip-nest-base:v0.0.1 AS builder
 
 WORKDIR /app
+RUN mkdir -p /app && chown -R node:node /app
 
 USER node
 
@@ -18,6 +19,8 @@ LABEL org.opencontainers.image.source="https://github.com/NoTIPswe/notip-managem
 
 ENV NODE_ENV=production
 WORKDIR /app
+RUN mkdir -p /app && chown -R node:node /app
+
 USER node
 
 COPY --chown=node:node package*.json ./
