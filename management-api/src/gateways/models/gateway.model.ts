@@ -13,4 +13,5 @@ export class GatewayModel {
   model: string;
   tenantId: string;
   provisioned: boolean;
+  updatedAt?: Date;
 }

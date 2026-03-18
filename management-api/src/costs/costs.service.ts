@@ -5,13 +5,13 @@ import {
   ForbiddenException,
   MethodNotAllowedException,
 } from '@nestjs/common';
-import { CostPersistenceService } from './costs.persistence.service';
+import { CostsPersistenceService } from './costs.persistence.service';
 import { CostModel } from './models/costs.model';
-import { CostMapper } from './costs.mapper';
+import { CostsMapper } from './costs.mapper';
 
 @Injectable()
-export class CostService {
-  constructor(private readonly cps: CostPersistenceService) {}
+export class CostsService {
+  constructor(private readonly cps: CostsPersistenceService) {}
 
   async getTenantCost(tenantId: string): Promise<CostModel> {
     try{
@@ -20,7 +20,7 @@ export class CostService {
         if (!cost) {
         throw new NotFoundException('Cost data not found for tenant');
         }
-        return CostMapper.toModel(cost);
+        return CostsMapper.toModel(cost);
     }catch(e){
         if(e?.status === 401){
             throw new UnauthorizedException('Unauthorized');
@@ -37,5 +37,4 @@ export class CostService {
 
 
 }
-
 

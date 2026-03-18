@@ -1,1 +1,3 @@
-export class UpdateGatewayRequestDto {}
+export class UpdateGatewayRequestDto {
+  name?: string;
+}

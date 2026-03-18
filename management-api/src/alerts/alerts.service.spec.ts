@@ -12,20 +12,22 @@ describe('AlertsService', () => {
   let service: AlertsService;
   let alertsPersistenceService: {
     setGatewayAlertsConfig: jest.Mock;
+    setDefaultAlertsConfig: jest.Mock;
     getAlertsConfig: jest.Mock;
   };
   let gatewaysService: {
-    findById: jest.Mock;
+    findByIdUnscoped: jest.Mock;
   };
 
   beforeEach(async () => {
     alertsPersistenceService = {
       setGatewayAlertsConfig: jest.fn(),
+      setDefaultAlertsConfig: jest.fn(),
       getAlertsConfig: jest.fn(),
     };
 
     gatewaysService = {
-      findById: jest.fn(),
+      findByIdUnscoped: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -46,7 +48,7 @@ describe('AlertsService', () => {
   });
 
   it('throws 404 when the gateway does not exist', async () => {
-    gatewaysService.findById.mockResolvedValue(null);
+    gatewaysService.findByIdUnscoped.mockResolvedValue(null);
 
     await expect(
       service.setGatewayAlertsConfig({
@@ -60,7 +62,7 @@ describe('AlertsService', () => {
   });
 
   it('throws 403 when the gateway belongs to a different tenant', async () => {
-    gatewaysService.findById.mockResolvedValue({
+    gatewaysService.findByIdUnscoped.mockResolvedValue({
       id: 'gateway-2',
       name: 'Gateway',
       status: GatewayStatus.GATEWAY_OFFLINE,
@@ -83,12 +85,12 @@ describe('AlertsService', () => {
       }),
     ).rejects.toThrow(ForbiddenException);
 
-    expect(gatewaysService.findById).toHaveBeenCalledWith('gateway-2');
+    expect(gatewaysService.findByIdUnscoped).toHaveBeenCalledWith('gateway-2');
     expect(alertsPersistenceService.setGatewayAlertsConfig).not.toHaveBeenCalled();
   });
 
   it('writes config when the gateway belongs to the authenticated tenant', async () => {
-    gatewaysService.findById.mockResolvedValue({
+    gatewaysService.findByIdUnscoped.mockResolvedValue({
       id: 'gateway-1',
       name: 'Gateway',
       status: GatewayStatus.GATEWAY_OFFLINE,
@@ -107,6 +109,7 @@ describe('AlertsService', () => {
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
       gatewayTimeoutMs: 90000,
+      updatedAt: new Date('2026-03-18T10:00:00.000Z'),
     });
 
     const result = await service.setGatewayAlertsConfig({
@@ -121,11 +124,42 @@ describe('AlertsService', () => {
       gatewayTimeoutMs: 90000,
     });
     expect(result).toEqual({
+      id: 'cfg-1',
+      tenantId: 'tenant-1',
+      gatewayId: 'gateway-1',
+      gatewayTimeoutMs: 90000,
+      updatedAt: new Date('2026-03-18T10:00:00.000Z'),
+    });
+  });
+
+  it('loads tenant alert config scoped by tenant id', async () => {
+    alertsPersistenceService.getAlertsConfig.mockResolvedValue([
+      {
+        id: 'cfg-default',
+        tenantId: 'tenant-1',
+        gatewayId: null,
+        gatewayTimeoutMs: 60000,
+        updatedAt: new Date('2026-03-18T10:00:00.000Z'),
+      },
+      {
+        id: 'cfg-gateway',
+        tenantId: 'tenant-1',
+        gatewayId: 'gateway-1',
+        gatewayTimeoutMs: 90000,
+        updatedAt: new Date('2026-03-18T11:00:00.000Z'),
+      },
+    ]);
+
+    const result = await service.getAlertsConfig({ tenantId: 'tenant-1' });
+
+    expect(alertsPersistenceService.getAlertsConfig).toHaveBeenCalledWith('tenant-1');
+    expect(result).toEqual({
       defaultTimeoutMs: 60000,
       gatewayOverrides: [
         {
           gatewayId: 'gateway-1',
           gatewayTimeoutMs: 90000,
+          updatedAt: new Date('2026-03-18T11:00:00.000Z'),
         },
       ],
     });

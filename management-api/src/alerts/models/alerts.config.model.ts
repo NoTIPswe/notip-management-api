@@ -3,5 +3,6 @@ export class AlertsConfigModel {
   gatewayOverrides: {
     gatewayId: string;
     gatewayTimeoutMs: number;
+    updatedAt?: Date;
   }[];
 }

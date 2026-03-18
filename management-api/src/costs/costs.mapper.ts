@@ -2,7 +2,7 @@ import { CostData } from './costs-data';
 import { CostModel } from './models/costs.model'
 import { CostResponseDto } from './dto/cost.response.dto';
 
-export class CostMapper {
+export class CostsMapper {
     static toModel(data: CostData): CostModel {
         return{
             storageGb: data.storageGb,

@@ -3,13 +3,12 @@ import { TenantEntity } from 'src/common/entities/tenant.entity';
 
 import {
   Column,
-  CreateDateColumn,
   Entity,
   Index,
   JoinColumn,
   ManyToOne,
-  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('alert_configs')
@@ -41,4 +40,7 @@ export class AlertsConfigEntity {
 
   @Column({ name: 'gateway_unreachable_timeout_ms', default: 60000 })
   gatewayTimeoutMs: number;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
 }

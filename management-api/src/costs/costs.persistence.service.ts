@@ -3,7 +3,7 @@ import { CostData } from './costs-data';
 
 
 @Injectable()
-export class CostPersistenceService {
+export class CostsPersistenceService {
     async getTenantCost(tenantId: string): Promise<CostData> {
 
         //da gestire con postgre config

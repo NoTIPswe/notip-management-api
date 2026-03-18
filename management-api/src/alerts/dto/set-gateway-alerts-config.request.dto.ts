@@ -1,3 +1,3 @@
 export class SetGatewayAlertsConfigRequestDto {
-  timeoutMs: number;
+  gatewayUnreachableTimeoutMs: number;
 }

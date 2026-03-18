@@ -23,24 +23,29 @@ export class AlertsMapper {
       gatewayOverrides: overrides.map((o) => ({
         gatewayId: o.gatewayId,
         gatewayTimeoutMs: o.gatewayTimeoutMs,
+        updatedAt: o.updatedAt,
       })),
     });
   }
   static toAlertsResponseDto(model: AlertsModel): AlertsResponseDto {
     return plainToInstance(AlertsResponseDto, model);
   }
-  static toSetAlertsConfigDefaultResposeDto(
-    model: AlertsModel,
+  static toSetAlertsConfigDefaultResponseDto(
+    entity: AlertsConfigEntity,
   ): SetAlertsConfigDefaultResponseDto {
-    return plainToInstance(SetAlertsConfigDefaultResponseDto, model);
+    return plainToInstance(SetAlertsConfigDefaultResponseDto, {
+      tenantId: entity.tenantId,
+      defaultTimeoutMs: entity.gatewayTimeoutMs,
+      updatedAt: entity.updatedAt,
+    });
   }
   static toSetGatewayAlertsConfigResponseDto(
-    model: AlertsConfigModel,
+    entity: AlertsConfigEntity,
   ): SetGatewayAlertsConfigResponseDto {
-    const override = model.gatewayOverrides[0];
     return plainToInstance(SetGatewayAlertsConfigResponseDto, {
-      gatewayId: override?.gatewayId ?? '',
-      timeoutMs: override?.gatewayTimeoutMs ?? model.defaultTimeoutMs,
+      gatewayId: entity.gatewayId ?? '',
+      timeoutMs: entity.gatewayTimeoutMs,
+      updatedAt: entity.updatedAt,
     });
   }
   static toAlertsConfigResponseDto(

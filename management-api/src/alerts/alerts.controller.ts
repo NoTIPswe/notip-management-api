@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SetGatewayAlertsConfigResponseDto } from './dto/set-gateway-alerts-config.response.dto';
 import { AlertsService } from './alerts.service';
@@ -8,13 +8,54 @@ import { TenantId } from 'src/common/decorators/tenants.decorator';
 import { TenantScoped } from 'src/common/decorators/access-policy.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UsersRole } from 'src/users/enums/users.enum';
+import { AlertsConfigResponseDto } from './dto/alerts-config.response.dto';
+import { SetAlertsConfigDefaultRequestDto } from './dto/set-alerts-config-default.request.dto';
+import { SetAlertsConfigDefaultResponseDto } from './dto/set-alerts-config-default.response.dto';
+import { AlertsResponseDto } from './dto/alerts.response.dto';
 
 @TenantScoped()
 @Controller('alerts')
 export class AlertsController {
   constructor(private readonly as: AlertsService) {}
 
-  @Put(':gatewayId')
+  @Get()
+  @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
+  @ApiOperation({ summary: 'Get alerts for the tenant in a time range' })
+  async getAlerts(
+    @TenantId() tenantId: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('gateway_id') gatewayId?: string,
+  ): Promise<AlertsResponseDto[]> {
+    const models = await this.as.getAlerts({ tenantId, from, to, gatewayId });
+    return models.map(AlertsMapper.toAlertsResponseDto);
+  }
+
+  @Get('config')
+  @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
+  @ApiOperation({ summary: 'Get alert configuration for the tenant' })
+  async getAlertsConfig(
+    @TenantId() tenantId: string,
+  ): Promise<AlertsConfigResponseDto> {
+    const model = await this.as.getAlertsConfig({ tenantId });
+    return AlertsMapper.toAlertsConfigResponseDto(model);
+  }
+
+  @Put('config/default')
+  @Roles(UsersRole.TENANT_ADMIN)
+  @ApiOperation({ summary: 'Set default alert configuration for the tenant' })
+  async setDefaultAlertsConfig(
+    @TenantId() tenantId: string,
+    @Body() dto: SetAlertsConfigDefaultRequestDto,
+  ): Promise<SetAlertsConfigDefaultResponseDto> {
+    const entity = await this.as.setDefaultAlertsConfig({
+      tenantId,
+      defaultTimeoutMs: dto.tenantUnreachableTimeoutMs,
+    });
+    return AlertsMapper.toSetAlertsConfigDefaultResponseDto(entity);
+  }
+
+  @Put('config/gateway/:gatewayId')
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Set alert configuration for a specific gateway' })
   @ApiResponse({
@@ -32,11 +73,11 @@ export class AlertsController {
     @Param('gatewayId') gatewayId: string,
     @Body() dto: SetGatewayAlertsConfigRequestDto,
   ): Promise<SetGatewayAlertsConfigResponseDto> {
-    const models = await this.as.setGatewayAlertsConfig({
+    const entity = await this.as.setGatewayAlertsConfig({
       tenantId,
       gatewayId,
-      gatewayTimeoutMs: dto.timeoutMs,
+      gatewayTimeoutMs: dto.gatewayUnreachableTimeoutMs,
     });
-    return AlertsMapper.toSetGatewayAlertsConfigResponseDto(models);
+    return AlertsMapper.toSetGatewayAlertsConfigResponseDto(entity);
   }
 }
