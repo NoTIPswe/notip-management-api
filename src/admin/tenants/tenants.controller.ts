@@ -33,7 +33,7 @@ export class TenantsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async getTenants(): Promise<TenantsResponseDto[]> {
     const models = await this.ts.getTenants();
-    return models.map(TenantsMapper.toResponseDto);
+    return models.map((model) => TenantsMapper.toResponseDto(model));
   }
   @Post()
   @ApiOperation({ summary: 'Create a new tenant' })

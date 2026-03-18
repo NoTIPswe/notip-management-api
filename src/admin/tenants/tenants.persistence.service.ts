@@ -29,8 +29,7 @@ export class TenantsPersistenceService {
     if (!tenant) {
       return null;
     }
-    const { id, ...fieldsToUpdate } = input;
-    Object.assign(tenant, fieldsToUpdate);
+    Object.assign(tenant, input);
     return this.r.save(tenant);
   }
 

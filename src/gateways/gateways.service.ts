@@ -22,7 +22,7 @@ export class GatewaysService {
     if (entities.length === 0) {
       throw new NotFoundException('No gateways found for this tenant');
     }
-    return entities.map(GatewaysMapper.toModel);
+    return entities.map((entity) => GatewaysMapper.toModel(entity));
   }
 
   async findById(input: GetGatewayByIdInput): Promise<GatewayModel> {

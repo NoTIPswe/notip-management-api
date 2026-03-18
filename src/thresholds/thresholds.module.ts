@@ -5,6 +5,6 @@ import { ThresholdsPersistenceService } from './thresholds.persistence.service';
 
 @Module({
   controllers: [ThresholdsController],
-  providers: [ThresholdsService, ThresholdsPersistenceService]
+  providers: [ThresholdsService, ThresholdsPersistenceService],
 })
 export class ThresholdsModule {}

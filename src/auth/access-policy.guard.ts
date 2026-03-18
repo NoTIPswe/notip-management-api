@@ -7,6 +7,10 @@ import {
 import { UsersRole } from 'src/users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
+interface RequestWithUser {
+  user?: AuthenticatedUser;
+}
+
 @Injectable()
 export class AccessPolicyGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -21,8 +25,8 @@ export class AccessPolicyGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser | undefined;
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const { user } = request;
 
     if (!user) {
       return false;

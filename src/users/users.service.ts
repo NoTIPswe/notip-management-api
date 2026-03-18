@@ -22,7 +22,7 @@ export class UsersService {
     if (entities.length === 0) {
       throw new NotFoundException('No users found in this tenant');
     }
-    return entities.map(UsersMapper.toModel);
+    return entities.map((entity) => UsersMapper.toModel(entity));
   }
 
   async createUser(input: CreateUserInput): Promise<UserModel> {

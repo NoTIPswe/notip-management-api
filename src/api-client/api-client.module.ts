@@ -5,6 +5,6 @@ import { ApiClientPersistenceService } from './api-client.persistence.service';
 
 @Module({
   controllers: [ApiClientController],
-  providers: [ApiClientService, ApiClientPersistenceService]
+  providers: [ApiClientService, ApiClientPersistenceService],
 })
 export class ApiClientModule {}

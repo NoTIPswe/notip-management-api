@@ -5,6 +5,6 @@ import { GatewaysKeysPersistenceService } from './keys.persistence.service';
 
 @Module({
   controllers: [KeysController],
-  providers: [KeysService, GatewaysKeysPersistenceService]
+  providers: [KeysService, GatewaysKeysPersistenceService],
 })
 export class KeysModule {}

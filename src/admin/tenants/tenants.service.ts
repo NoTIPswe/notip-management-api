@@ -18,18 +18,17 @@ import {
 } from './interfaces/service-persistence.interfaces';
 
 function isDatabaseError(
-    error: unknown,
-    code: string,
-  ): error is { code: string } {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      typeof error.code === 'string' &&
-      error.code === code
-    );
-  }
-
+  error: unknown,
+  code: string,
+): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    error.code === code
+  );
+}
 
 @Injectable()
 export class TenantsService {
@@ -37,7 +36,7 @@ export class TenantsService {
 
   async getTenants(): Promise<TenantsModel[]> {
     const entities = await this.tps.getTenants();
-    return entities.map(TenantsMapper.toModel);
+    return entities.map((entity) => TenantsMapper.toModel(entity));
   }
   async createTenant(input: CreateTenantInput): Promise<TenantsModel> {
     const persistenceInput: CreateTenantPersistenceInput = {

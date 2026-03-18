@@ -8,8 +8,11 @@ import { AlertsEntity } from './entities/alerts.entity';
 import { AlertsConfigEntity } from './entities/alerts.config.entity';
 
 @Module({
-  imports: [GatewaysModule, TypeOrmModule.forFeature([AlertsEntity, AlertsConfigEntity])],
+  imports: [
+    GatewaysModule,
+    TypeOrmModule.forFeature([AlertsEntity, AlertsConfigEntity]),
+  ],
   controllers: [AlertsController],
-  providers: [AlertsService, AlertsPersistenceService]
+  providers: [AlertsService, AlertsPersistenceService],
 })
 export class AlertsModule {}

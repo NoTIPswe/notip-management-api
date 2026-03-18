@@ -5,6 +5,6 @@ import { CommandPersistenceService } from './command.persistence.service';
 
 @Module({
   controllers: [CommandController],
-  providers: [CommandService, CommandPersistenceService]
+  providers: [CommandService, CommandPersistenceService],
 })
 export class CommandModule {}

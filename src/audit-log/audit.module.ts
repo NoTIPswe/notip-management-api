@@ -5,6 +5,6 @@ import { AuditLogPersistenceService } from './audit.persistence.service';
 
 @Module({
   controllers: [AuditLogController],
-  providers: [AuditLogService, AuditLogPersistenceService]
+  providers: [AuditLogService, AuditLogPersistenceService],
 })
 export class AuditLogModule {}

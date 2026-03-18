@@ -47,7 +47,9 @@ export class AlertsService {
     });
   }
 
-  async getAlertsConfig(input: GetAlertsConfigInput): Promise<AlertsConfigModel> {
+  async getAlertsConfig(
+    input: GetAlertsConfigInput,
+  ): Promise<AlertsConfigModel> {
     const entities = await this.aps.getAlertsConfig(input.tenantId);
     return AlertsMapper.toAlertsConfigModel(entities);
   }
@@ -59,6 +61,6 @@ export class AlertsService {
       to: input.to,
       gatewayId: input.gatewayId,
     });
-    return entities.map(AlertsMapper.toAlertsModel);
+    return entities.map((entity) => AlertsMapper.toAlertsModel(entity));
   }
 }

@@ -4,6 +4,10 @@ import { ROLES_KEY } from 'src/common/decorators/roles.decorator';
 import { UsersRole } from 'src/users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
+interface RequestWithUser {
+  user?: AuthenticatedUser;
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
@@ -15,8 +19,8 @@ export class RolesGuard implements CanActivate {
     );
     if (!requiredRoles?.length) return true;
 
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser | undefined;
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
+    const { user } = request;
     return !!user && requiredRoles.includes(user.effectiveRole);
   }
 }

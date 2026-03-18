@@ -48,7 +48,10 @@ export class GatewaysPersistenceService {
 
     if (input.name) {
       if (!gateway.metadata) {
-        gateway.metadata = { gatewayId: gateway.id, gateway } as GatewayEntity['metadata'];
+        gateway.metadata = {
+          gatewayId: gateway.id,
+          gateway,
+        } as GatewayEntity['metadata'];
       }
       gateway.metadata.name = input.name;
     }

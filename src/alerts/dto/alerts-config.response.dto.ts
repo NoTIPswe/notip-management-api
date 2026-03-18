@@ -1,4 +1,3 @@
-
 export class AlertsConfigResponseDto {
   defaultTimeoutMs: number;
   gatewayOverrides: AlertsGatewayOverridesResponseDto[];

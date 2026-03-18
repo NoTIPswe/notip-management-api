@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { TenantScoped } from 'src/common/decorators/access-policy.decorator';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UsersRole } from 'src/users/enums/users.enum';
@@ -27,7 +20,7 @@ export class GatewaysController {
     @TenantId() tenantId: string,
   ): Promise<GatewayResponseDto[]> {
     const models = await this.gs.getGateways({ tenantId });
-    return models.map(GatewaysMapper.toResponseDto);
+    return models.map((model) => GatewaysMapper.toResponseDto(model));
   }
 
   @Get(':id')

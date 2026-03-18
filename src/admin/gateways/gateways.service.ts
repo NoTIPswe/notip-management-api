@@ -16,17 +16,17 @@ import {
 } from './interfaces/service-persistence.interfaces';
 
 function isDatabaseError(
-    error: unknown,
-    code: string,
-  ): error is { code: string } {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      typeof error.code === 'string' &&
-      error.code === code
-    );
-  }
+  error: unknown,
+  code: string,
+): error is { code: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof error.code === 'string' &&
+    error.code === code
+  );
+}
 
 @Injectable()
 export class GatewaysService {
@@ -49,7 +49,8 @@ export class GatewaysService {
       const entity = await this.gps.addGateway(persistenceInput);
       return GatewaysMapper.toModel(entity);
     } catch (e: unknown) {
-      if (isDatabaseError(e, '23503')) throw new NotFoundException('Tenant not found');
+      if (isDatabaseError(e, '23503'))
+        throw new NotFoundException('Tenant not found');
       if (isDatabaseError(e, '23505'))
         throw new ConflictException('Factory ID already registered');
       throw e;

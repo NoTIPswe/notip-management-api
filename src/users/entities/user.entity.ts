@@ -30,7 +30,7 @@ export class UserEntity {
   role: UsersRole;
 
   @Column({ type: 'jsonb', nullable: true })
-  permissions: any | null;
+  permissions: Record<string, unknown> | null;
 
   @Column({ name: 'last_access', nullable: true })
   lastAccess: Date | null;

@@ -28,7 +28,7 @@ export class AlertsController {
     @Query('gateway_id') gatewayId?: string,
   ): Promise<AlertsResponseDto[]> {
     const models = await this.as.getAlerts({ tenantId, from, to, gatewayId });
-    return models.map(AlertsMapper.toAlertsResponseDto);
+    return models.map((model) => AlertsMapper.toAlertsResponseDto(model));
   }
 
   @Get('config')

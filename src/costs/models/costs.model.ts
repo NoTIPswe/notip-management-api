@@ -1,4 +1,4 @@
 export class CostModel {
-    storageGb: number;
-    bandwidthGb: number;
+  storageGb: number;
+  bandwidthGb: number;
 }

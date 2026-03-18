@@ -14,27 +14,24 @@ export class CostsService {
   constructor(private readonly cps: CostsPersistenceService) {}
 
   async getTenantCost(tenantId: string): Promise<CostModel> {
-    try{
-        const cost = await this.cps.getTenantCost(tenantId);
+    try {
+      const cost = await this.cps.getTenantCost(tenantId);
 
-        if (!cost) {
+      if (!cost) {
         throw new NotFoundException('Cost data not found for tenant');
-        }
-        return CostsMapper.toModel(cost);
-    }catch(e: unknown){
-        if(e === 401){
-            throw new UnauthorizedException('Unauthorized');
-        }
-        if(e === 403){
-            throw new ForbiddenException('Forbidden');
-        }
-        if(e === 405){
-            throw new MethodNotAllowedException('Method not allowed');
-        }
-        throw e;
+      }
+      return CostsMapper.toModel(cost);
+    } catch (e: unknown) {
+      if (e === 401) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+      if (e === 403) {
+        throw new ForbiddenException('Forbidden');
+      }
+      if (e === 405) {
+        throw new MethodNotAllowedException('Method not allowed');
+      }
+      throw e;
     }
   }
-
-
 }
-

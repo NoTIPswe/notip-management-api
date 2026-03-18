@@ -2,6 +2,6 @@ import { Module } from '@nestjs/common';
 
 @Module({
   controllers: [],
-  providers: []
+  providers: [],
 })
 export class CommonModule {}
