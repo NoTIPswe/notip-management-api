@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
 import { AlertsConfigEntity } from './entities/alerts.config.entity';
-import { AlertsEntity } from './entities/alerts.entity';
 import { SetGatewayAlertsConfigPersistenceInput } from './interfaces/service-persistence.interface';
+import { AlertsEntity } from './entities/alerts.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AlertsPersistenceService {
@@ -10,9 +10,27 @@ export class AlertsPersistenceService {
     private readonly r: Repository<AlertsEntity>,
     private readonly rac: Repository<AlertsConfigEntity>,
   ) {}
+
   async setGatewayAlertsConfig(
     input: SetGatewayAlertsConfigPersistenceInput,
   ): Promise<AlertsConfigEntity> {
-    const alertConfig = await this.rac.findOneBy({ tenantId: input. });
+    await this.rac.upsert(
+      {
+        tenantId: input.tenantId,
+        gatewayId: input.gatewayId,
+        gatewayTimeoutMs: input.gatewayTimeoutMs,
+      },
+      ['gatewayId'],
+    );
+    return this.rac.findOne({ where: { gatewayId: input.gatewayId } });
+  }
+
+  async getAlertsConfig(tenantId: string): Promise<AlertsConfigEntity[]> {
+    return this.rac.find({
+      where: {
+        tenant: { id: tenantId },
+      },
+      relations: ['gateway'],
+    });
   }
 }

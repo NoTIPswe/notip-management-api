@@ -1,8 +1,18 @@
-import { Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { TenantsService } from './tenants.service';
-import { TenantsResponseDto } from './dto/tenant.response.dto';
+import { TenantsResponseDto } from './dto/tenants.response.dto';
 import { TenantsMapper } from './tenants.mapper';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CreateTenantRequestDto } from './dto/create-tenant.request.dto';
+import { UpdateTenantRequestDto } from './dto/update-tenant.request.dto';
 import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
 
 @Controller('admin/tenants')
@@ -35,8 +45,10 @@ export class TenantsController {
     status: 409,
     description: 'Conflict - Tenant with the same name already exists',
   })
-  async createTenant(CreateTenantRequestDto): Promise<TenantsResponseDto> {
-    const tenantModel = await this.ts.createTenant(CreateTenantRequestDto);
+  async createTenant(
+    @Body() dto: CreateTenantRequestDto,
+  ): Promise<TenantsResponseDto> {
+    const tenantModel = await this.ts.createTenant(dto);
     return TenantsMapper.toResponseDto(tenantModel);
   }
 
@@ -50,19 +62,18 @@ export class TenantsController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
   async updateTenant(
-    id: string,
-    UpdateTenantRequestDto,
+    @Param('id') id: string,
+    @Body() dto: UpdateTenantRequestDto,
   ): Promise<UpdateTenantsResponseDto> {
-    const tenantModel = await this.ts.updateTenant(id, UpdateTenantRequestDto);
+    const tenantModel = await this.ts.updateTenant({ id, ...dto });
     return TenantsMapper.toUpdateResponseDto(tenantModel);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a tenant' })
   @ApiResponse({ status: 204, description: 'Tenant deleted successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
-  async deleteTenant(id: string): Promise<void> {
+  async deleteTenant(@Param('id') id: string): Promise<void> {
     await this.ts.deleteTenant(id);
   }
 }

@@ -5,8 +5,9 @@ import {
   Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { AlertType } from '../alerts.enum';
+
 import type { AlertsDetails } from '../interfaces/alerts.interfaces';
+import { AlertType } from '../enums/alerts.enum';
 
 @Entity('alerts')
 export class AlertsEntity {

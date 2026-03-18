@@ -1,6 +1,6 @@
 export class GatewayModel {
   id: string;
-  factoryKey: string;
+  factoryKeyHash: string | null;
   factoryId: string;
   createdAt: Date;
   firmwareVersion: string;

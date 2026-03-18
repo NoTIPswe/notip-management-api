@@ -1,5 +1,6 @@
+import { GatewaysEntity } from 'src/common/entities/gateways.entity';
 import { TenantsEntity } from 'src/common/entities/tenants.entity';
-import { GatewaysEntity } from 'src/gateways/entities/gateway.entity';
+
 import {
   Column,
   CreateDateColumn,
@@ -24,6 +25,12 @@ export class AlertsConfigEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'tenant_id' })
+  tenantId: string;
+
+  @Column({ name: 'gateway_id', nullable: true })
+  gatewayId: string | null;
+
   @ManyToOne(() => TenantsEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })
   tenant: TenantsEntity;
@@ -33,5 +40,5 @@ export class AlertsConfigEntity {
   gateway: GatewaysEntity | null;
 
   @Column({ name: 'gateway_unreachable_timeout_ms', default: 60000 })
-  gatewayUnreachableTimeoutMs: number;
+  gatewayTimeoutMs: number;
 }

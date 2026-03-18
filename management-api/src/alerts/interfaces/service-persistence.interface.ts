@@ -11,4 +11,5 @@ export interface SetAlertsConfigDefaultPersistenceInput {
 export interface SetGatewayAlertsConfigPersistenceInput {
   gatewayTimeoutMs: number;
   gatewayId: string;
+  tenantId: string;
 }

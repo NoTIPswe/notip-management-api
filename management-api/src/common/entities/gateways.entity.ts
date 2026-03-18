@@ -1,22 +1,28 @@
-import { TenantsEntity } from 'src/common/entities/tenants.entity';
+// common/entities/gateway.entity.ts
+import { TenantsEntity } from './tenants.entity';
+import { GatewayMetadataEntity } from './gateways-metadata.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('admin/gateways')
+@Entity('gateways')
 export class GatewaysEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  @ManyToOne(() => TenantsEntity, {
-    onDelete: 'CASCADE',
-  })
+
+  @Column({ name: 'tenant_id' })
+  tenantId: string;
+
+  @ManyToOne(() => TenantsEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })
-  tenantsEntity: TenantsEntity;
+  tenant: TenantsEntity;
 
   @Column({ name: 'factory_id', unique: true })
   factoryId: string;
@@ -35,4 +41,12 @@ export class GatewaysEntity {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @OneToOne(() => GatewayMetadataEntity, (meta) => meta.gateway, {
+    cascade: true,
+  })
+  metadata: GatewayMetadataEntity;
 }

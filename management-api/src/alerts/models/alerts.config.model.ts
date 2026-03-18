@@ -1,6 +1,7 @@
-export class AlertConfigModel {
+export class AlertsConfigModel {
   id: string;
   tenantId: string;
-  gatewayId?: string;
-  gatewayTimeoutMs: number;
+  gatewayId: string[];
+  gatewayTimeoutMs: number[];
+  tenantTimeoutMs: number;
 }

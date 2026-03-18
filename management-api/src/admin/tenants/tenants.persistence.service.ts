@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { CreateTenantPersistenceInput } from './interfaces/service-persistence.interfaces';
+import {
+  CreateTenantPersistenceInput,
+  UpdateTenantPersistenceInput,
+} from './interfaces/service-persistence.interfaces';
 import { TenantsEntity } from 'src/common/entities/tenants.entity';
 
 @Injectable()
@@ -18,16 +21,20 @@ export class TenantsPersistenceService {
     return this.r.save(tenant);
   }
 
-  async updateTenant(UpdatePersistenceInput): Promise<TenantsEntity> {
-    const tenant = await this.r.findOneBy({ id: UpdatePersistenceInput.id });
+  async updateTenant(
+    input: UpdateTenantPersistenceInput,
+  ): Promise<TenantsEntity | null> {
+    const tenant = await this.r.findOneBy({ id: input.id });
     if (!tenant) {
-      throw new NotFoundException('Tenant not found');
+      return null;
     }
-    Object.assign(tenant, UpdatePersistenceInput);
+    const { id, ...fieldsToUpdate } = input;
+    Object.assign(tenant, fieldsToUpdate);
     return this.r.save(tenant);
   }
 
-  async deleteTenant(id: string): Promise<void> {
-    await this.r.delete(id);
+  async deleteTenant(id: string): Promise<boolean> {
+    const deleteResult = await this.r.delete(id);
+    return (deleteResult.affected ?? 0) > 0;
   }
 }

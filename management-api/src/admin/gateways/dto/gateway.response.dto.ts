@@ -1,5 +1,4 @@
 export class GatewayResponseDto {
-  gatewayId: string;
-
+  id: string;
   tenantId: string;
 }

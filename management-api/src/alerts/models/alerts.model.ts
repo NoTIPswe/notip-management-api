@@ -1,4 +1,4 @@
-import { AlertType } from '../alerts.enum';
+import { AlertType } from '../enums/alerts.enum';
 import { AlertsDetails } from '../interfaces/alerts.interfaces';
 
 export class AlertsModel {

@@ -1,1 +1,3 @@
-export class DeleteUserRequestDto {}
+export class DeleteUserRequestDto {
+  id: string[];
+}

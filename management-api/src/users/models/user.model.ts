@@ -1,4 +1,4 @@
-import { UserRole } from 'src/users/user.enum';
+import { UsersRole } from '../enums/users.enum';
 
 export class UserModel {
   id: string;
@@ -6,7 +6,7 @@ export class UserModel {
   keycloakId: string | null;
   name: string | null;
   email: string | null;
-  role: UserRole;
+  role: UsersRole;
   permissions: string | null;
   lastAccess: Date;
   createdAt: Date;

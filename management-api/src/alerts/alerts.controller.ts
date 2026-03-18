@@ -2,6 +2,7 @@ import { Controller, Put } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SetGatewayAlertsConfigResponseDto } from './dto/set-gateway-alerts-config.response.dto';
 import { AlertsService } from './alerts.service';
+import { AlertsMapper } from './alerts.mapper';
 
 @Controller('alerts')
 export class AlertsController {
@@ -24,5 +25,6 @@ export class AlertsController {
     const models = await this.as.setGatewayAlertsConfig(
       SetGatewayAlertsConfigRequestDto,
     );
+    return AlertsMapper.toSetGatewayAlertsConfigResponseDto(models);
   }
 }

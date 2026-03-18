@@ -1,5 +1,3 @@
-import { UserRole } from 'src/users/user.enum';
-
 import {
   Column,
   CreateDateColumn,
@@ -8,7 +6,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { TenantEntity } from 'src/admin/tenants/tenants.entity';
+import { UsersRole } from '../enums/users.enum';
+import { TenantsEntity } from 'src/common/entities/tenants.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -27,8 +26,8 @@ export class UserEntity {
   @Column()
   email: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.TENANT_USER })
-  role: UserRole;
+  @Column({ type: 'enum', enum: UsersRole, default: UsersRole.TENANT_USER })
+  role: UsersRole;
 
   @Column({ type: 'jsonb', nullable: true })
   permissions: any | null;
@@ -39,9 +38,9 @@ export class UserEntity {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @ManyToOne(() => TenantEntity, (tenant) => tenant.users, {
+  @ManyToOne(() => TenantsEntity, (tenant) => tenant.users, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'tenant_id' })
-  tenant: TenantEntity;
+  tenant: TenantsEntity;
 }

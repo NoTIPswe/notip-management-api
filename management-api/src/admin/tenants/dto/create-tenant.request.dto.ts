@@ -12,5 +12,5 @@ export class CreateTenantRequestDto {
 
   @IsString()
   @IsOptional()
-  adminPassword?: string;
+  adminPassword?: string | null;
 }

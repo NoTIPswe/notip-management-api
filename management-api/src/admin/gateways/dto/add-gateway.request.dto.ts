@@ -6,5 +6,5 @@ export class AddGatewayRequestDto {
   @IsString()
   tenantId: string;
   @IsString()
-  factoryKey: string;
+  factoryKeyHash: string;
 }

@@ -11,4 +11,5 @@ export interface SetAlertsConfigDefaultsInput {
 export interface SetGatewayAlertsConfigInput {
   gatewayTimeoutMs: number;
   gatewayId: string;
+  tenantId: string;
 }

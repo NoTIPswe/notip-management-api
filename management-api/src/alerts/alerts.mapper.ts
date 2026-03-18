@@ -1,14 +1,30 @@
 import { plainToInstance } from 'class-transformer';
-import { AlertEntity } from './entities/alerts.entity';
 import { AlertsModel } from './models/alerts.model';
 import { AlertsResponseDto } from './dto/alerts.response.dto';
 import { SetAlertsConfigDefaultResponseDto } from './dto/set-alerts-config-default.response.dto';
 import { SetGatewayAlertsConfigResponseDto } from './dto/set-gateway-alerts-config.response.dto';
 import { AlertsConfigResponseDto } from './dto/alerts-config.response.dto';
+import { AlertsEntity } from './entities/alerts.entity';
+import { AlertsConfigEntity } from './entities/alerts.config.entity';
+import { AlertsConfigModel } from './models/alerts.config.model';
 
 export class AlertsMapper {
-  static toModel(entity: AlertEntity): AlertsModel {
+  static toAlertsModel(entity: AlertsEntity): AlertsModel {
     return plainToInstance(AlertsModel, entity);
+  }
+  static toAlertsConfigModel(
+    entities: AlertsConfigEntity[],
+  ): AlertsConfigModel {
+    const defaultConfig = entities.find((e) => e.gatewayId === null);
+    const overrides = entities.filter((e) => e.gatewayId !== null);
+
+    return plainToInstance(AlertsConfigModel, {
+      defaultTimeoutMs: defaultConfig?.gatewayTimeoutMs ?? 60000,
+      gatewayOverrides: overrides.map((o) => ({
+        gatewayId: o.gatewayId,
+        gatewayTimeoutMs: o.gatewayTimeoutMs,
+      })),
+    });
   }
   static toAlertsResponseDto(model: AlertsModel): AlertsResponseDto {
     return plainToInstance(AlertsResponseDto, model);

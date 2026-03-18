@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { TenantsPersistenceService } from './tenants.persistence.service';
 import { TenantsModel } from './tenant.model';
 import { TenantsMapper } from './tenants.mapper';
+import {
+  CreateTenantInput,
+  UpdateTenantInput,
+} from './interfaces/controller-service.interfaces';
 
 @Injectable()
 export class TenantsService {
@@ -11,15 +15,17 @@ export class TenantsService {
     const entities = await this.tps.getTenants();
     return entities.map(TenantsMapper.toModel);
   }
-  async createTenant(CreateTenantInput): Promise<TenantsModel> {
-    const entity = await this.tps.createTenant(CreateTenantInput);
+  async createTenant(input: CreateTenantInput): Promise<TenantsModel> {
+    const entity = await this.tps.createTenant(input);
     return TenantsMapper.toModel(entity);
   }
-  async updateTenant(id: string, UpdateTenantInput): Promise<TenantsModel> {
-    const entity = await this.tps.updateTenant(UpdateTenantInput);
+  async updateTenant(input: UpdateTenantInput): Promise<TenantsModel> {
+    const entity = await this.tps.updateTenant(input);
+    if (!entity) throw new NotFoundException('Tenant not found');
     return TenantsMapper.toModel(entity);
   }
   async deleteTenant(id: string): Promise<void> {
-    await this.tps.deleteTenant(id);
+    const deletedEntity = await this.tps.deleteTenant(id);
+    if (!deletedEntity) throw new NotFoundException('Tenant not found');
   }
 }
