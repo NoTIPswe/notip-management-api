@@ -1,23 +1,26 @@
 {
 	"name": "NoTIP Nest Dev",
+
 	"image": "ghcr.io/notipswe/notip-nest-dev:v0.0.1",
-	"remoteUser": "node",
-	"mounts": [
-		"source=notip-nest-node_modules,target=/app/node_modules,type=volume"
-	],
+
 	"postCreateCommand": "[ -f package.json ] && npm install; pre-commit install --install-hooks",
-	"postStartCommand": "pre-commit install --install-hooks",
+	"init": true,
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"firsttris.vscode-jest-runner",
-				"streetsidesoftware.code-spell-checker"
+				"SonarSource.sonarlint-vscode",
+				"ms-azuretools.vscode-containers"
 			]
 		}
 	},
-	"workspaceFolder": "/app",
+
 	"forwardPorts": [3000],
-	"init": true
+
+	"workspaceFolder": "/workspaces/notip-management-api",
+	"updateRemoteUserUID": true,
+	"remoteUser": "node"
 }
