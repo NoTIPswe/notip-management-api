@@ -1,4 +1,4 @@
-import { TenantEntity } from 'src/common/entities/tenant.entity';
+import { TenantEntity } from '../../common/entities/tenant.entity';
 import { TenantsResponseDto } from './dto/tenants.response.dto';
 import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
 import { TenantsModel } from './tenant.model';

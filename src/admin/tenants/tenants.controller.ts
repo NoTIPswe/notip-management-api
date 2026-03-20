@@ -14,7 +14,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateTenantRequestDto } from './dto/create-tenant.request.dto';
 import { UpdateTenantRequestDto } from './dto/update-tenant.request.dto';
 import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
-import { AdminOnly } from 'src/common/decorators/access-policy.decorator';
+import { AdminOnly } from '../../common/decorators/access-policy.decorator';
 
 @AdminOnly()
 @Controller('admin/tenants')

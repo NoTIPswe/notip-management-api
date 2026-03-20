@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { KeysController } from './keys.controller';
-import { KeysService } from './keys.service';
-import { GatewaysKeysPersistenceService } from './keys.persistence.service';
+import { KeysController } from './controller/keys.controller';
+import { KeysService } from './services/keys.service';
+import { GatewaysKeysPersistenceService } from './services/keys.persistence.service';
 
 @Module({
   controllers: [KeysController],

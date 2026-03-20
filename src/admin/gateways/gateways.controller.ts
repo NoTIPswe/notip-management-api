@@ -4,7 +4,7 @@ import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { GatewaysService } from './gateways.service';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
 import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
-import { AdminOnly } from 'src/common/decorators/access-policy.decorator';
+import { AdminOnly } from '../../common/decorators/access-policy.decorator';
 import { GatewaysMapper } from './gateways.mapper';
 
 @AdminOnly()

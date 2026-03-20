@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { GatewaysController } from './gateways.controller';
-import { GatewaysService } from './gateways.service';
-import { GatewaysPersistenceService } from './gateways.persistence.service';
-import { GatewayEntity } from 'src/common/entities/gateway.entity';
-import { GatewayMetadataEntity } from 'src/common/entities/gateway-metadata.entity';
+import { GatewaysController } from './controller/gateways.controller';
+import { GatewaysService } from './services/gateways.service';
+import { GatewaysPersistenceService } from './services/gateways.persistence.service';
+import { GatewayEntity } from '../common/entities/gateway.entity';
+import { GatewayMetadataEntity } from '../common/entities/gateway-metadata.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([GatewayEntity, GatewayMetadataEntity])],

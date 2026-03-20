@@ -1,4 +1,4 @@
-import { GatewayEntity } from 'src/common/entities/gateway.entity';
+import { GatewayEntity } from '../common/entities/gateway.entity';
 import { GatewayModel } from './models/gateway.model';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { UpdateGatewayResponseDto } from './dto/update-gateway.response.dto';

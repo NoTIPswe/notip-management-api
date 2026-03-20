@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { of } from 'rxjs';
 import { TenantInterceptor } from './tenant.interceptor';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../../users/enums/users.enum';
 
 describe('TenantInterceptor', () => {
   it('copies the effective tenant id onto the request', () => {

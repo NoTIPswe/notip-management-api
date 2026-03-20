@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
 import { ConfigService } from '@nestjs/config';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 interface JwtClaims {

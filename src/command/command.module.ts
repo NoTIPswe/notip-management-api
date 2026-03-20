@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CommandController } from './command.controller';
-import { CommandService } from './command.service';
-import { CommandPersistenceService } from './command.persistence.service';
+import { CommandController } from './controller/command.controller';
+import { CommandService } from './services/command.service';
+import { CommandPersistenceService } from './services/command.persistence.service';
 
 @Module({
   controllers: [CommandController],

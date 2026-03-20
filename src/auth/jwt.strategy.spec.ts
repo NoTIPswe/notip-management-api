@@ -4,7 +4,7 @@ jest.mock('jwks-rsa', () => ({
 
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtStrategy } from './jwt.strategy';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../users/enums/users.enum';
 
 describe('JwtStrategy.validate', () => {
   const strategy = Object.create(JwtStrategy.prototype) as JwtStrategy;

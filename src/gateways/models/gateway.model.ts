@@ -1,4 +1,4 @@
-import { GatewayStatus } from 'src/common/enums/gateway.enum';
+import { GatewayStatus } from '../../common/enums/gateway.enum';
 
 export class GatewayModel {
   id: string;

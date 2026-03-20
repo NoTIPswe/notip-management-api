@@ -1,5 +1,5 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
-import { TenantStatus } from 'src/common/enums/tenants.enum';
+import { TenantStatus } from '../../common/enums/tenants.enum';
 import { TenantsService } from './tenants.service';
 import { TenantsPersistenceService } from './tenants.persistence.service';
 

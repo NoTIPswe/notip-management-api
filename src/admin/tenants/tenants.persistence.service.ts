@@ -5,7 +5,7 @@ import {
   DeleteTenantPersistenceInput,
   UpdateTenantPersistenceInput,
 } from './interfaces/service-persistence.interfaces';
-import { TenantEntity } from 'src/common/entities/tenant.entity';
+import { TenantEntity } from '../../common/entities/tenant.entity';
 
 @Injectable()
 export class TenantsPersistenceService {

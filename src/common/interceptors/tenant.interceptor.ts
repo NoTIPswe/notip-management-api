@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-user.interface';
+import { AuthenticatedUser } from '../../auth/interfaces/authenticated-user.interface';
 
 interface RequestWithUser {
   user?: AuthenticatedUser;

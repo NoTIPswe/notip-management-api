@@ -1,5 +1,5 @@
-import { GatewayEntity } from 'src/common/entities/gateway.entity';
-import { TenantEntity } from 'src/common/entities/tenant.entity';
+import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { TenantEntity } from '../../common/entities/tenant.entity';
 
 import {
   Column,

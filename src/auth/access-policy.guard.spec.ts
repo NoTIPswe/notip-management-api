@@ -1,8 +1,8 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AccessPolicyGuard } from './access-policy.guard';
-import { AccessPolicy } from 'src/common/decorators/access-policy.decorator';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { AccessPolicy } from '../common/decorators/access-policy.decorator';
+import { UsersRole } from '../users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 const createContext = (user?: AuthenticatedUser): ExecutionContext =>

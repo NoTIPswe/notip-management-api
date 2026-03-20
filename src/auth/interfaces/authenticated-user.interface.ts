@@ -1,4 +1,4 @@
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../../users/enums/users.enum';
 
 export interface AuthenticatedUser {
   actorUserId: string;

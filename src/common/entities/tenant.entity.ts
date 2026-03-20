@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 
 import { TenantStatus } from '../enums/tenants.enum';
-import { UserEntity } from 'src/users/entities/user.entity';
+import { UserEntity } from '../../users/entities/user.entity';
 import { GatewayEntity } from './gateway.entity';
 
 @Entity('admin/tenants')

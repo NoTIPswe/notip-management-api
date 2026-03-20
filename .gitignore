@@ -28,6 +28,7 @@ npm-debug.log*
 # --- IDEs / Editor ---
 .idea/
 .vscode/
+*.md
 
 # --- Angular Specific ---
 .angular/

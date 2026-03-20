@@ -1,7 +1,7 @@
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RolesGuard } from './roles.guard';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 const createContext = (user?: AuthenticatedUser): ExecutionContext =>

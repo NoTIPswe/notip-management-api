@@ -1,4 +1,4 @@
-import { TenantEntity } from 'src/common/entities/tenant.entity';
+import { TenantEntity } from '../../common/entities/tenant.entity';
 import {
   Column,
   CreateDateColumn,

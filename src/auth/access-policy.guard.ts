@@ -3,8 +3,8 @@ import { Reflector } from '@nestjs/core';
 import {
   ACCESS_POLICY_KEY,
   AccessPolicy,
-} from 'src/common/decorators/access-policy.decorator';
-import { UsersRole } from 'src/users/enums/users.enum';
+} from '../common/decorators/access-policy.decorator';
+import { UsersRole } from '../users/enums/users.enum';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 
 interface RequestWithUser {

@@ -13,7 +13,7 @@ jest.mock('@nestjs/passport', () => {
 import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { AccessPolicy } from 'src/common/decorators/access-policy.decorator';
+import { AccessPolicy } from '../common/decorators/access-policy.decorator';
 
 describe('JwtAuthGuard', () => {
   const context = {

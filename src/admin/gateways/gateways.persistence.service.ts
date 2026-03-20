@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GatewayEntity } from 'src/common/entities/gateway.entity';
+import { GatewayEntity } from '../../common/entities/gateway.entity';
 import { Repository } from 'typeorm';
 import {
   AddGatewayPersistenceInput,

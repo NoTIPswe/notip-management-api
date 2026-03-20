@@ -4,7 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import {
   ACCESS_POLICY_KEY,
   AccessPolicy,
-} from 'src/common/decorators/access-policy.decorator';
+} from '../common/decorators/access-policy.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {

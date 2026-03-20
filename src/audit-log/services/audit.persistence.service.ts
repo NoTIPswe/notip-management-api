@@ -1,0 +1,26 @@
+import { Injectable } from '@nestjs/common';
+import { AuditLogEntity } from '../entities/audit.entity';
+import { Repository } from 'typeorm';
+import { GetAuditLogsPersistenceInput } from '../interfaces/service-persistence.interface';
+@Injectable()
+export class AuditLogPersistenceService {
+  constructor(private readonly r: Repository<AuditLogEntity>) {}
+
+  async getAuditLogs(
+    input: GetAuditLogsPersistenceInput,
+  ): Promise<AuditLogEntity[]> {
+    const query = this.r.createQueryBuilder('audit_log');
+    query.where('audit_log.timestamp >= :from', { from: input.from });
+    query.andWhere('audit_log.timestamp <= :to', { to: input.to });
+
+    if (input.userId) {
+      query.andWhere('audit_log.userId = :userId', { userId: input.userId });
+    }
+
+    if (input.action) {
+      query.andWhere('audit_log.action = :action', { action: input.action });
+    }
+
+    return await query.getMany();
+  }
+}
