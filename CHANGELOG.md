@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.0.0...v1.1.0) (2026-03-21)
+
+
+### Features
+
+* added token functionality, almost everything completed ([16c55d8](https://github.com/NoTIPswe/notip-management-api/commit/16c55d8a15f6d99ac26f7abbba6ef6f49b3468cc))
+
 # 1.0.0 (2026-03-20)
 
 
