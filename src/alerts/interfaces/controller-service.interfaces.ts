@@ -4,8 +4,8 @@ export interface GetAlertsConfigInput {
 
 export interface GetAlertsInput {
   tenantId: string;
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
   gatewayId?: string;
 }
 

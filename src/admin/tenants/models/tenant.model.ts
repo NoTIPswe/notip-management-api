@@ -1,4 +1,4 @@
-import { TenantStatus } from '../../common/enums/tenants.enum';
+import { TenantStatus } from '../../../common/enums/tenants.enum';
 
 export class TenantsModel {
   id: string;

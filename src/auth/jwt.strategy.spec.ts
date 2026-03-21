@@ -28,6 +28,52 @@ describe('JwtStrategy.validate', () => {
     ).toThrow('Missing role');
   });
 
+  it('accepts normalized role values from token claim', () => {
+    expect(
+      strategy.validate({
+        sub: 'user-1',
+        role: 'TENANT-ADMIN',
+        tenant_id: 'tenant-1',
+      }).effectiveRole,
+    ).toBe(UsersRole.TENANT_ADMIN);
+  });
+
+  it('extracts role from keycloak resource_access roles', () => {
+    Object.assign(strategy as unknown as Record<string, unknown>, {
+      managementClientId: 'notip-mgmt',
+    });
+
+    expect(
+      strategy.validate({
+        sub: 'user-1',
+        tenant_id: 'tenant-1',
+        resource_access: {
+          'notip-mgmt': {
+            roles: [UsersRole.TENANT_USER],
+          },
+        },
+      }).effectiveRole,
+    ).toBe(UsersRole.TENANT_USER);
+  });
+
+  it('throws when token contains multiple recognized roles', () => {
+    Object.assign(strategy as unknown as Record<string, unknown>, {
+      managementClientId: 'notip-mgmt',
+    });
+
+    expect(() =>
+      strategy.validate({
+        sub: 'user-1',
+        tenant_id: 'tenant-1',
+        resource_access: {
+          'notip-mgmt': {
+            roles: [UsersRole.TENANT_USER, UsersRole.TENANT_ADMIN],
+          },
+        },
+      }),
+    ).toThrow('Ambiguous role claims');
+  });
+
   it('throws when a non-system admin has no tenant', () => {
     expect(() =>
       strategy.validate({

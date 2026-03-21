@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { KeyEntity } from '../entities/key.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class GatewaysKeysPersistenceService {
-  constructor(private readonly r: Repository<KeyEntity>) {}
+  constructor(
+    @InjectRepository(KeyEntity)
+    private readonly r: Repository<KeyEntity>,
+  ) {}
   async getKeys(id: string): Promise<KeyEntity[]> {
     return this.r.find({ where: { gatewayId: id } });
   }

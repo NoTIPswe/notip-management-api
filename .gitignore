@@ -44,3 +44,4 @@ certs/
 
 # --- Ignored folder --- 
 ignored/
+scripts/test/

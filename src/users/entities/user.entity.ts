@@ -30,9 +30,9 @@ export class UserEntity {
   role: UsersRole;
 
   @Column({ type: 'jsonb', nullable: true })
-  permissions: Record<string, unknown> | null;
+  permissions: string[] | null;
 
-  @Column({ name: 'last_access', nullable: true })
+  @Column({ name: 'last_access', type: 'timestamptz', nullable: true })
   lastAccess: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })

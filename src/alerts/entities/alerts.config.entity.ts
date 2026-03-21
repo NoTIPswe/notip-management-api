@@ -27,7 +27,7 @@ export class AlertsConfigEntity {
   @Column({ name: 'tenant_id' })
   tenantId: string;
 
-  @Column({ name: 'gateway_id', nullable: true })
+  @Column({ name: 'gateway_id', type: 'uuid', nullable: true })
   gatewayId: string | null;
 
   @ManyToOne(() => TenantEntity, { onDelete: 'CASCADE' })

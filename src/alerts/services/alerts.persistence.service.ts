@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { AlertsConfigEntity } from '../entities/alerts.config.entity';
 import {
   GetAlertsPersistenceInput,
@@ -6,12 +7,20 @@ import {
   SetGatewayAlertsConfigPersistenceInput,
 } from '../interfaces/service-persistence.interface';
 import { AlertsEntity } from '../entities/alerts.entity';
-import { Between, IsNull, Repository } from 'typeorm';
+import {
+  Between,
+  IsNull,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 
 @Injectable()
 export class AlertsPersistenceService {
   constructor(
+    @InjectRepository(AlertsEntity)
     private readonly r: Repository<AlertsEntity>,
+    @InjectRepository(AlertsConfigEntity)
     private readonly rac: Repository<AlertsConfigEntity>,
   ) {}
 
@@ -57,10 +66,19 @@ export class AlertsPersistenceService {
   }
 
   async getAlerts(input: GetAlertsPersistenceInput): Promise<AlertsEntity[]> {
+    const createdAtFilter =
+      input.from && input.to
+        ? Between(new Date(input.from), new Date(input.to))
+        : input.from
+          ? MoreThanOrEqual(new Date(input.from))
+          : input.to
+            ? LessThanOrEqual(new Date(input.to))
+            : undefined;
+
     return this.r.find({
       where: {
         tenantId: input.tenantId,
-        createdAt: Between(new Date(input.from), new Date(input.to)),
+        ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
         ...(input.gatewayId ? { gatewayId: input.gatewayId } : {}),
       },
       order: {

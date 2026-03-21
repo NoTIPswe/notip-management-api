@@ -18,6 +18,7 @@ export interface UpdateUserInput {
   name?: string;
   role?: UsersRole;
   password?: string;
+  permissions?: string[];
 }
 
 export interface DeleteUsersInput {

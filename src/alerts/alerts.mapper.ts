@@ -3,7 +3,10 @@ import { AlertsModel } from './models/alerts.model';
 import { AlertsResponseDto } from './dto/alerts.response.dto';
 import { SetAlertsConfigDefaultResponseDto } from './dto/set-alerts-config-default.response.dto';
 import { SetGatewayAlertsConfigResponseDto } from './dto/set-gateway-alerts-config.response.dto';
-import { AlertsConfigResponseDto } from './dto/alerts-config.response.dto';
+import {
+  AlertsConfigResponseDto,
+  AlertsGatewayOverridesResponseDto,
+} from './dto/alerts-config.response.dto';
 import { AlertsEntity } from './entities/alerts.entity';
 import { AlertsConfigEntity } from './entities/alerts.config.entity';
 import { AlertsConfigModel } from './models/alerts.config.model';
@@ -28,35 +31,44 @@ export class AlertsMapper {
     });
   }
   static toAlertsResponseDto(model: AlertsModel): AlertsResponseDto {
-    return plainToInstance(AlertsResponseDto, model);
+    const dto = new AlertsResponseDto();
+    dto.id = model.id;
+    dto.gatewayId = model.gatewayId;
+    dto.type = model.type;
+    dto.details = model.details as AlertsResponseDto['details'];
+    dto.createdAt = model.createdAt;
+    return dto;
   }
   static toSetAlertsConfigDefaultResponseDto(
     entity: AlertsConfigEntity,
   ): SetAlertsConfigDefaultResponseDto {
-    return plainToInstance(SetAlertsConfigDefaultResponseDto, {
-      tenantId: entity.tenantId,
-      defaultTimeoutMs: entity.gatewayTimeoutMs,
-      updatedAt: entity.updatedAt,
-    });
+    const dto = new SetAlertsConfigDefaultResponseDto();
+    dto.tenantId = entity.tenantId;
+    dto.defaultTimeoutMs = entity.gatewayTimeoutMs;
+    dto.updatedAt = entity.updatedAt;
+    return dto;
   }
   static toSetGatewayAlertsConfigResponseDto(
     entity: AlertsConfigEntity,
   ): SetGatewayAlertsConfigResponseDto {
-    return plainToInstance(SetGatewayAlertsConfigResponseDto, {
-      gatewayId: entity.gatewayId ?? '',
-      timeoutMs: entity.gatewayTimeoutMs,
-      updatedAt: entity.updatedAt,
-    });
+    const dto = new SetGatewayAlertsConfigResponseDto();
+    dto.gatewayId = entity.gatewayId ?? '';
+    dto.timeoutMs = entity.gatewayTimeoutMs;
+    dto.updatedAt = entity.updatedAt;
+    return dto;
   }
   static toAlertsConfigResponseDto(
     model: AlertsConfigModel,
   ): AlertsConfigResponseDto {
-    return plainToInstance(AlertsConfigResponseDto, {
-      defaultTimeoutMs: model.defaultTimeoutMs,
-      gatewayOverrides: model.gatewayOverrides.map((override) => ({
-        gatewayId: override.gatewayId,
-        timeoutMs: override.gatewayTimeoutMs,
-      })),
+    const overrides = model.gatewayOverrides.map((override) => {
+      const overrideDto = new AlertsGatewayOverridesResponseDto();
+      overrideDto.gatewayId = override.gatewayId;
+      overrideDto.timeoutMs = override.gatewayTimeoutMs;
+      return overrideDto;
     });
+    const dto = new AlertsConfigResponseDto();
+    dto.defaultTimeoutMs = model.defaultTimeoutMs;
+    dto.gatewayOverrides = overrides;
+    return dto;
   }
 }

@@ -1,7 +1,7 @@
 import { TenantEntity } from '../../common/entities/tenant.entity';
 import { TenantsResponseDto } from './dto/tenants.response.dto';
 import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
-import { TenantsModel } from './tenant.model';
+import { TenantsModel } from './models/tenant.model';
 
 export class TenantsMapper {
   static toModel(entity: TenantEntity): TenantsModel {

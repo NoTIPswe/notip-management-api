@@ -28,6 +28,8 @@ describe('Admin GatewaysPersistenceService', () => {
       tenant: { id: 'tenant-1' },
       factoryId: 'factory-1',
       factoryKeyHash: 'hash',
+      model: 'unknown-model',
+      firmwareVersion: '0.0.0',
     };
     const savedGateway = {
       id: 'gateway-1',
@@ -46,5 +48,12 @@ describe('Admin GatewaysPersistenceService', () => {
         factoryKeyHash: 'hash',
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'gateway-1' }));
+
+    expect(repo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'unknown-model',
+        firmwareVersion: '0.0.0',
+      }),
+    );
   });
 });

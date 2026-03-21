@@ -1,21 +1,24 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { TenantsPersistenceService } from './tenants.persistence.service';
-import { TenantsModel } from './tenant.model';
-import { TenantsMapper } from './tenants.mapper';
+import { TenantsModel } from '../models/tenant.model';
+import { TenantsMapper } from '../tenants.mapper';
 import {
   CreateTenantInput,
   DeleteTenantInput,
   UpdateTenantInput,
-} from './interfaces/controller-service.interfaces';
+} from '../interfaces/controller-service.interfaces';
 import {
   CreateTenantPersistenceInput,
   DeleteTenantPersistenceInput,
   UpdateTenantPersistenceInput,
-} from './interfaces/service-persistence.interfaces';
+} from '../interfaces/service-persistence.interfaces';
+import { KeycloakAdminService } from './keycloak-admin.service';
+import { UsersRole } from '../../../users/enums/users.enum';
 
 function isDatabaseError(
   error: unknown,
@@ -32,7 +35,10 @@ function isDatabaseError(
 
 @Injectable()
 export class TenantsService {
-  constructor(private readonly tps: TenantsPersistenceService) {}
+  constructor(
+    private readonly tps: TenantsPersistenceService,
+    private readonly keycloakAdminService: KeycloakAdminService,
+  ) {}
 
   async getTenants(): Promise<TenantsModel[]> {
     const entities = await this.tps.getTenants();
@@ -42,13 +48,38 @@ export class TenantsService {
     const persistenceInput: CreateTenantPersistenceInput = {
       name: input.name,
     };
+
+    let tenant = null;
     try {
-      const entity = await this.tps.createTenant(persistenceInput);
-      return TenantsMapper.toModel(entity);
+      tenant = await this.tps.createTenant(persistenceInput);
     } catch (e: unknown) {
       if (isDatabaseError(e, '23505')) {
         throw new ConflictException('Tenant name already exists');
       }
+      throw e;
+    }
+
+    let keycloakUserId = '';
+
+    try {
+      keycloakUserId = await this.keycloakAdminService.createTenantAdminUser({
+        email: input.adminEmail,
+        name: input.adminName,
+        password: input.adminPassword,
+        tenantId: tenant.id,
+      });
+
+      await this.tps.createTenantAdminLocalUser({
+        tenantId: tenant.id,
+        keycloakId: keycloakUserId,
+        email: input.adminEmail,
+        name: input.adminName,
+        role: UsersRole.TENANT_ADMIN,
+      });
+
+      return TenantsMapper.toModel(tenant);
+    } catch (e: unknown) {
+      await this.safeCleanupTenantCreation(tenant.id, keycloakUserId);
       throw e;
     }
   }
@@ -71,10 +102,34 @@ export class TenantsService {
     }
   }
   async deleteTenant(input: DeleteTenantInput): Promise<void> {
+    const tenantAdmins = await this.tps.getTenantAdminUsers(input.id);
+    for (const tenantAdmin of tenantAdmins) {
+      if (tenantAdmin.keycloakId) {
+        await this.keycloakAdminService.deleteUser(tenantAdmin.keycloakId);
+      }
+    }
+
     const persistenceInput: DeleteTenantPersistenceInput = {
       id: input.id,
     };
     const deletedEntity = await this.tps.deleteTenant(persistenceInput);
     if (!deletedEntity) throw new NotFoundException('Tenant not found');
+  }
+
+  private async safeCleanupTenantCreation(
+    tenantId: string,
+    keycloakUserId: string,
+  ): Promise<void> {
+    try {
+      if (keycloakUserId) {
+        await this.keycloakAdminService.deleteUser(keycloakUserId);
+      }
+    } catch {
+      throw new InternalServerErrorException(
+        'Tenant rollback failed while deleting Keycloak user',
+      );
+    }
+
+    await this.tps.deleteTenant({ id: tenantId });
   }
 }

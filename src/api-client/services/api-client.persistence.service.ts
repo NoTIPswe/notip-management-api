@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ApiClientEntity } from '../entities/api-client.entity';
 import { Repository } from 'typeorm';
 @Injectable()
 export class ApiClientPersistenceService {
-  constructor(private readonly r: Repository<ApiClientEntity>) {}
+  constructor(
+    @InjectRepository(ApiClientEntity)
+    private readonly r: Repository<ApiClientEntity>,
+  ) {}
 
   async createApiClient(name: string): Promise<ApiClientEntity> {
     const newApiClient = this.r.create({

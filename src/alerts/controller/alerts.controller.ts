@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { SetGatewayAlertsConfigResponseDto } from '../dto/set-gateway-alerts-config.response.dto';
 import { AlertsService } from '../services/alerts.service';
 import { AlertsMapper } from '../alerts.mapper';
@@ -21,10 +21,13 @@ export class AlertsController {
   @Get()
   @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
   @ApiOperation({ summary: 'Get alerts for the tenant in a time range' })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  @ApiQuery({ name: 'gateway_id', required: false, type: String })
   async getAlerts(
     @TenantId() tenantId: string,
-    @Query('from') from: string,
-    @Query('to') to: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('gateway_id') gatewayId?: string,
   ): Promise<AlertsResponseDto[]> {
     const models = await this.as.getAlerts({ tenantId, from, to, gatewayId });

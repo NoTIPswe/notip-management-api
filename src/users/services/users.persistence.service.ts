@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../entities/user.entity';
 import { In, Repository } from 'typeorm';
 import {
@@ -8,14 +9,24 @@ import {
 
 @Injectable()
 export class UsersPersistenceService {
-  constructor(private readonly r: Repository<UserEntity>) {}
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly r: Repository<UserEntity>,
+  ) {}
 
   async getUsers(tenantId: string): Promise<UserEntity[]> {
     return this.r.find({ where: { tenantId } });
   }
 
   async createUser(input: CreateUserPersistenceInput): Promise<UserEntity> {
-    const user = this.r.create({ ...input, tenantId: input.tenantId });
+    const user = this.r.create({
+      tenantId: input.tenantId,
+      keycloakId: input.keycloakId,
+      email: input.email,
+      name: input.name,
+      role: input.role,
+      permissions: input.permissions ?? null,
+    });
     return this.r.save(user);
   }
 
@@ -26,8 +37,17 @@ export class UsersPersistenceService {
     if (!user) {
       return null;
     }
-    Object.assign(user, input);
+    if (input.email !== undefined) user.email = input.email;
+    if (input.name !== undefined) user.name = input.name;
+    if (input.role !== undefined) user.role = input.role;
+    if (input.permissions !== undefined) {
+      user.permissions = input.permissions;
+    }
     return this.r.save(user);
+  }
+
+  async getUsersByIds(ids: string[]): Promise<UserEntity[]> {
+    return this.r.find({ where: { id: In(ids) } });
   }
 
   async deleteUsersByIds(ids: string[]): Promise<number> {

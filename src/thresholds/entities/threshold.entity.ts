@@ -30,7 +30,7 @@ export class ThresholdEntity {
   @Column({ name: 'tenant_id', type: 'uuid' })
   tenantId: string;
 
-  @Column({ name: 'sensor_type', nullable: true })
+  @Column({ name: 'sensor_type', type: 'text', nullable: true })
   sensorType: string | null;
 
   @Column({ name: 'sensor_id', type: 'uuid', nullable: true })

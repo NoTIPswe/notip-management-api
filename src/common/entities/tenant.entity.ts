@@ -11,7 +11,7 @@ import { TenantStatus } from '../enums/tenants.enum';
 import { UserEntity } from '../../users/entities/user.entity';
 import { GatewayEntity } from './gateway.entity';
 
-@Entity('admin/tenants')
+@Entity({ schema: 'admin', name: 'tenants' })
 export class TenantEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -22,7 +22,7 @@ export class TenantEntity {
   @Column({ default: 'active' })
   status: TenantStatus;
 
-  @Column({ name: 'suspension_interval_days', nullable: true })
+  @Column({ name: 'suspension_interval_days', type: 'int', nullable: true })
   suspensionIntervalDays: number | null;
 
   @CreateDateColumn({ name: 'created_at' })

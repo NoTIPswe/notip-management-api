@@ -7,14 +7,15 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { TenantsService } from './tenants.service';
-import { TenantsResponseDto } from './dto/tenants.response.dto';
-import { TenantsMapper } from './tenants.mapper';
+import { TenantsService } from '../services/tenants.service';
+import { TenantsResponseDto } from '../dto/tenants.response.dto';
+import { TenantsMapper } from '../tenants.mapper';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreateTenantRequestDto } from './dto/create-tenant.request.dto';
-import { UpdateTenantRequestDto } from './dto/update-tenant.request.dto';
-import { UpdateTenantsResponseDto } from './dto/update-tenant.response.dto';
-import { AdminOnly } from '../../common/decorators/access-policy.decorator';
+import { CreateTenantRequestDto } from '../dto/create-tenant.request.dto';
+import { UpdateTenantRequestDto } from '../dto/update-tenant.request.dto';
+import { UpdateTenantsResponseDto } from '../dto/update-tenant.response.dto';
+import { DeleteTenantResponseDto } from '../dto/delete-tenant.response.dto';
+import { AdminOnly } from '../../../common/decorators/access-policy.decorator';
 
 @AdminOnly()
 @Controller('admin/tenants')
@@ -50,7 +51,18 @@ export class TenantsController {
   async createTenant(
     @Body() dto: CreateTenantRequestDto,
   ): Promise<TenantsResponseDto> {
-    const tenantModel = await this.ts.createTenant(dto);
+    const rawDto = dto as CreateTenantRequestDto & {
+      admin_email?: string;
+      admin_name?: string;
+      admin_password?: string;
+    };
+
+    const tenantModel = await this.ts.createTenant({
+      name: rawDto.name,
+      adminEmail: rawDto.adminEmail ?? rawDto.admin_email ?? '',
+      adminName: rawDto.adminName ?? rawDto.admin_name ?? '',
+      adminPassword: rawDto.adminPassword ?? rawDto.admin_password ?? '',
+    });
     return TenantsMapper.toResponseDto(tenantModel);
   }
 
@@ -73,9 +85,16 @@ export class TenantsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a tenant' })
-  @ApiResponse({ status: 204, description: 'Tenant deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tenant deleted successfully',
+    type: DeleteTenantResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
-  async deleteTenant(@Param('id') id: string): Promise<void> {
+  async deleteTenant(
+    @Param('id') id: string,
+  ): Promise<DeleteTenantResponseDto> {
     await this.ts.deleteTenant({ id });
+    return { message: 'Tenant deleted successfully' };
   }
 }

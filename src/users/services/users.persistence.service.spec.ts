@@ -17,10 +17,11 @@ describe('UsersPersistenceService', () => {
   it('creates and saves a user', async () => {
     const createdUser = {
       tenantId: 'tenant-1',
+      keycloakId: 'kc-user-1',
       email: 'user@example.com',
       name: 'User',
       role: 'tenant_user',
-      password: 'secret',
+      permissions: null,
     };
     const savedUser = {
       id: 'user-1',
@@ -35,10 +36,10 @@ describe('UsersPersistenceService', () => {
     await expect(
       service.createUser({
         tenantId: 'tenant-1',
+        keycloakId: 'kc-user-1',
         email: 'user@example.com',
         name: 'User',
         role: 'tenant_user',
-        password: 'secret',
       } as never),
     ).resolves.toEqual(expect.objectContaining({ id: 'user-1' }));
   });

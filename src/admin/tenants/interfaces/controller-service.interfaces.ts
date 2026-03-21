@@ -8,7 +8,7 @@ export interface CreateTenantInput {
   name: string;
   adminEmail: string;
   adminName: string;
-  adminPassword?: string | null;
+  adminPassword: string;
 }
 
 export interface UpdateTenantInput {

@@ -1,7 +1,7 @@
 export interface GetAlertsPersistenceInput {
   tenantId: string;
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
   gatewayId?: string;
 }
 

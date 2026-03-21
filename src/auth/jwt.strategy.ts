@@ -11,6 +11,16 @@ interface JwtClaims {
   email?: string;
   name?: string;
   role?: string;
+  realm_access?: {
+    roles?: string[];
+  };
+  resource_access?: Record<
+    string,
+    {
+      roles?: string[];
+    }
+  >;
+  azp?: string;
   tenant_id?: string;
   is_impersonating?: boolean;
   actor_user_id?: string;
@@ -23,32 +33,96 @@ interface JwtClaims {
 const isUsersRole = (value: string): value is UsersRole =>
   Object.values(UsersRole).includes(value as UsersRole);
 
+const normalizeRole = (value?: string): UsersRole | undefined => {
+  if (!value) return undefined;
+
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+  return isUsersRole(normalized) ? normalized : undefined;
+};
+
+const resolveSingleRole = (
+  roles: string[],
+  missingRoleMessage = 'Missing role',
+): UsersRole => {
+  const normalizedRoles = new Set(
+    roles
+      .map((role) => normalizeRole(role))
+      .filter((role): role is UsersRole => role !== undefined),
+  );
+
+  if (normalizedRoles.size === 0) {
+    throw new UnauthorizedException(missingRoleMessage);
+  }
+
+  if (normalizedRoles.size > 1) {
+    throw new UnauthorizedException('Ambiguous role claims');
+  }
+
+  return [...normalizedRoles][0];
+};
+
+const extractEffectiveRole = (
+  payload: JwtClaims,
+  clientId: string,
+): UsersRole => {
+  const candidateRoles: string[] = [];
+
+  if (payload.role) {
+    candidateRoles.push(payload.role);
+  }
+
+  const tokenClientId = clientId || payload.azp;
+  if (tokenClientId) {
+    candidateRoles.push(
+      ...(payload.resource_access?.[tokenClientId]?.roles ?? []),
+    );
+  }
+
+  candidateRoles.push(...(payload.realm_access?.roles ?? []));
+
+  return resolveSingleRole(candidateRoles);
+};
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly managementClientId: string;
+
   constructor(configService: ConfigService) {
+    const keycloakUrl = configService.get<string>('KEYCLOAK_URL');
+    const keycloakRealm = configService.get<string>('KEYCLOAK_REALM');
+    const managementClientId =
+      configService.get<string>('KEYCLOAK_MGMT_CLIENT_ID') ?? '';
+
     super({
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
         cacheMaxAge: 24 * 60 * 60 * 1000,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `${configService.get<string>('KEYCLOAK_URL')}/realms/${configService.get<string>('KEYCLOAK_REALM')}/protocol/openid-connect/certs`,
+        jwksUri: `${keycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
       }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      audience: configService.get<string>('KEYCLOAK_MGMT_CLIENT_ID'),
-      issuer: `${configService.get('KEYCLOAK_URL')}/realms/${configService.get('KEYCLOAK_REALM')}`,
+      audience: managementClientId,
+      issuer: `${keycloakUrl}/realms/${keycloakRealm}`,
       algorithms: ['RS256'],
     });
+
+    this.managementClientId = managementClientId;
   }
   validate(payload: JwtClaims): AuthenticatedUser {
     if (!payload.sub) {
       throw new UnauthorizedException();
     }
-    if (!payload.role || !isUsersRole(payload.role)) {
-      throw new UnauthorizedException('Missing role');
-    }
 
-    if (payload.role !== UsersRole.SYSTEM_ADMIN && !payload.tenant_id) {
+    const effectiveRole = extractEffectiveRole(
+      payload,
+      this.managementClientId,
+    );
+
+    if (effectiveRole !== UsersRole.SYSTEM_ADMIN && !payload.tenant_id) {
       throw new UnauthorizedException('Missing tenant_id');
     }
 
@@ -56,12 +130,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const actorUserId = isImpersonating ? payload.actor_user_id : payload.sub;
     const actorEmail = isImpersonating ? payload.actor_email : payload.email;
     const actorName = isImpersonating ? payload.actor_name : payload.name;
-    const actorRole = isImpersonating ? payload.actor_role : payload.role;
+    const actorRole = isImpersonating
+      ? normalizeRole(payload.actor_role)
+      : effectiveRole;
     const actorTenantId = isImpersonating
       ? payload.actor_tenant_id
       : payload.tenant_id;
 
-    if (!actorUserId || !actorRole || !isUsersRole(actorRole)) {
+    if (!actorUserId || !actorRole) {
       throw new UnauthorizedException('Missing impersonation actor claims');
     }
 
@@ -74,7 +150,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       effectiveUserId: payload.sub,
       effectiveEmail: payload.email,
       effectiveName: payload.name,
-      effectiveRole: payload.role,
+      effectiveRole,
       effectiveTenantId: payload.tenant_id,
       isImpersonating,
     };

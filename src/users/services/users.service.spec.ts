@@ -2,10 +2,12 @@ import { NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersPersistenceService } from './users.persistence.service';
 import { UsersRole } from '../enums/users.enum';
+import { KeycloakAdminService } from '../../admin/tenants/services/keycloak-admin.service';
 
 const createUserEntity = (overrides: Record<string, unknown> = {}) => ({
   id: 'user-1',
   tenantId: 'tenant-1',
+  keycloakId: 'kc-user-1',
   email: 'user@example.com',
   name: 'User One',
   role: UsersRole.TENANT_ADMIN,
@@ -18,7 +20,10 @@ describe('UsersService', () => {
     const persistence = {
       getUsers: jest.fn().mockResolvedValue([createUserEntity()]),
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const keycloakAdminService = {
+      syncUserApplicationRole: jest.fn(),
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(service.getUsers({ tenantId: 'tenant-1' })).resolves.toEqual([
       expect.objectContaining({
@@ -33,7 +38,10 @@ describe('UsersService', () => {
     const persistence = {
       getUsers: jest.fn().mockResolvedValue([]),
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const keycloakAdminService = {
+      syncUserApplicationRole: jest.fn(),
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(service.getUsers({ tenantId: 'tenant-1' })).rejects.toThrow(
       NotFoundException,
@@ -45,7 +53,14 @@ describe('UsersService', () => {
     const persistence = {
       createUser: createUserMock,
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const createTenantUserMock = jest.fn().mockResolvedValue('kc-user-1');
+    const syncUserApplicationRoleMock = jest.fn().mockResolvedValue(undefined);
+    const keycloakAdminService = {
+      createTenantUser: createTenantUserMock,
+      syncUserApplicationRole: syncUserApplicationRoleMock,
+      deleteUser: jest.fn(),
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(
       service.createUser({
@@ -58,18 +73,27 @@ describe('UsersService', () => {
     ).resolves.toEqual(expect.objectContaining({ id: 'user-1' }));
     expect(createUserMock).toHaveBeenCalledWith({
       tenantId: 'tenant-1',
+      keycloakId: 'kc-user-1',
       email: 'user@example.com',
       name: 'User One',
       role: UsersRole.TENANT_ADMIN,
-      password: 'secret',
     });
+    expect(createTenantUserMock).toHaveBeenCalled();
+    expect(syncUserApplicationRoleMock).not.toHaveBeenCalled();
   });
 
   it('updates an existing user', async () => {
+    const updateUserMock = jest.fn().mockResolvedValue(createUserEntity());
     const persistence = {
-      updateUser: jest.fn().mockResolvedValue(createUserEntity()),
+      updateUser: updateUserMock,
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const syncUserApplicationRoleMock = jest.fn().mockResolvedValue(undefined);
+    const keycloakAdminService = {
+      createTenantUser: jest.fn(),
+      syncUserApplicationRole: syncUserApplicationRoleMock,
+      deleteUser: jest.fn(),
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(
       service.updateUser({
@@ -77,16 +101,26 @@ describe('UsersService', () => {
         email: 'user@example.com',
         name: 'Updated User',
         role: UsersRole.TENANT_USER,
-        password: 'secret',
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'user-1' }));
+
+    expect(updateUserMock).toHaveBeenCalled();
+    expect(syncUserApplicationRoleMock).toHaveBeenCalledWith(
+      'kc-user-1',
+      UsersRole.TENANT_USER,
+    );
   });
 
   it('throws when updating a missing user', async () => {
     const persistence = {
       updateUser: jest.fn().mockResolvedValue(null),
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const keycloakAdminService = {
+      createTenantUser: jest.fn(),
+      syncUserApplicationRole: jest.fn(),
+      deleteUser: jest.fn(),
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(
       service.updateUser({
@@ -94,17 +128,24 @@ describe('UsersService', () => {
         email: 'user@example.com',
         name: 'Updated User',
         role: UsersRole.TENANT_USER,
-        password: 'secret',
       }),
     ).rejects.toThrow(NotFoundException);
   });
 
   it('delegates bulk deletion', async () => {
     const persistence = {
+      getUsersByIds: jest.fn().mockResolvedValue([createUserEntity()]),
       deleteUsersByIds: jest.fn().mockResolvedValue(2),
     } as unknown as UsersPersistenceService;
-    const service = new UsersService(persistence);
+    const deleteUserMock = jest.fn().mockResolvedValue(undefined);
+    const keycloakAdminService = {
+      createTenantUser: jest.fn(),
+      syncUserApplicationRole: jest.fn(),
+      deleteUser: deleteUserMock,
+    } as unknown as KeycloakAdminService;
+    const service = new UsersService(persistence, keycloakAdminService);
 
     await expect(service.deleteUsers({ ids: ['1', '2'] })).resolves.toBe(2);
+    expect(deleteUserMock).toHaveBeenCalledWith('kc-user-1');
   });
 });

@@ -27,7 +27,12 @@ export class GatewayEntity {
   @Column({ name: 'factory_id', unique: true })
   factoryId: string;
 
-  @Column({ name: 'factory_key_hash', select: false, nullable: true })
+  @Column({
+    name: 'factory_key_hash',
+    type: 'text',
+    select: false,
+    nullable: true,
+  })
   factoryKeyHash: string | null;
 
   @Column({ default: false })

@@ -1,6 +1,6 @@
-import { TenantStatus } from '../../common/enums/tenants.enum';
-import { TenantsController } from './tenants.controller';
-import { TenantsService } from './tenants.service';
+import { TenantStatus } from '../../../common/enums/tenants.enum';
+import { TenantsController } from '../controller/tenants.controller';
+import { TenantsService } from '../services/tenants.service';
 
 const tenantModel = {
   id: 'tenant-1',
@@ -38,6 +38,7 @@ describe('TenantsController', () => {
         name: 'Tenant One',
         adminEmail: 'admin@example.com',
         adminName: 'Admin User',
+        adminPassword: 'Passw0rd!',
       }),
     ).resolves.toEqual(
       expect.objectContaining({
@@ -73,7 +74,9 @@ describe('TenantsController', () => {
     } as unknown as TenantsService;
     const controller = new TenantsController(service);
 
-    await expect(controller.deleteTenant('tenant-1')).resolves.toBeUndefined();
+    await expect(controller.deleteTenant('tenant-1')).resolves.toEqual({
+      message: 'Tenant deleted successfully',
+    });
     expect(deleteTenantMock).toHaveBeenCalledWith({ id: 'tenant-1' });
   });
 });

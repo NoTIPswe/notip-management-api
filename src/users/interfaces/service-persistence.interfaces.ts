@@ -5,7 +5,8 @@ export interface CreateUserPersistenceInput {
   name: string;
   role: UsersRole;
   tenantId: string;
-  password: string;
+  keycloakId: string;
+  permissions?: string[];
 }
 
 export interface UpdateUserPersistenceInput {
@@ -13,5 +14,5 @@ export interface UpdateUserPersistenceInput {
   email?: string;
   name?: string;
   role?: UsersRole;
-  password?: string;
+  permissions?: string[];
 }

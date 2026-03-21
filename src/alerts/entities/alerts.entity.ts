@@ -5,8 +5,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import type { AlertsDetails } from '../interfaces/alerts.interfaces';
 import { AlertType } from '../enums/alerts.enum';
+import type { AlertsDetails } from '../interfaces/alerts.interfaces';
 
 @Entity('alerts')
 export class AlertsEntity {
@@ -23,7 +23,7 @@ export class AlertsEntity {
   gatewayId: string;
 
   @Column({ type: 'jsonb' })
-  details: AlertsDetails;
+  details: Record<string, unknown> & AlertsDetails;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

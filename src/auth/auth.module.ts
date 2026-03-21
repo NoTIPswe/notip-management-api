@@ -7,8 +7,11 @@ import { JwtStrategy } from './jwt.strategy';
 import { RolesGuard } from './roles.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AccessPolicyGuard } from './access-policy.guard';
+import { MockAuthGuard } from './mock-auth.guard';
+import { AuthController } from './controller/auth.controller';
 
 @Module({
+  controllers: [AuthController],
   imports: [
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -19,9 +22,10 @@ import { AccessPolicyGuard } from './access-policy.guard';
     JwtAuthGuard,
     AccessPolicyGuard,
     RolesGuard,
+    MockAuthGuard,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: process.env.MOCK_AUTH === 'true' ? MockAuthGuard : JwtAuthGuard,
     },
     {
       provide: APP_GUARD,

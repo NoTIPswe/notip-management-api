@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { GatewaysService } from './gateways.service';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
@@ -13,6 +13,7 @@ export class GatewaysController {
   constructor(private readonly gs: GatewaysService) {}
   @Get()
   @ApiOperation({ summary: 'Get all Gateways' })
+  @ApiQuery({ name: 'tenant_id', required: false, type: String })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async getGateways(
     @Query('tenant_id') tenantId?: string,
@@ -26,6 +27,19 @@ export class GatewaysController {
   async addGateway(
     @Body() input: AddGatewayRequestDto,
   ): Promise<AddGatewayResponseDto> {
-    return this.gs.addGateway(GatewaysMapper.toAddGatewayInput(input));
+    const rawInput = input as AddGatewayRequestDto & {
+      tenant_id?: string;
+      factory_id?: string;
+      factory_key_hash?: string;
+    };
+
+    return this.gs.addGateway(
+      GatewaysMapper.toAddGatewayInput({
+        tenantId: rawInput.tenantId ?? rawInput.tenant_id ?? '',
+        factoryId: rawInput.factoryId ?? rawInput.factory_id ?? '',
+        factoryKeyHash:
+          rawInput.factoryKeyHash ?? rawInput.factory_key_hash ?? '',
+      }),
+    );
   }
 }

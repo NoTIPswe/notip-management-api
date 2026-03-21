@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { AuditLogEntity } from '../entities/audit.entity';
 import { Repository } from 'typeorm';
 import { GetAuditLogsPersistenceInput } from '../interfaces/service-persistence.interface';
 @Injectable()
 export class AuditLogPersistenceService {
-  constructor(private readonly r: Repository<AuditLogEntity>) {}
+  constructor(
+    @InjectRepository(AuditLogEntity)
+    private readonly r: Repository<AuditLogEntity>,
+  ) {}
 
   async getAuditLogs(
     input: GetAuditLogsPersistenceInput,

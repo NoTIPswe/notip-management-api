@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GatewayEntity } from '../../common/entities/gateway.entity';
 import {
   AddGatewayPersistenceInput,
   GetGatewaysPersistenceInput,
 } from './interfaces/service-persistence.interfaces';
+
+const DEFAULT_GATEWAY_MODEL = 'unknown-model';
+const DEFAULT_GATEWAY_FIRMWARE_VERSION = '0.0.0';
+
 @Injectable()
 export class GatewaysPersistenceService {
-  constructor(private readonly r: Repository<GatewayEntity>) {}
+  constructor(
+    @InjectRepository(GatewayEntity)
+    private readonly r: Repository<GatewayEntity>,
+  ) {}
 
   async getGateways(
     input: GetGatewaysPersistenceInput,
@@ -22,6 +30,8 @@ export class GatewaysPersistenceService {
       tenant: { id: input.tenantId },
       factoryId: input.factoryId,
       factoryKeyHash: input.factoryKeyHash,
+      model: DEFAULT_GATEWAY_MODEL,
+      firmwareVersion: DEFAULT_GATEWAY_FIRMWARE_VERSION,
     });
     return this.r.save(entity);
   }

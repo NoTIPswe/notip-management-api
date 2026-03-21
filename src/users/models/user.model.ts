@@ -7,7 +7,7 @@ export class UserModel {
   name: string;
   email: string;
   role: UsersRole;
-  permissions: string;
-  lastAccess: Date;
+  permissions: string[] | null;
+  lastAccess: Date | null;
   createdAt: Date;
 }

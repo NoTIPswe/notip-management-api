@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { GatewayEntity } from '../../common/entities/gateway.entity';
 import {
   DeleteGatewayPersistenceInput,
   GetGatewayByIdPersistenceInput,
@@ -10,7 +11,10 @@ import {
 
 @Injectable()
 export class GatewaysPersistenceService {
-  constructor(private readonly r: Repository<GatewayEntity>) {}
+  constructor(
+    @InjectRepository(GatewayEntity)
+    private readonly r: Repository<GatewayEntity>,
+  ) {}
 
   async getGateways(
     input: GetGatewaysPersistenceInput,
