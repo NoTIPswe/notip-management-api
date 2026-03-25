@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GatewayStatus } from '../../common/enums/gateway.enum';
+import { GatewayStatus } from '../enums/gateway.enum';
 
 export class UpdateGatewayResponseDto {
   @ApiProperty({ name: 'id' })

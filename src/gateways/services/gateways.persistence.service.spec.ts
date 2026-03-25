@@ -78,33 +78,33 @@ describe('GatewaysPersistenceService', () => {
     expect(result).toEqual(savedGateway);
   });
 
-  it('returns null when decommissioning a missing gateway', async () => {
+  it('returns null when deleting a missing gateway', async () => {
     const repo = {};
     const service = new GatewaysPersistenceService(repo as never);
     jest.spyOn(service, 'findById').mockResolvedValue(null);
 
     await expect(
-      service.decommissionGateway({
+      service.deleteGateway({
         tenantId: 'tenant-1',
         gatewayId: 'gateway-1',
       }),
     ).resolves.toBeNull();
   });
 
-  it('marks a gateway as not provisioned when decommissioned', async () => {
-    const gateway = { id: 'gateway-1', provisioned: true };
-    const savedGateway = { id: 'gateway-1', provisioned: false };
+  it('removes a gateway when deleted', async () => {
+    const gateway = { id: 'gateway-1' };
     const repo = {
-      save: jest.fn().mockResolvedValue(savedGateway),
+      remove: jest.fn().mockResolvedValue(gateway),
     };
     const service = new GatewaysPersistenceService(repo as never);
     jest.spyOn(service, 'findById').mockResolvedValue(gateway as never);
 
     await expect(
-      service.decommissionGateway({
+      service.deleteGateway({
         tenantId: 'tenant-1',
         gatewayId: 'gateway-1',
       }),
-    ).resolves.toEqual(expect.objectContaining({ provisioned: false }));
+    ).resolves.toEqual(gateway);
+    expect(repo.remove).toHaveBeenCalledWith(gateway);
   });
 });

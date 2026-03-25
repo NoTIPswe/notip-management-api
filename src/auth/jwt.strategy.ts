@@ -22,6 +22,10 @@ interface JwtClaims {
   >;
   azp?: string;
   tenant_id?: string;
+  act?: {
+    sub?: string;
+    role?: string;
+  };
   is_impersonating?: boolean;
   actor_user_id?: string;
   actor_email?: string;
@@ -126,16 +130,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Missing tenant_id');
     }
 
-    const isImpersonating = payload.is_impersonating === true;
-    const actorUserId = isImpersonating ? payload.actor_user_id : payload.sub;
-    const actorEmail = isImpersonating ? payload.actor_email : payload.email;
-    const actorName = isImpersonating ? payload.actor_name : payload.name;
+    const isImpersonating =
+      !!payload.act && !!payload.act.sub && payload.act.sub !== payload.sub;
+    const actorUserId = isImpersonating
+      ? payload.act?.sub
+      : payload.actor_user_id || payload.sub;
+    const actorEmail = isImpersonating
+      ? payload.actor_email || payload.email
+      : payload.actor_email || payload.email;
+    const actorName = isImpersonating
+      ? payload.actor_name || payload.name
+      : payload.actor_name || payload.name;
     const actorRole = isImpersonating
-      ? normalizeRole(payload.actor_role)
-      : effectiveRole;
+      ? normalizeRole(payload.act?.role) ||
+        normalizeRole(payload.actor_role) ||
+        effectiveRole
+      : normalizeRole(payload.actor_role) || effectiveRole;
     const actorTenantId = isImpersonating
-      ? payload.actor_tenant_id
-      : payload.tenant_id;
+      ? payload.actor_tenant_id || payload.tenant_id
+      : payload.actor_tenant_id || payload.tenant_id;
 
     if (!actorUserId || !actorRole) {
       throw new UnauthorizedException('Missing impersonation actor claims');

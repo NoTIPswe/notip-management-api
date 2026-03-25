@@ -9,7 +9,6 @@ import {
 
 import { TenantStatus } from '../enums/tenants.enum';
 import { UserEntity } from '../../users/entities/user.entity';
-import { GatewayEntity } from './gateway.entity';
 
 @Entity({ schema: 'admin', name: 'tenants' })
 export class TenantEntity {
@@ -33,6 +32,7 @@ export class TenantEntity {
 
   @OneToMany(() => UserEntity, (user) => user.tenant)
   users: UserEntity[];
-  @OneToMany(() => GatewayEntity, (gateways) => gateways.tenant)
-  gateways: GatewayEntity[];
+
+  @OneToMany('GatewayEntity', 'tenant')
+  gateways: any[];
 }

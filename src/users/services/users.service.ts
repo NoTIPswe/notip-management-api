@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { UserModel } from '../models/user.model';
@@ -17,9 +18,12 @@ import {
   UpdateUserPersistenceInput,
 } from '../interfaces/service-persistence.interfaces';
 import { KeycloakAdminService } from '../../admin/tenants/services/keycloak-admin.service';
+import { UsersRole } from '../enums/users.enum';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly ps: UsersPersistenceService,
     private readonly keycloakAdminService: KeycloakAdminService,
@@ -34,6 +38,7 @@ export class UsersService {
   }
 
   async createUser(input: CreateUserInput): Promise<UserModel> {
+    this.logger.log(`Creating user: ${input.email}`);
     const keycloakId = await this.keycloakAdminService.createTenantUser({
       email: input.email,
       name: input.name,
@@ -47,16 +52,26 @@ export class UsersService {
       name: input.name,
       role: input.role,
       tenantId: input.tenantId,
-      keycloakId,
+      id: keycloakId,
     };
 
     try {
       const entity = await this.ps.createUser(persistenceInput);
       return UsersMapper.toModel(entity);
     } catch (error) {
+      this.logger.error(
+        `Failed to save user ${input.email} to DB, rolling back Keycloak...`,
+      );
       try {
         await this.keycloakAdminService.deleteUser(keycloakId);
-      } catch {
+      } catch (rollbackError) {
+        const errorMsg =
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError);
+        this.logger.error(
+          `Critical: Failed to rollback Keycloak user ${keycloakId}: ${errorMsg}`,
+        );
         throw new InternalServerErrorException(
           'Failed to rollback Keycloak user after DB error',
         );
@@ -66,6 +81,7 @@ export class UsersService {
   }
 
   async updateUser(input: UpdateUserInput): Promise<UserModel> {
+    this.logger.log(`Updating user: ${input.id}`);
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
       email: input.email,
@@ -74,28 +90,77 @@ export class UsersService {
       permissions: input.permissions,
     };
     const entity = await this.ps.updateUser(persistenceInput);
-    if (!entity) {
+    if (!entity || entity.tenantId !== input.tenantId) {
       throw new NotFoundException('User not found');
     }
 
-    if (entity.keycloakId && input.role) {
+    if (entity.id && input.role) {
       await this.keycloakAdminService.syncUserApplicationRole(
-        entity.keycloakId,
+        entity.id,
         input.role,
       );
+    }
+
+    if (entity.id && (input.email || input.name)) {
+      await this.keycloakAdminService.updateUser(entity.id, {
+        email: input.email,
+        name: input.name,
+      });
     }
 
     return UsersMapper.toModel(entity);
   }
 
   async deleteUsers(input: DeleteUsersInput): Promise<number> {
+    this.logger.log(`Deleting users: ${input.ids.join(', ')}`);
     const users = await this.ps.getUsersByIds(input.ids);
-    for (const user of users) {
-      if (user.keycloakId) {
-        await this.keycloakAdminService.deleteUser(user.keycloakId);
+
+    const usersToDelete = users.filter((u) => {
+      // Cannot delete self
+      if (input.requesterId && u.id === input.requesterId) {
+        this.logger.warn(`User ${u.id} tried to delete themselves, skipping.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (usersToDelete.length === 0 && users.length > 0) {
+      return 0;
+    }
+
+    for (const user of usersToDelete) {
+      if (user.id) {
+        // If we delete a TENANT_ADMIN, check if it's the last one
+        if (user.role === UsersRole.TENANT_ADMIN) {
+          const allTenantAdmins = await this.ps.getTenantAdmins(user.tenantId);
+          const remainingAdmins = allTenantAdmins.filter(
+            (admin) => !input.ids.includes(admin.id),
+          );
+
+          if (remainingAdmins.length === 0) {
+            // Last admin(s) being deleted: cascade to all Keycloak users of this tenant
+            const allTenantUsers = await this.ps.getUsers(user.tenantId);
+            for (const tenantUser of allTenantUsers) {
+              if (tenantUser.id && !input.ids.includes(tenantUser.id)) {
+                await this.keycloakAdminService.deleteUser(tenantUser.id);
+              }
+            }
+            // Note: The tenant group and the tenant itself should ideally be deleted here too,
+            // but we avoid circular dependency with TenantsService for now.
+            // The DB cascade will handle local users deletion when the tenant is deleted via its own endpoint.
+            // If the user wants deletion of the last admin to destroy the tenant, we should ensure
+            // this is handled, but here we at least fix the "one admin can delete another" requirement.
+          }
+        }
+        await this.keycloakAdminService.deleteUser(user.id);
       }
     }
 
-    return this.ps.deleteUsersByIds(input.ids);
+    const idsToDelete = usersToDelete
+      .map((u) => u.id)
+      .filter((id): id is string => !!id);
+    if (idsToDelete.length === 0) return 0;
+
+    return this.ps.deleteUsersByIds(idsToDelete);
   }
 }

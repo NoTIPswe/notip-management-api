@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { GatewayModel } from '../models/gateway.model';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
 import {
@@ -15,7 +11,14 @@ import { GatewaysMapper } from '../gateways.mapper';
 
 @Injectable()
 export class GatewaysService {
+  private readonly logger = new Logger(GatewaysService.name);
+
   constructor(private readonly gps: GatewaysPersistenceService) {}
+
+  getAlertsForGateway(gatewayId: string) {
+    void gatewayId;
+    return [];
+  }
 
   async getGateways(input: GetGatewaysInput): Promise<GatewayModel[]> {
     const entities = await this.gps.getGateways({ tenantId: input.tenantId });
@@ -45,6 +48,7 @@ export class GatewaysService {
   }
 
   async updateGateway(input: UpdateGatewayInput): Promise<GatewayModel> {
+    this.logger.log(`Updating gateway: ${input.gatewayId}`);
     const entity = await this.gps.updateGateway({
       tenantId: input.tenantId,
       gatewayId: input.gatewayId,
@@ -57,19 +61,13 @@ export class GatewaysService {
   }
 
   async deleteGateway(input: DeleteGatewayInput): Promise<void> {
-    const gateway = await this.gps.findById({
+    this.logger.log(`Deleting gateway: ${input.gatewayId}`);
+    const result = await this.gps.deleteGateway({
       tenantId: input.tenantId,
       gatewayId: input.gatewayId,
     });
-    if (!gateway) {
+    if (!result) {
       throw new NotFoundException('Gateway not found');
     }
-    if (!gateway.provisioned) {
-      throw new ConflictException('Gateway already decommissioned');
-    }
-    await this.gps.decommissionGateway({
-      tenantId: input.tenantId,
-      gatewayId: input.gatewayId,
-    });
   }
 }

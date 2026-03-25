@@ -16,4 +16,28 @@ export class AuditLogService {
     });
     return entities.map((e) => AuditLogMapper.toModel(e));
   }
+
+  async logAuditEvent({
+    userId,
+    action,
+    resource,
+    details,
+    tenantId,
+  }: {
+    userId: string;
+    action: string;
+    resource: string;
+    details: Record<string, unknown>;
+    tenantId: string;
+  }): Promise<void> {
+    const entity = this.alps.createAuditLog({
+      userId,
+      action,
+      resource,
+      details,
+      tenantId,
+      timestamp: new Date(),
+    });
+    await this.alps.saveAuditLog(entity);
+  }
 }

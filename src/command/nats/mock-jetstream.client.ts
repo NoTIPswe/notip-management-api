@@ -10,8 +10,15 @@ import { CommandAckPayload } from '../interfaces/command-ack.interface';
 export class MockJetStreamClient extends JetStreamClient {
   private handler: JetStreamHandler | null = null;
 
-  subscribe(_subject: string, handler: JetStreamHandler): Promise<void> {
+  async subscribe(_subject: string, handler: JetStreamHandler): Promise<void> {
     this.handler = handler;
+    return Promise.resolve();
+  }
+
+  async publish(
+    _subject: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _data: Buffer, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<void> {
     return Promise.resolve();
   }
 

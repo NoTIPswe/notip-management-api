@@ -27,4 +27,12 @@ export class AuditLogPersistenceService {
 
     return await query.getMany();
   }
+
+  async saveAuditLog(entity: AuditLogEntity): Promise<void> {
+    await this.r.save(entity);
+  }
+
+  createAuditLog(data: Partial<AuditLogEntity>): AuditLogEntity {
+    return this.r.create(data);
+  }
 }

@@ -102,14 +102,14 @@ describe('TenantsPersistenceService', () => {
     const repo = {};
     const user = {
       tenantId: 'tenant-1',
-      keycloakId: 'kc-user-1',
+      id: 'kc-user-1',
       email: 'admin@example.com',
       name: 'Admin User',
       role: UsersRole.TENANT_ADMIN,
     };
     const userRepo = {
       create: jest.fn().mockReturnValue(user),
-      save: jest.fn().mockResolvedValue({ id: 'user-1', ...user }),
+      save: jest.fn().mockResolvedValue({ ...user }),
     };
     const service = new TenantsPersistenceService(
       repo as never,
@@ -119,16 +119,16 @@ describe('TenantsPersistenceService', () => {
     await expect(
       service.createTenantAdminLocalUser({
         tenantId: 'tenant-1',
-        keycloakId: 'kc-user-1',
+        id: 'kc-user-1',
         email: 'admin@example.com',
         name: 'Admin User',
         role: UsersRole.TENANT_ADMIN,
       }),
-    ).resolves.toEqual(expect.objectContaining({ id: 'user-1' }));
+    ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
     expect(userRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
         tenantId: 'tenant-1',
-        keycloakId: 'kc-user-1',
+        id: 'kc-user-1',
       }),
     );
   });
@@ -149,7 +149,7 @@ describe('TenantsPersistenceService', () => {
     ]);
     expect(findMock).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1', role: UsersRole.TENANT_ADMIN },
-      select: { id: true, keycloakId: true },
+      select: { id: true },
     });
   });
 });

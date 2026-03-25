@@ -9,4 +9,6 @@ export type JetStreamHandler = (
 
 export abstract class JetStreamClient {
   abstract subscribe(subject: string, handler: JetStreamHandler): Promise<void>;
+
+  abstract publish(subject: string, data: Buffer): Promise<void>;
 }

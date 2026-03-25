@@ -9,22 +9,39 @@ export class ApiClientPersistenceService {
     private readonly r: Repository<ApiClientEntity>,
   ) {}
 
-  async createApiClient(name: string): Promise<ApiClientEntity> {
+  async createApiClient(
+    id: string,
+    tenantId: string,
+    name: string,
+    keycloakClientId: string,
+  ): Promise<ApiClientEntity> {
     const newApiClient = this.r.create({
+      id,
+      tenantId,
       name,
+      keycloakClientId,
     });
     return await this.r.save(newApiClient);
   }
 
-  async getApiClients(): Promise<ApiClientEntity[]> {
-    return await this.r.find();
+  async findByName(
+    tenantId: string,
+    name: string,
+  ): Promise<ApiClientEntity | null> {
+    return await this.r.findOneBy({ tenantId, name });
   }
 
-  async deleteApiClient(id: string): Promise<void | null> {
+  async getApiClients(tenantId: string): Promise<ApiClientEntity[]> {
+    return await this.r.findBy({ tenantId });
+  }
+
+  async deleteApiClient(id: string): Promise<string | null> {
     const apiClient = await this.r.findOneBy({ id });
     if (!apiClient) {
       return null;
     }
-    await this.r.delete(id);
+    const keycloakUuid = apiClient.id;
+    await this.r.remove(apiClient);
+    return keycloakUuid;
   }
 }

@@ -37,7 +37,6 @@ export class ThresholdsService {
       minValue: input.minValue,
       maxValue: input.maxValue,
     });
-
     return ThresholdsMapper.toModel(entity);
   }
 
@@ -46,7 +45,6 @@ export class ThresholdsService {
   ): Promise<ThresholdModel> {
     this.validateValueRange(input.minValue, input.maxValue);
     const sensorId = this.ensureSensorId(input.sensorId);
-
     const entity = await this.tps.setThresholdSensor({
       tenantId: input.tenantId,
       sensorId,
@@ -54,7 +52,6 @@ export class ThresholdsService {
       maxValue: input.maxValue,
       sensorType: input.sensorType,
     });
-
     return ThresholdsMapper.toModel(entity);
   }
 
@@ -66,18 +63,17 @@ export class ThresholdsService {
       tenantId: input.tenantId,
       sensorId,
     });
-
     if (!deleted) {
       throw new NotFoundException('Sensor threshold not found');
     }
   }
 
   async deleteThresholdType(input: DeleteThresholdTypeInput): Promise<void> {
+    const sensorType = this.ensureSensorType(input.sensorType);
     const deleted = await this.tps.deleteThresholdType({
       tenantId: input.tenantId,
-      sensorType: this.ensureSensorType(input.sensorType),
+      sensorType,
     });
-
     if (!deleted) {
       throw new NotFoundException('Threshold type not found');
     }

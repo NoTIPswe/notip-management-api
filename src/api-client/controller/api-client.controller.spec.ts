@@ -12,12 +12,15 @@ const apiClient = {
 describe('ApiClientController', () => {
   it('creates an api client and maps the response', async () => {
     const service = {
-      createApiClient: jest.fn().mockResolvedValue(apiClient),
+      createApiClient: jest.fn().mockResolvedValue({
+        model: apiClient,
+        clientSecret: 'secret',
+      }),
     } as unknown as ApiClientService;
     const controller = new ApiClientController(service);
 
     await expect(
-      controller.createApiClient({ name: 'Primary Client' }),
+      controller.createApiClient('tenant-1', { name: 'Primary Client' }),
     ).resolves.toEqual(
       expect.objectContaining({
         id: 'client-1',
@@ -32,12 +35,14 @@ describe('ApiClientController', () => {
     } as unknown as ApiClientService;
     const controller = new ApiClientController(service);
 
-    await expect(controller.getApiClients()).resolves.toEqual([
+    await expect(controller.getApiClients('tenant-1')).resolves.toEqual([
       expect.objectContaining({
         id: 'client-1',
         clientId: 'kc-client-1',
       }),
     ]);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(service.getApiClients).toHaveBeenCalledWith('tenant-1');
   });
 
   it('delegates deletion to the service', async () => {
@@ -50,6 +55,7 @@ describe('ApiClientController', () => {
     await expect(
       controller.deleteApiClient('client-1'),
     ).resolves.toBeUndefined();
+
     expect(deleteApiClientMock).toHaveBeenCalledWith('client-1');
   });
 });

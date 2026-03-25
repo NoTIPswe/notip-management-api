@@ -5,7 +5,7 @@ export interface CreateUserPersistenceInput {
   name: string;
   role: UsersRole;
   tenantId: string;
-  keycloakId: string;
+  id: string;
   permissions?: string[];
 }
 

@@ -4,13 +4,13 @@ import { CommandWritingPersistenceService } from './command-writing.persistence.
 import { CommandAckPayload } from '../interfaces/command-ack.interface';
 import { CommandStatus } from '../enums/command-status.enum';
 
-const COMMANDS_ACK_SUBJECT = 'cmd.ack';
-const STATUS_NORMALIZATION_MAP: Record<CommandStatus, CommandStatus> = {
-  [CommandStatus.ACK]: CommandStatus.ACK,
-  [CommandStatus.NACK]: CommandStatus.NACK,
-  [CommandStatus.QUEUED]: CommandStatus.QUEUED,
-  [CommandStatus.EXPIRED]: CommandStatus.EXPIRED,
-  [CommandStatus.TIMEOUT]: CommandStatus.TIMEOUT,
+const COMMANDS_ACK_SUBJECT = 'command.ack.>';
+const STATUS_NORMALIZATION_MAP: Record<string, CommandStatus> = {
+  ack: CommandStatus.ACK,
+  nack: CommandStatus.NACK,
+  queued: CommandStatus.QUEUED,
+  expired: CommandStatus.EXPIRED,
+  timeout: CommandStatus.TIMEOUT,
 };
 
 @Injectable()
@@ -24,8 +24,12 @@ export class CommandsAckConsumer implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.jetStreamClient.subscribe(COMMANDS_ACK_SUBJECT, async (msg) => {
+      this.logger.debug('Received command ack message');
       await this.processMessage(msg);
     });
+    this.logger.log(
+      `Listening for command acknowledgments on ${COMMANDS_ACK_SUBJECT}`,
+    );
   }
 
   private async processMessage(message: JetStreamMessage): Promise<void> {

@@ -4,8 +4,9 @@ import { ThresholdsPersistenceService } from './thresholds.persistence.service';
 const createRepo = () => ({
   find: jest.fn(),
   delete: jest.fn(),
-  upsert: jest.fn(),
-  findOneOrFail: jest.fn(),
+  findOne: jest.fn(),
+  save: jest.fn(),
+  create: jest.fn(),
 });
 
 describe('ThresholdsPersistenceService', () => {
@@ -25,9 +26,11 @@ describe('ThresholdsPersistenceService', () => {
 
   it('upserts default thresholds and returns the persisted entity', async () => {
     const repo = createRepo();
-    const persisted = { id: 'threshold-1' };
-    repo.upsert.mockResolvedValue(undefined);
-    repo.findOneOrFail.mockResolvedValue(persisted);
+    const existing = null;
+    const created = { id: 'threshold-1' };
+    repo.findOne.mockResolvedValueOnce(existing);
+    repo.create.mockReturnValueOnce(created);
+    repo.save.mockResolvedValueOnce(created);
     const service = new ThresholdsPersistenceService(repo as never);
 
     await expect(
@@ -37,35 +40,32 @@ describe('ThresholdsPersistenceService', () => {
         minValue: 0,
         maxValue: 1,
       }),
-    ).resolves.toEqual(persisted);
+    ).resolves.toEqual(created);
 
-    expect(repo.upsert).toHaveBeenCalledWith(
-      {
-        tenantId: 'tenant-1',
-        sensorType: 'temperature',
-        sensorId: null,
-        minValue: 0,
-        maxValue: 1,
-      },
-      {
-        conflictPaths: ['tenantId', 'sensorType'],
-        skipUpdateIfNoValuesChanged: true,
-      },
-    );
-    expect(repo.findOneOrFail).toHaveBeenCalledWith({
+    expect(repo.findOne).toHaveBeenCalledWith({
       where: {
         tenantId: 'tenant-1',
         sensorType: 'temperature',
         sensorId: IsNull(),
       },
     });
+    expect(repo.create).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      sensorType: 'temperature',
+      sensorId: null,
+      minValue: 0,
+      maxValue: 1,
+    });
+    expect(repo.save).toHaveBeenCalledWith(created);
   });
 
   it('upserts sensor-specific thresholds and returns the persisted entity', async () => {
     const repo = createRepo();
-    const persisted = { id: 'sensor-threshold' };
-    repo.upsert.mockResolvedValue(undefined);
-    repo.findOneOrFail.mockResolvedValue(persisted);
+    const existing = null;
+    const created = { id: 'sensor-threshold' };
+    repo.findOne.mockResolvedValueOnce(existing);
+    repo.create.mockReturnValueOnce(created);
+    repo.save.mockResolvedValueOnce(created);
     const service = new ThresholdsPersistenceService(repo as never);
 
     await expect(
@@ -76,30 +76,31 @@ describe('ThresholdsPersistenceService', () => {
         maxValue: 5,
         sensorType: 'temperature',
       }),
-    ).resolves.toEqual(persisted);
+    ).resolves.toEqual(created);
 
-    expect(repo.upsert).toHaveBeenCalledWith(
-      {
-        tenantId: 'tenant-1',
-        sensorId: 'sensor-1',
-        sensorType: 'temperature',
-        minValue: 0,
-        maxValue: 5,
-      },
-      {
-        conflictPaths: ['tenantId', 'sensorId'],
-        skipUpdateIfNoValuesChanged: true,
-      },
-    );
-    expect(repo.findOneOrFail).toHaveBeenCalledWith({
+    expect(repo.findOne).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1', sensorId: 'sensor-1' },
     });
+    expect(repo.create).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      sensorId: 'sensor-1',
+      minValue: 0,
+      maxValue: 5,
+      sensorType: 'temperature',
+    });
+    expect(repo.save).toHaveBeenCalledWith(created);
   });
 
   it('does not overwrite sensor type when not provided', async () => {
     const repo = createRepo();
-    repo.upsert.mockResolvedValue(undefined);
-    repo.findOneOrFail.mockResolvedValue({ id: 'sensor-threshold' });
+    const existing = {
+      id: 'sensor-threshold',
+      sensorType: 'humidity',
+      minValue: 1,
+      maxValue: 2,
+    };
+    repo.findOne.mockResolvedValueOnce(existing);
+    repo.save.mockResolvedValueOnce({ ...existing, minValue: 0, maxValue: 5 });
     const service = new ThresholdsPersistenceService(repo as never);
 
     await service.setThresholdSensor({
@@ -109,18 +110,14 @@ describe('ThresholdsPersistenceService', () => {
       maxValue: 5,
     });
 
-    expect(repo.upsert).toHaveBeenCalledWith(
-      {
-        tenantId: 'tenant-1',
-        sensorId: 'sensor-1',
-        minValue: 0,
-        maxValue: 5,
-      },
-      {
-        conflictPaths: ['tenantId', 'sensorId'],
-        skipUpdateIfNoValuesChanged: true,
-      },
-    );
+    expect(repo.findOne).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', sensorId: 'sensor-1' },
+    });
+    expect(repo.save).toHaveBeenCalledWith({
+      ...existing,
+      minValue: 0,
+      maxValue: 5,
+    });
   });
 
   it('deletes sensor thresholds and returns status', async () => {

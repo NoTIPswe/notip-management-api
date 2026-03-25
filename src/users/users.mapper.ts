@@ -9,7 +9,6 @@ export class UsersMapper {
     const model = new UserModel();
     model.id = entity.id;
     model.tenantId = entity.tenantId;
-    model.keycloakId = entity.keycloakId;
     model.email = entity.email;
     model.name = entity.name;
     model.role = entity.role;

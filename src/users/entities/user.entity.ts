@@ -4,21 +4,18 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { UsersRole } from '../enums/users.enum';
 import { TenantEntity } from '../../common/entities/tenant.entity';
 
 @Entity('users')
 export class UserEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid', { name: 'id' })
   id: string;
 
   @Column({ name: 'tenant_id' })
   tenantId: string;
-
-  @Column({ name: 'keycloak_id' })
-  keycloakId: string;
 
   @Column()
   name: string;

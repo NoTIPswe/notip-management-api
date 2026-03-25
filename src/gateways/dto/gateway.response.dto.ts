@@ -1,22 +1,54 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GatewayStatus } from '../../common/enums/gateway.enum';
+import { GatewayStatus } from '../enums/gateway.enum';
 import { Expose } from 'class-transformer';
 
 export class GatewayResponseDto {
-  @ApiProperty({ name: 'id' })
+  @ApiProperty({
+    description: 'Unique identifier of the gateway',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   id: string;
-  @ApiProperty({ name: 'name' })
+
+  @ApiProperty({
+    description: 'User-defined name of the gateway',
+    example: 'Main Entrance Gateway',
+  })
   name: string;
-  @ApiProperty({ name: 'status', type: String, enum: GatewayStatus })
+
+  @ApiProperty({
+    description: 'Current connectivity status',
+    enum: GatewayStatus,
+    example: GatewayStatus.GATEWAY_ONLINE,
+  })
   status: GatewayStatus;
-  @ApiProperty({ name: 'last_seen_at' })
+
+  @ApiProperty({
+    description: 'Timestamp of the last heart-beat received from the gateway',
+    name: 'last_seen_at',
+    example: '2024-03-24T10:00:00Z',
+  })
   @Expose({ name: 'last_seen_at' })
   lastSeenAt: Date | null;
+
+  @ApiProperty({
+    description: 'Whether the gateway has been provisioned/activated',
+    example: true,
+  })
   provisioned: boolean;
-  @ApiProperty({ name: 'firmware_version' })
+
+  @ApiProperty({
+    description: 'Current firmware version installed on the device',
+    name: 'firmware_version',
+    example: '1.2.3',
+  })
   @Expose({ name: 'firmware_version' })
   firmwareVersion?: string;
-  @ApiProperty({ name: 'send_frequency_ms' })
+
+  @ApiProperty({
+    description: 'Configured data sending frequency in milliseconds',
+    name: 'send_frequency_ms',
+    example: 30000,
+  })
   @Expose({ name: 'send_frequency_ms' })
   sendFrequencyMs?: number | null;
 }

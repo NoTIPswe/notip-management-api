@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { TenantId } from '../../common/decorators/tenants.decorator';
 import { TenantScoped } from '../../common/decorators/access-policy.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UsersRole } from '../../users/enums/users.enum';
@@ -8,14 +9,16 @@ import { CreateApiClientResponseDto } from '../dto/create-api-client.response.dt
 import { ApiClientMapper } from '../api-client.mapper';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApiClientResponseDto } from '../dto/api-client.response.dto';
+import { Audit } from '../../common/decorators/audit.decorator';
 
 @TenantScoped()
 @Roles(UsersRole.TENANT_ADMIN)
-@Controller('api-client')
+@Controller('api-clients')
 export class ApiClientController {
   constructor(private readonly acs: ApiClientService) {}
 
   @Post()
+  @Audit({ action: 'CREATE_API_CLIENT', resource: 'ApiClients' })
   @ApiOperation({ summary: 'Create a new API client for the tenant' })
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({
@@ -23,23 +26,31 @@ export class ApiClientController {
     description: 'API client with the same name already exists',
   })
   async createApiClient(
+    @TenantId() tenantId: string,
     @Body() input: CreateApiClientRequestDto,
   ): Promise<CreateApiClientResponseDto> {
-    const apiClient = await this.acs.createApiClient(input.name);
-    return ApiClientMapper.toCreateApiClientResponseDto(apiClient);
+    const { model, clientSecret } = await this.acs.createApiClient(
+      tenantId,
+      input.name,
+    );
+    return ApiClientMapper.toCreateApiClientResponseDto(model, clientSecret);
   }
+
   @Get()
   @ApiOperation({ summary: 'Get all API clients for the tenant' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async getApiClients(): Promise<ApiClientResponseDto[]> {
-    const apiClients = await this.acs.getApiClients();
+  async getApiClients(
+    @TenantId() tenantId: string,
+  ): Promise<ApiClientResponseDto[]> {
+    const apiClients = await this.acs.getApiClients(tenantId);
     return apiClients.map((apiClient) =>
       ApiClientMapper.toApiClientsResponseDto(apiClient),
     );
   }
 
   @Delete(':id')
+  @Audit({ action: 'DELETE_API_CLIENT', resource: 'ApiClients' })
   @ApiOperation({ summary: 'Delete an API client for the tenant' })
   @ApiResponse({ status: 404, description: 'API client not found' })
   async deleteApiClient(@Param('id') id: string): Promise<void> {

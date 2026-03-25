@@ -1,7 +1,20 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  NotFoundException,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from '../services/users.service';
-import { TenantId } from '../../common/decorators/tenants.decorator';
+import {
+  TenantId,
+  CurrentUserId,
+  CurrentUserRole,
+} from '../../common/decorators/tenants.decorator';
 import { TenantScoped } from '../../common/decorators/access-policy.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UsersRole } from '../enums/users.enum';
@@ -13,11 +26,29 @@ import { UpdateUserRequestDto } from '../dto/update-user.request.dto';
 import { UpdateUserResponseDto } from '../dto/update-user.response.dto';
 import { DeleteUserRequestDto } from '../dto/delete-user.request.dto';
 import { DeleteUserResponseDto } from '../dto/delete-user.response.dto';
+import { Audit } from '../../common/decorators/audit.decorator';
 
+@ApiTags('Users')
 @TenantScoped()
 @Controller('users')
 export class UsersController {
   constructor(private readonly s: UsersService) {}
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user details by id' })
+  @ApiResponse({ status: 200, type: UserResponseDto })
+  @Roles(UsersRole.TENANT_ADMIN)
+  async getUserById(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+  ): Promise<UserResponseDto> {
+    const users = await this.s.getUsers({ tenantId });
+    const user = users.find((u) => u.id === id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return UsersMapper.toUserResponseDto(user);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get users for tenant' })
@@ -29,6 +60,7 @@ export class UsersController {
   }
 
   @Post()
+  @Audit({ action: 'CREATE_USER', resource: 'Users' })
   @ApiOperation({ summary: 'Create user in tenant' })
   @ApiResponse({ status: 201, type: CreateUserResponseDto })
   @Roles(UsersRole.TENANT_ADMIN)
@@ -47,15 +79,18 @@ export class UsersController {
   }
 
   @Patch(':id')
+  @Audit({ action: 'UPDATE_USER', resource: 'Users' })
   @ApiOperation({ summary: 'Update user in tenant' })
   @ApiResponse({ status: 200, type: UpdateUserResponseDto })
   @Roles(UsersRole.TENANT_ADMIN)
   async updateUser(
+    @TenantId() tenantId: string,
     @Param('id') id: string,
     @Body() dto: UpdateUserRequestDto,
   ): Promise<UpdateUserResponseDto> {
     const model = await this.s.updateUser({
       id,
+      tenantId,
       email: dto.email,
       name: dto.name,
       role: dto.role,
@@ -65,13 +100,21 @@ export class UsersController {
   }
 
   @Post('bulk-delete')
+  @Audit({ action: 'DELETE_USERS', resource: 'Users' })
+  @HttpCode(200)
   @ApiOperation({ summary: 'Delete users by ids' })
   @ApiResponse({ status: 200, type: DeleteUserResponseDto })
   @Roles(UsersRole.TENANT_ADMIN)
   async deleteUsers(
+    @CurrentUserId() requesterId: string,
+    @CurrentUserRole() requesterRole: UsersRole,
     @Body() dto: DeleteUserRequestDto,
   ): Promise<DeleteUserResponseDto> {
-    const deleted = await this.s.deleteUsers({ ids: dto.ids });
+    const deleted = await this.s.deleteUsers({
+      ids: dto.ids,
+      requesterId,
+      requesterRole,
+    });
     return {
       deleted,
       failed: [],
