@@ -22,11 +22,14 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typecheck": "npx tsc --noEmit --project tsconfig.json",
-    "generate:openapi": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\"}' scripts/generate-openapi.ts",
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate",
     "migration:run": "npm run typeorm -- migration:run",
-    "migration:revert": "npm run typeorm -- migration:revert"
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "build:openapi-spec": "ts-node --compiler-options '{\"module\":\"CommonJS\",\"moduleResolution\":\"node\",\"emitDecoratorMetadata\":true,\"experimentalDecorators\":true}' scripts/generate-openapi.ts",
+    "fetch:openapi": "bash scripts/generate-openapi.sh",
+    "fetch:asyncapi": "bash scripts/generate-asyncapi.sh",
+    "generate-client": "openapi-ts --input ./api-contracts/openapi/openapi.yaml --output ./src/generated/api-client --client fetch"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -53,6 +56,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@hey-api/openapi-ts": "^0.94.5",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
@@ -60,6 +64,7 @@
     "@semantic-release/git": "^10.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
