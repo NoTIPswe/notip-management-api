@@ -39,10 +39,17 @@ export class DatabaseExceptionFilter implements ExceptionFilter {
 
   private extractUniqueViolationMessage(detail?: string): string {
     if (!detail) return 'Unique constraint violation';
-    const match = detail.match(/\((.*?)\)=\((.*?)\)/);
-    if (match) {
-      return `Field ${match[1]} with value ${match[2]} already exists`;
+
+    const separatorIndex = detail.indexOf(')=(');
+    if (detail.startsWith('(') && separatorIndex > 1 && detail.endsWith(')')) {
+      const field = detail.slice(1, separatorIndex);
+      const value = detail.slice(separatorIndex + 3, -1);
+
+      if (field && value) {
+        return `Field ${field} with value ${value} already exists`;
+      }
     }
+
     return detail;
   }
 }
