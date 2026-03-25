@@ -1,4 +1,4 @@
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../../gateways/entities/gateway.entity';
 import { TenantEntity } from '../../common/entities/tenant.entity';
 
 import {
@@ -12,13 +12,8 @@ import {
 } from 'typeorm';
 
 @Entity('alert_configs')
-@Index('IDX_alert_config_tenant_default', ['tenantId'], {
+@Index('IDX_alert_config_tenant_gateway', ['tenantId', 'gatewayId'], {
   unique: true,
-  where: '"gateway_id" IS NULL',
-})
-@Index('IDX_alert_config_gateway_override', ['gatewayId'], {
-  unique: true,
-  where: '"gateway_id" IS NOT NULL',
 })
 export class AlertsConfigEntity {
   @PrimaryGeneratedColumn('uuid')

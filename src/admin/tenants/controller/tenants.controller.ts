@@ -10,13 +10,15 @@ import {
 import { TenantsService } from '../services/tenants.service';
 import { TenantsResponseDto } from '../dto/tenants.response.dto';
 import { TenantsMapper } from '../tenants.mapper';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateTenantRequestDto } from '../dto/create-tenant.request.dto';
 import { UpdateTenantRequestDto } from '../dto/update-tenant.request.dto';
 import { UpdateTenantsResponseDto } from '../dto/update-tenant.response.dto';
 import { DeleteTenantResponseDto } from '../dto/delete-tenant.response.dto';
 import { AdminOnly } from '../../../common/decorators/access-policy.decorator';
+import { Audit } from '../../../common/decorators/audit.decorator';
 
+@ApiTags('Admin Tenants')
 @AdminOnly()
 @Controller('admin/tenants')
 export class TenantsController {
@@ -36,7 +38,9 @@ export class TenantsController {
     const models = await this.ts.getTenants();
     return models.map((model) => TenantsMapper.toResponseDto(model));
   }
+
   @Post()
+  @Audit({ action: 'CREATE_TENANT', resource: 'Tenants' })
   @ApiOperation({ summary: 'Create a new tenant' })
   @ApiResponse({
     status: 201,
@@ -51,22 +55,12 @@ export class TenantsController {
   async createTenant(
     @Body() dto: CreateTenantRequestDto,
   ): Promise<TenantsResponseDto> {
-    const rawDto = dto as CreateTenantRequestDto & {
-      admin_email?: string;
-      admin_name?: string;
-      admin_password?: string;
-    };
-
-    const tenantModel = await this.ts.createTenant({
-      name: rawDto.name,
-      adminEmail: rawDto.adminEmail ?? rawDto.admin_email ?? '',
-      adminName: rawDto.adminName ?? rawDto.admin_name ?? '',
-      adminPassword: rawDto.adminPassword ?? rawDto.admin_password ?? '',
-    });
+    const tenantModel = await this.ts.createTenant(dto);
     return TenantsMapper.toResponseDto(tenantModel);
   }
 
   @Patch(':id')
+  @Audit({ action: 'UPDATE_TENANT', resource: 'Tenants' })
   @ApiOperation({ summary: 'Update tenant details' })
   @ApiResponse({
     status: 200,
@@ -84,6 +78,7 @@ export class TenantsController {
   }
 
   @Delete(':id')
+  @Audit({ action: 'DELETE_TENANT', resource: 'Tenants' })
   @ApiOperation({ summary: 'Delete a tenant' })
   @ApiResponse({
     status: 200,

@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { GatewaysService } from './gateways.service';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
 
@@ -113,7 +113,7 @@ describe('GatewaysService', () => {
 
   it('throws when deleting a missing gateway', async () => {
     const persistence = {
-      findById: jest.fn().mockResolvedValue(null),
+      deleteGateway: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
     const service = new GatewaysService(persistence);
 
@@ -122,31 +122,17 @@ describe('GatewaysService', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('throws when deleting an already decommissioned gateway', async () => {
+  it('deletes an existing gateway', async () => {
+    const deleteGatewayMock = jest.fn().mockResolvedValue({ id: 'gateway-1' });
     const persistence = {
-      findById: jest
-        .fn()
-        .mockResolvedValue(createGatewayEntity({ provisioned: false })),
-    } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
-
-    await expect(
-      service.deleteGateway({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
-    ).rejects.toThrow(ConflictException);
-  });
-
-  it('decommissions an existing provisioned gateway', async () => {
-    const decommissionGatewayMock = jest.fn().mockResolvedValue(undefined);
-    const persistence = {
-      findById: jest.fn().mockResolvedValue(createGatewayEntity()),
-      decommissionGateway: decommissionGatewayMock,
+      deleteGateway: deleteGatewayMock,
     } as unknown as GatewaysPersistenceService;
     const service = new GatewaysService(persistence);
 
     await expect(
       service.deleteGateway({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
     ).resolves.toBeUndefined();
-    expect(decommissionGatewayMock).toHaveBeenCalledWith({
+    expect(deleteGatewayMock).toHaveBeenCalledWith({
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
     });

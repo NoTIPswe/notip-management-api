@@ -51,6 +51,29 @@ export class NatsJetStreamClient
     this.logger.log(`Subscribed to JetStream subject: ${subject}`);
   }
 
+  async publish(subject: string, data: Buffer): Promise<void> {
+    await this.ensureConnected();
+
+    if (!this.jetStream) {
+      throw new Error('JetStream client is not connected');
+    }
+
+    try {
+      const ack = await this.jetStream.publish(subject, data);
+      if (ack.duplicate) {
+        this.logger.warn(
+          `JetStream publish to ${subject} reported a duplicate message`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish message to JetStream subject: ${subject}`,
+        error as Error,
+      );
+      throw error;
+    }
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.closeConnection();
   }

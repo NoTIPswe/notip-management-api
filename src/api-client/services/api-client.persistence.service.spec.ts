@@ -15,20 +15,43 @@ describe('ApiClientPersistenceService', () => {
     };
     const service = new ApiClientPersistenceService(repo as never);
 
-    await expect(service.createApiClient('Primary Client')).resolves.toEqual(
+    await expect(
+      service.createApiClient(
+        'client-1',
+        'tenant-1',
+        'Primary Client',
+        'kc-client-1',
+      ),
+    ).resolves.toEqual(
       expect.objectContaining({ id: 'client-1', name: 'Primary Client' }),
     );
   });
 
-  it('returns all api clients', async () => {
+  it('finds an api client by name', async () => {
     const repo = {
-      find: jest.fn().mockResolvedValue([{ id: 'client-1' }]),
+      findOneBy: jest.fn().mockResolvedValue({ id: 'client-1' }),
     };
     const service = new ApiClientPersistenceService(repo as never);
 
-    await expect(service.getApiClients()).resolves.toEqual([
+    await expect(
+      service.findByName('tenant-1', 'Primary Client'),
+    ).resolves.toEqual({ id: 'client-1' });
+    expect(repo.findOneBy).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      name: 'Primary Client',
+    });
+  });
+
+  it('returns api clients for a tenant', async () => {
+    const repo = {
+      findBy: jest.fn().mockResolvedValue([{ id: 'client-1' }]),
+    };
+    const service = new ApiClientPersistenceService(repo as never);
+
+    await expect(service.getApiClients('tenant-1')).resolves.toEqual([
       { id: 'client-1' },
     ]);
+    expect(repo.findBy).toHaveBeenCalledWith({ tenantId: 'tenant-1' });
   });
 
   it('returns null when the api client does not exist', async () => {
@@ -41,13 +64,14 @@ describe('ApiClientPersistenceService', () => {
   });
 
   it('deletes an existing api client', async () => {
+    const apiClient = { id: 'client-1' };
     const repo = {
-      findOneBy: jest.fn().mockResolvedValue({ id: 'client-1' }),
-      delete: jest.fn().mockResolvedValue(undefined),
+      findOneBy: jest.fn().mockResolvedValue(apiClient),
+      remove: jest.fn().mockResolvedValue(undefined),
     };
     const service = new ApiClientPersistenceService(repo as never);
 
-    await expect(service.deleteApiClient('client-1')).resolves.toBeUndefined();
-    expect(repo.delete).toHaveBeenCalledWith('client-1');
+    await expect(service.deleteApiClient('client-1')).resolves.toBe('client-1');
+    expect(repo.remove).toHaveBeenCalledWith(apiClient);
   });
 });

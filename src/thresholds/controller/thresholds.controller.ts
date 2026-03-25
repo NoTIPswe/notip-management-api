@@ -10,6 +10,7 @@ import { SetThresholdDefaultTypeRequestDto } from '../dto/set-threshold-default-
 import { SetThresholdDefaultTypeResponseDto } from '../dto/set-threshold-default-type.response.dto';
 import { SetThresholdSensorRequestDto } from '../dto/set-threshold-sensor.request.dto';
 import { SetThresholdSensorResponseDto } from '../dto/set-threshold-sensor.response.dto';
+import { Audit } from '../../common/decorators/audit.decorator';
 
 @TenantScoped()
 @Controller('thresholds')
@@ -28,6 +29,7 @@ export class ThresholdsController {
   }
 
   @Put('default')
+  @Audit({ action: 'SET_DEFAULT_THRESHOLD', resource: 'Thresholds' })
   @Roles(UsersRole.TENANT_ADMIN)
   async setDefaultThreshold(
     @TenantId() tenantId: string,
@@ -43,6 +45,7 @@ export class ThresholdsController {
   }
 
   @Put('sensor/:sensorId')
+  @Audit({ action: 'SET_SENSOR_THRESHOLD', resource: 'Thresholds' })
   @Roles(UsersRole.TENANT_ADMIN)
   async setSensorThreshold(
     @TenantId() tenantId: string,
@@ -60,6 +63,7 @@ export class ThresholdsController {
   }
 
   @Delete('sensor/:sensorId')
+  @Audit({ action: 'DELETE_SENSOR_THRESHOLD', resource: 'Thresholds' })
   @Roles(UsersRole.TENANT_ADMIN)
   async deleteSensorThreshold(
     @TenantId() tenantId: string,
@@ -70,6 +74,7 @@ export class ThresholdsController {
   }
 
   @Delete('type/:sensorType')
+  @Audit({ action: 'DELETE_THRESHOLD_TYPE', resource: 'Thresholds' })
   @Roles(UsersRole.TENANT_ADMIN)
   async deleteThresholdType(
     @TenantId() tenantId: string,

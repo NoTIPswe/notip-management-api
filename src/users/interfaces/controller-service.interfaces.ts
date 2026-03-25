@@ -14,6 +14,7 @@ export interface CreateUserInput {
 
 export interface UpdateUserInput {
   id: string;
+  tenantId: string;
   email?: string;
   name?: string;
   role?: UsersRole;
@@ -23,4 +24,6 @@ export interface UpdateUserInput {
 
 export interface DeleteUsersInput {
   ids: string[];
+  requesterId?: string;
+  requesterRole?: UsersRole;
 }

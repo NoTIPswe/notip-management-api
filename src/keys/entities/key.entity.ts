@@ -1,4 +1,4 @@
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../../gateways/entities/gateway.entity';
 import {
   Column,
   CreateDateColumn,

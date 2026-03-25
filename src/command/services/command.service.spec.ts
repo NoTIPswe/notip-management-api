@@ -5,6 +5,7 @@ import { GatewaysService } from '../../gateways/services/gateways.service';
 import { CommandType } from '../enums/command-type.enum';
 import { CommandStatus } from '../enums/command-status.enum';
 import { CommandEntity } from '../entities/command.entity';
+import { JetStreamClient } from '../nats/jetstream.client';
 
 const createCommandEntity = (
   overrides: Partial<CommandEntity> = {},
@@ -31,15 +32,22 @@ const createGatewayServiceMock = () => ({
   findById: jest.fn(),
 });
 
+const createJetStreamMock = () => ({
+  subscribe: jest.fn(),
+  publish: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('CommandService', () => {
-  it('queues config commands', async () => {
+  it('queues and publishes config commands', async () => {
     const persistence = createPersistenceMock();
     const gateways = createGatewayServiceMock();
+    const jetStream = createJetStreamMock();
     persistence.queueCommand.mockResolvedValue(createCommandEntity());
     gateways.findById.mockResolvedValue({ id: 'gateway-1' });
     const service = new CommandService(
       persistence as unknown as CommandPersistenceService,
       gateways as unknown as GatewaysService,
+      jetStream as unknown as JetStreamClient,
     );
 
     const result = await service.sendConfig({
@@ -60,6 +68,10 @@ describe('CommandService', () => {
         status: CommandStatus.QUEUED,
       }),
     );
+    expect(jetStream.publish).toHaveBeenCalledWith(
+      'command.gw.tenant-1.gateway-1',
+      expect.any(Buffer),
+    );
     expect(result).toEqual(
       expect.objectContaining({ id: 'cmd-1', status: CommandStatus.QUEUED }),
     );
@@ -68,9 +80,11 @@ describe('CommandService', () => {
   it('requires at least one config field', async () => {
     const persistence = createPersistenceMock();
     const gateways = createGatewayServiceMock();
+    const jetStream = createJetStreamMock();
     const service = new CommandService(
       persistence as unknown as CommandPersistenceService,
       gateways as unknown as GatewaysService,
+      jetStream as unknown as JetStreamClient,
     );
 
     await expect(
@@ -78,9 +92,10 @@ describe('CommandService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('queues firmware commands', async () => {
+  it('queues and publishes firmware commands', async () => {
     const persistence = createPersistenceMock();
     const gateways = createGatewayServiceMock();
+    const jetStream = createJetStreamMock();
     gateways.findById.mockResolvedValue({ id: 'gateway-1' });
     persistence.queueCommand.mockResolvedValue(
       createCommandEntity({ type: CommandType.FIRMWARE }),
@@ -88,6 +103,7 @@ describe('CommandService', () => {
     const service = new CommandService(
       persistence as unknown as CommandPersistenceService,
       gateways as unknown as GatewaysService,
+      jetStream as unknown as JetStreamClient,
     );
 
     const result = await service.sendFirmware({
@@ -100,6 +116,10 @@ describe('CommandService', () => {
     expect(persistence.queueCommand).toHaveBeenCalledWith(
       expect.objectContaining({ type: CommandType.FIRMWARE }),
     );
+    expect(jetStream.publish).toHaveBeenCalledWith(
+      'command.gw.tenant-1.gateway-1',
+      expect.any(Buffer),
+    );
     expect(gateways.findById).toHaveBeenCalledWith({
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
@@ -110,12 +130,14 @@ describe('CommandService', () => {
   it('returns status for existing commands', async () => {
     const persistence = createPersistenceMock();
     const gateways = createGatewayServiceMock();
+    const jetStream = createJetStreamMock();
     persistence.findCommand.mockResolvedValue(
       createCommandEntity({ status: CommandStatus.ACK }),
     );
     const service = new CommandService(
       persistence as unknown as CommandPersistenceService,
       gateways as unknown as GatewaysService,
+      jetStream as unknown as JetStreamClient,
     );
 
     const result = await service.getStatus({
@@ -130,10 +152,12 @@ describe('CommandService', () => {
   it('throws when command missing', async () => {
     const persistence = createPersistenceMock();
     const gateways = createGatewayServiceMock();
+    const jetStream = createJetStreamMock();
     persistence.findCommand.mockResolvedValue(null);
     const service = new CommandService(
       persistence as unknown as CommandPersistenceService,
       gateways as unknown as GatewaysService,
+      jetStream as unknown as JetStreamClient,
     );
 
     await expect(

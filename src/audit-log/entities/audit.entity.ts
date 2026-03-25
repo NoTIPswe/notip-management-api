@@ -31,7 +31,7 @@ export class AuditLogEntity {
   resource: string;
 
   @Column({ type: 'jsonb' })
-  details: string;
+  details: Record<string, unknown>;
 
   @Column()
   timestamp: Date;

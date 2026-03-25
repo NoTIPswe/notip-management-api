@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -14,6 +15,8 @@ import { KeysModule } from './keys/keys.module';
 import { UsersModule } from './users/users.module';
 import { CommandModule } from './command/command.module';
 import { AuthModule } from './auth/auth.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { validate } from './common/env.validation';
 
 const databaseImports =
   process.env.NODE_ENV === 'test'
@@ -22,15 +25,13 @@ const databaseImports =
         TypeOrmModule.forRootAsync({
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
-            const port = Number(configService.get<string>('DB_PORT'));
-
             return {
               type: 'postgres',
-              host: configService.get<string>('DB_HOST', 'localhost'),
-              port: Number.isNaN(port) ? 5432 : port,
-              username: configService.get<string>('DB_USER', 'postgres'),
-              password: configService.get<string>('DB_PASSWORD', 'postgres'),
-              database: configService.get<string>('DB_NAME', 'postgres'),
+              host: configService.get<string>('DB_HOST'),
+              port: configService.get<number>('DB_PORT'),
+              username: configService.get<string>('DB_USER'),
+              password: configService.get<string>('DB_PASSWORD'),
+              database: configService.get<string>('DB_NAME'),
               autoLoadEntities: true,
               synchronize: false,
             };
@@ -40,7 +41,10 @@ const databaseImports =
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
     ...databaseImports,
     AuthModule,
     AdminModule,
@@ -55,6 +59,12 @@ const databaseImports =
     CommandModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
+  ],
 })
 export class AppModule {}

@@ -73,6 +73,6 @@ describe('GatewaysController', () => {
 
     await expect(
       controller.deleteGateway('tenant-1', 'gateway-1'),
-    ).resolves.toEqual({ message: 'decommissioned' });
+    ).resolves.toEqual({ message: 'deleted' });
   });
 });

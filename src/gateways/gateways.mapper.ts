@@ -1,4 +1,4 @@
-import { GatewayEntity } from '../common/entities/gateway.entity';
+import { GatewayEntity } from './entities/gateway.entity';
 import { GatewayModel } from './models/gateway.model';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { UpdateGatewayResponseDto } from './dto/update-gateway.response.dto';
@@ -16,7 +16,7 @@ export class GatewaysMapper {
       createdAt: entity.createdAt,
       firmwareVersion: entity.firmwareVersion,
       model: entity.model,
-      tenantId: entity.tenantId,
+      tenantId: entity.tenantId ?? entity.tenant?.id ?? '',
       provisioned: entity.provisioned,
       updatedAt: entity.updatedAt,
     };

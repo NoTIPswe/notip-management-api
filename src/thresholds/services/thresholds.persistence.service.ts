@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, QueryDeepPartialEntity } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { ThresholdEntity } from '../entities/threshold.entity';
 import {
   DeleteThresholdSensorPersistenceInput,
@@ -29,54 +29,57 @@ export class ThresholdsPersistenceService {
   async setThresholdDefaultType(
     input: SetThresholdDefaultTypePersistenceInput,
   ): Promise<ThresholdEntity> {
-    await this.r.upsert(
-      {
-        tenantId: input.tenantId,
-        sensorType: input.sensorType,
-        sensorId: null,
-        minValue: input.minValue,
-        maxValue: input.maxValue,
-      },
-      {
-        conflictPaths: ['tenantId', 'sensorType'],
-        skipUpdateIfNoValuesChanged: true,
-      },
-    );
-
-    return this.r.findOneOrFail({
+    let entity = await this.r.findOne({
       where: {
         tenantId: input.tenantId,
         sensorType: input.sensorType,
         sensorId: IsNull(),
       },
     });
+    if (entity) {
+      entity.minValue = input.minValue;
+      entity.maxValue = input.maxValue;
+      await this.r.save(entity);
+    } else {
+      entity = this.r.create({
+        tenantId: input.tenantId,
+        sensorType: input.sensorType,
+        sensorId: null,
+        minValue: input.minValue,
+        maxValue: input.maxValue,
+      });
+      await this.r.save(entity);
+    }
+    return entity;
   }
 
   async setThresholdSensor(
     input: SetThresholdSensorPersistenceInput,
   ): Promise<ThresholdEntity> {
-    const payload: QueryDeepPartialEntity<ThresholdEntity> = {
-      tenantId: input.tenantId,
-      sensorId: input.sensorId,
-      minValue: input.minValue,
-      maxValue: input.maxValue,
-    };
-
-    if (input.sensorType !== undefined) {
-      payload.sensorType = input.sensorType;
-    }
-
-    await this.r.upsert(payload, {
-      conflictPaths: ['tenantId', 'sensorId'],
-      skipUpdateIfNoValuesChanged: true,
-    });
-
-    return this.r.findOneOrFail({
+    let entity = await this.r.findOne({
       where: {
         tenantId: input.tenantId,
         sensorId: input.sensorId,
       },
     });
+    if (entity) {
+      entity.minValue = input.minValue;
+      entity.maxValue = input.maxValue;
+      if (input.sensorType !== undefined) {
+        entity.sensorType = input.sensorType;
+      }
+      await this.r.save(entity);
+    } else {
+      entity = this.r.create({
+        tenantId: input.tenantId,
+        sensorId: input.sensorId,
+        minValue: input.minValue,
+        maxValue: input.maxValue,
+        sensorType: input.sensorType,
+      });
+      await this.r.save(entity);
+    }
+    return entity;
   }
 
   async deleteSensorThreshold(

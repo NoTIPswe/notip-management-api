@@ -1,9 +1,9 @@
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../../gateways/entities/gateway.entity';
 import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
 import { AddGatewayInput } from './interfaces/controller-service.interfaces';
-import { GatewayModel } from './gateway.model';
+import { GatewayModel } from './models/gateway.model';
 
 export class GatewaysMapper {
   static toModel(entity: GatewayEntity): GatewayModel {

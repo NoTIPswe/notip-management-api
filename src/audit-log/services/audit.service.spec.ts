@@ -32,4 +32,37 @@ describe('AuditLogService', () => {
       }),
     ]);
   });
+
+  it('logs audit event', async () => {
+    const mockEntity = { id: 'new-audit' };
+    const persistence = {
+      createAuditLog: jest.fn().mockReturnValue(mockEntity),
+      saveAuditLog: jest.fn().mockResolvedValue(mockEntity),
+    } as unknown as AuditLogPersistenceService;
+    const service = new AuditLogService(persistence);
+
+    const input = {
+      userId: 'u1',
+      action: 'act',
+      resource: 'res',
+      details: { d: 'd' },
+      tenantId: 't1',
+    };
+
+    await service.logAuditEvent(input);
+
+    /* eslint-disable-next-line @typescript-eslint/unbound-method */
+    expect(persistence.createAuditLog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'u1',
+        action: 'act',
+        resource: 'res',
+        details: { d: 'd' },
+        tenantId: 't1',
+        timestamp: expect.any(Date) as unknown as Date,
+      }),
+    );
+    /* eslint-disable-next-line @typescript-eslint/unbound-method */
+    expect(persistence.saveAuditLog).toHaveBeenCalledWith(mockEntity);
+  });
 });

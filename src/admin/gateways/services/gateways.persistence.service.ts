@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../../../gateways/entities/gateway.entity';
 import {
   AddGatewayPersistenceInput,
   GetGatewaysPersistenceInput,
-} from './interfaces/service-persistence.interfaces';
+} from '../interfaces/service-persistence.interfaces';
 
 const DEFAULT_GATEWAY_MODEL = 'unknown-model';
 const DEFAULT_GATEWAY_FIRMWARE_VERSION = '0.0.0';
@@ -27,6 +27,7 @@ export class GatewaysPersistenceService {
 
   async addGateway(input: AddGatewayPersistenceInput): Promise<GatewayEntity> {
     const entity = this.r.create({
+      tenantId: input.tenantId,
       tenant: { id: input.tenantId },
       factoryId: input.factoryId,
       factoryKeyHash: input.factoryKeyHash,

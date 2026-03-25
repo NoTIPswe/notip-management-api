@@ -17,16 +17,13 @@ describe('UsersPersistenceService', () => {
   it('creates and saves a user', async () => {
     const createdUser = {
       tenantId: 'tenant-1',
-      keycloakId: 'kc-user-1',
+      id: 'kc-user-1',
       email: 'user@example.com',
       name: 'User',
       role: 'tenant_user',
       permissions: null,
     };
-    const savedUser = {
-      id: 'user-1',
-      ...createdUser,
-    };
+    const savedUser = { ...createdUser };
     const repo = {
       create: jest.fn().mockReturnValue(createdUser),
       save: jest.fn().mockResolvedValue(savedUser),
@@ -36,12 +33,12 @@ describe('UsersPersistenceService', () => {
     await expect(
       service.createUser({
         tenantId: 'tenant-1',
-        keycloakId: 'kc-user-1',
+        id: 'kc-user-1',
         email: 'user@example.com',
         name: 'User',
         role: 'tenant_user',
       } as never),
-    ).resolves.toEqual(expect.objectContaining({ id: 'user-1' }));
+    ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
   });
 
   it('updates an existing user', async () => {

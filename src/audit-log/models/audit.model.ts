@@ -3,7 +3,7 @@ export class AuditLogModel {
   userId: string;
   action: string;
   resource: string;
-  details: string;
+  details: Record<string, unknown>;
   timestamp: Date;
   tenantId: string;
 }

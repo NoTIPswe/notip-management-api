@@ -26,7 +26,7 @@ describe('AlertsPersistenceService', () => {
         gatewayId: 'gateway-1',
         gatewayTimeoutMs: 30000,
       },
-      ['gatewayId'],
+      ['tenantId', 'gatewayId'],
     );
   });
 
@@ -47,6 +47,14 @@ describe('AlertsPersistenceService', () => {
         defaultTimeoutMs: 60000,
       }),
     ).resolves.toEqual({ id: 'config-1' });
+    expect(configRepo.upsert).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-1',
+        gatewayId: null,
+        gatewayTimeoutMs: 60000,
+      },
+      ['tenantId', 'gatewayId'],
+    );
     expect(configRepo.findOne).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1', gatewayId: IsNull() },
     });

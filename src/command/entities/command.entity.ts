@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../../gateways/entities/gateway.entity';
 import { TenantEntity } from '../../common/entities/tenant.entity';
 import { CommandType } from '../enums/command-type.enum';
 import { CommandStatus } from '../enums/command-status.enum';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { GatewayEntity } from '../../common/entities/gateway.entity';
+import { GatewayEntity } from '../entities/gateway.entity';
 import {
   DeleteGatewayPersistenceInput,
   GetGatewayByIdPersistenceInput,
@@ -50,20 +50,23 @@ export class GatewaysPersistenceService {
       return null;
     }
 
-    if (input.name) {
+    if (typeof input.name === 'string') {
       if (!gateway.metadata) {
         gateway.metadata = {
           gatewayId: gateway.id,
           gateway,
+          name: input.name,
+          sendFrequencyMs: 0,
         } as GatewayEntity['metadata'];
+      } else {
+        gateway.metadata.name = input.name;
       }
-      gateway.metadata.name = input.name;
     }
 
     return this.r.save(gateway);
   }
 
-  async decommissionGateway(
+  async deleteGateway(
     input: DeleteGatewayPersistenceInput,
   ): Promise<GatewayEntity | null> {
     const gateway = await this.findById(input);
@@ -71,7 +74,6 @@ export class GatewaysPersistenceService {
       return null;
     }
 
-    gateway.provisioned = false;
-    return this.r.save(gateway);
+    return this.r.remove(gateway);
   }
 }

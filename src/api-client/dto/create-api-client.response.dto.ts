@@ -9,6 +9,9 @@ export class CreateApiClientResponseDto {
   @ApiProperty({ name: 'client_id' })
   @Expose({ name: 'client_id' })
   clientId: string;
+  @ApiProperty({ name: 'client_secret', required: false })
+  @Expose({ name: 'client_secret' })
+  clientSecret?: string;
   @ApiProperty({ name: 'created_at' })
   @Expose({ name: 'created_at' })
   createdAt: Date;

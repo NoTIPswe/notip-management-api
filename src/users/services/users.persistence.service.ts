@@ -6,6 +6,7 @@ import {
   CreateUserPersistenceInput,
   UpdateUserPersistenceInput,
 } from '../interfaces/service-persistence.interfaces';
+import { UsersRole } from '../enums/users.enum';
 
 @Injectable()
 export class UsersPersistenceService {
@@ -18,10 +19,16 @@ export class UsersPersistenceService {
     return this.r.find({ where: { tenantId } });
   }
 
+  async getTenantAdmins(tenantId: string): Promise<UserEntity[]> {
+    return this.r.find({
+      where: { tenantId, role: UsersRole.TENANT_ADMIN },
+    });
+  }
+
   async createUser(input: CreateUserPersistenceInput): Promise<UserEntity> {
     const user = this.r.create({
+      id: input.id,
       tenantId: input.tenantId,
-      keycloakId: input.keycloakId,
       email: input.email,
       name: input.name,
       role: input.role,

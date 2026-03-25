@@ -33,7 +33,7 @@ export class AlertsPersistenceService {
         gatewayId: input.gatewayId,
         gatewayTimeoutMs: input.gatewayTimeoutMs,
       },
-      ['gatewayId'],
+      ['tenantId', 'gatewayId'],
     );
     return (await this.rac.findOne({
       where: { gatewayId: input.gatewayId, tenantId: input.tenantId },
@@ -49,7 +49,7 @@ export class AlertsPersistenceService {
         gatewayId: null,
         gatewayTimeoutMs: input.defaultTimeoutMs,
       },
-      ['tenantId'],
+      ['tenantId', 'gatewayId'],
     );
     return (await this.rac.findOne({
       where: { tenantId: input.tenantId, gatewayId: IsNull() },

@@ -27,11 +27,13 @@ export class ApiClientMapper {
 
   static toCreateApiClientResponseDto(
     apiClientModel: ApiClientModel,
+    clientSecret?: string,
   ): CreateApiClientResponseDto {
     return {
       id: apiClientModel.id,
       name: apiClientModel.name,
       clientId: apiClientModel.keycloakClientId,
+      clientSecret,
       createdAt: apiClientModel.createdAt,
     };
   }

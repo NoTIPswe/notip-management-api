@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SetGatewayAlertsConfigResponseDto } from '../dto/set-gateway-alerts-config.response.dto';
 import { AlertsService } from '../services/alerts.service';
 import { AlertsMapper } from '../alerts.mapper';
@@ -12,7 +12,9 @@ import { AlertsConfigResponseDto } from '../dto/alerts-config.response.dto';
 import { SetAlertsConfigDefaultRequestDto } from '../dto/set-alerts-config-default.request.dto';
 import { SetAlertsConfigDefaultResponseDto } from '../dto/set-alerts-config-default.response.dto';
 import { AlertsResponseDto } from '../dto/alerts.response.dto';
+import { Audit } from '../../common/decorators/audit.decorator';
 
+@ApiTags('Alerts')
 @TenantScoped()
 @Controller('alerts')
 export class AlertsController {
@@ -45,6 +47,7 @@ export class AlertsController {
   }
 
   @Put('config/default')
+  @Audit({ action: 'SET_DEFAULT_ALERTS_CONFIG', resource: 'Alerts' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Set default alert configuration for the tenant' })
   async setDefaultAlertsConfig(
@@ -59,6 +62,7 @@ export class AlertsController {
   }
 
   @Put('config/gateway/:gatewayId')
+  @Audit({ action: 'SET_GATEWAY_ALERTS_CONFIG', resource: 'Alerts' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Set alert configuration for a specific gateway' })
   @ApiResponse({

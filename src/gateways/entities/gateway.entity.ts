@@ -1,5 +1,4 @@
-// common/entities/gateway.entity.ts
-import { TenantEntity } from './tenant.entity';
+import { TenantEntity } from '../../common/entities/tenant.entity';
 import { GatewayMetadataEntity } from './gateway-metadata.entity';
 import {
   Column,

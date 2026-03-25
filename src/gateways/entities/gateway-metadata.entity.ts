@@ -1,4 +1,3 @@
-// common/entities/gateway-metadata.entity.ts
 import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 
 import { GatewayStatus } from '../enums/gateway.enum';
@@ -9,7 +8,7 @@ export class GatewayMetadataEntity {
   @PrimaryColumn('uuid', { name: 'gateway_id' })
   gatewayId: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   name: string;
 
   @Column({
@@ -20,10 +19,10 @@ export class GatewayMetadataEntity {
   status: GatewayStatus;
 
   @Column({ name: 'last_seen_at', type: 'timestamp', nullable: true })
-  lastSeenAt: Date | null;
+  lastSeenAt: Date;
 
-  @Column({ name: 'send_frequency_ms', type: 'bigint' })
-  sendFrequencyMs: number;
+  @Column({ name: 'send_frequency_ms', type: 'bigint', nullable: true })
+  sendFrequencyMs: number | null;
 
   @OneToOne(() => GatewayEntity, (gateway) => gateway.metadata, {
     onDelete: 'CASCADE',

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CommandPersistenceService } from './command.persistence.service';
@@ -14,12 +15,16 @@ import { CommandType } from '../enums/command-type.enum';
 import { CommandStatus } from '../enums/command-status.enum';
 import { CommandMapper } from '../command.mapper';
 import { GatewaysService } from '../../gateways/services/gateways.service';
+import { JetStreamClient } from '../nats/jetstream.client';
 
 @Injectable()
 export class CommandService {
+  private readonly logger = new Logger(CommandService.name);
+
   constructor(
     private readonly cps: CommandPersistenceService,
     private readonly gatewaysService: GatewaysService,
+    private readonly jetStreamClient: JetStreamClient,
   ) {}
 
   async sendConfig(input: SendConfigCommandInput): Promise<CommandModel> {
@@ -40,7 +45,14 @@ export class CommandService {
       status: CommandStatus.QUEUED,
       issuedAt: new Date(),
     });
-    return CommandMapper.toModel(entity);
+
+    const model = CommandMapper.toModel(entity);
+    await this.publishToNats(model, 'config_update', {
+      send_frequency_ms: input.sendFrequencyMs,
+      status: input.status,
+    });
+
+    return model;
   }
 
   async sendFirmware(input: SendFirmwareCommandInput): Promise<CommandModel> {
@@ -52,7 +64,14 @@ export class CommandService {
       status: CommandStatus.QUEUED,
       issuedAt: new Date(),
     });
-    return CommandMapper.toModel(entity);
+
+    const model = CommandMapper.toModel(entity);
+    await this.publishToNats(model, 'firmware_push', {
+      version: input.firmwareVersion,
+      url: input.downloadUrl,
+    });
+
+    return model;
   }
 
   async getStatus(input: GetCommandStatusInput): Promise<CommandModel> {
@@ -65,6 +84,36 @@ export class CommandService {
       throw new NotFoundException('Command not found');
     }
     return CommandMapper.toModel(entity);
+  }
+
+  private async publishToNats(
+    model: CommandModel,
+    type: string,
+    payload: Record<string, any>,
+  ): Promise<void> {
+    const subject = `command.gw.${model.tenantId}.${model.gatewayId}`;
+    const natsPayload = {
+      commandId: model.id,
+      type,
+      payload,
+      issuedAt: model.issuedAt.toISOString(),
+    };
+
+    try {
+      await this.jetStreamClient.publish(
+        subject,
+        Buffer.from(JSON.stringify(natsPayload)),
+      );
+      this.logger.log(`Published command ${model.id} to NATS on ${subject}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish command ${model.id} to NATS`,
+        error as Error,
+      );
+      // We don't throw here to avoid failing the request if NATS is down,
+      // as the command is already queued in the DB.
+      // Depending on requirements, you might want to throw or handle this differently.
+    }
   }
 
   private async ensureGatewayOwnership(
