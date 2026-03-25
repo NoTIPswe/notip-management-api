@@ -1,3 +1,18 @@
+# [1.2.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.1.0...v1.2.0) (2026-03-25)
+
+
+### Bug Fixes
+
+* failed test ([76fc472](https://github.com/NoTIPswe/notip-management-api/commit/76fc4724c5cf373f191cae6b5eef0df36188a809))
+* failed test ([7d3b2e8](https://github.com/NoTIPswe/notip-management-api/commit/7d3b2e8b511cff7735e619c338a26efd3d6694da))
+* failed test ([7f230c8](https://github.com/NoTIPswe/notip-management-api/commit/7f230c8437615163f8cacf0df853110303a26819))
+* failed test ([1833a86](https://github.com/NoTIPswe/notip-management-api/commit/1833a8687e34c695130259f0c53740dd1f65137f))
+
+
+### Features
+
+* finish the last implementation Management-api ([8135839](https://github.com/NoTIPswe/notip-management-api/commit/81358399506ee9498bebc67ad7d8e4e3e47a94e1))
+
 # [1.1.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.0.0...v1.1.0) (2026-03-21)
 
 
