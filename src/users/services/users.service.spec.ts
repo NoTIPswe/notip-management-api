@@ -25,6 +25,7 @@ describe('UsersService', () => {
   let createUserPersistenceMock: jest.Mock;
   let updateUserPersistenceMock: jest.Mock;
   let getUsersByIdsMock: jest.Mock;
+  let getTenantAdminsMock: jest.Mock;
   let deleteUsersByIdsMock: jest.Mock;
 
   let createTenantUserMock: jest.Mock;
@@ -37,6 +38,7 @@ describe('UsersService', () => {
     createUserPersistenceMock = jest.fn();
     updateUserPersistenceMock = jest.fn();
     getUsersByIdsMock = jest.fn();
+    getTenantAdminsMock = jest.fn();
     deleteUsersByIdsMock = jest.fn();
 
     persistence = {
@@ -44,6 +46,7 @@ describe('UsersService', () => {
       createUser: createUserPersistenceMock,
       updateUser: updateUserPersistenceMock,
       getUsersByIds: getUsersByIdsMock,
+      getTenantAdmins: getTenantAdminsMock,
       deleteUsersByIds: deleteUsersByIdsMock,
     } as unknown as jest.Mocked<UsersPersistenceService>;
 
@@ -167,6 +170,13 @@ describe('UsersService', () => {
   it('allows TENANT_ADMIN deletion by SYSTEM_ADMIN and cascades in Keycloak', async () => {
     getUsersByIdsMock.mockResolvedValue([
       createUserEntity({ role: UsersRole.TENANT_ADMIN, tenantId: 't1' }),
+    ]);
+    getTenantAdminsMock.mockResolvedValue([
+      createUserEntity({
+        id: 'kc-user-1',
+        role: UsersRole.TENANT_ADMIN,
+        tenantId: 't1',
+      }),
     ]);
     getUsersMock.mockResolvedValue([
       { id: 'u1', tenantId: 't1' } as any,

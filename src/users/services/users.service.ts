@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -130,6 +131,15 @@ export class UsersService {
 
     for (const user of usersToDelete) {
       if (user.id) {
+        if (
+          user.role === UsersRole.TENANT_ADMIN &&
+          input.requesterRole !== UsersRole.SYSTEM_ADMIN
+        ) {
+          throw new ForbiddenException(
+            'Only SYSTEM_ADMIN can delete TENANT_ADMIN users',
+          );
+        }
+
         // If we delete a TENANT_ADMIN, check if it's the last one
         if (user.role === UsersRole.TENANT_ADMIN) {
           const allTenantAdmins = await this.ps.getTenantAdmins(user.tenantId);
