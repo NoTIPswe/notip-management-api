@@ -79,6 +79,58 @@ describe('AlertsService', () => {
     ).resolves.toEqual(expect.objectContaining({ gatewayId: 'gateway-1' }));
   });
 
+  it('deletes gateway-specific alert config', async () => {
+    const persistence = {
+      deleteGatewayAlertsConfig: jest.fn().mockResolvedValue(true),
+    } as unknown as AlertsPersistenceService;
+    const gateways = {
+      findByIdUnscoped: jest.fn().mockResolvedValue({ tenantId: 'tenant-1' }),
+    } as unknown as GatewaysService;
+    const service = new AlertsService(persistence, gateways);
+
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('throws when deleting config for a missing gateway', async () => {
+    const persistence = {} as AlertsPersistenceService;
+    const gateways = {
+      findByIdUnscoped: jest.fn().mockResolvedValue(null),
+    } as unknown as GatewaysService;
+    const service = new AlertsService(persistence, gateways);
+
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('throws when deleting config for a gateway in another tenant', async () => {
+    const persistence = {} as AlertsPersistenceService;
+    const gateways = {
+      findByIdUnscoped: jest.fn().mockResolvedValue({ tenantId: 'tenant-2' }),
+    } as unknown as GatewaysService;
+    const service = new AlertsService(persistence, gateways);
+
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws when gateway config deletion reports nothing deleted', async () => {
+    const persistence = {
+      deleteGatewayAlertsConfig: jest.fn().mockResolvedValue(false),
+    } as unknown as AlertsPersistenceService;
+    const gateways = {
+      findByIdUnscoped: jest.fn().mockResolvedValue({ tenantId: 'tenant-1' }),
+    } as unknown as GatewaysService;
+    const service = new AlertsService(persistence, gateways);
+
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).rejects.toThrow(NotFoundException);
+  });
+
   it('stores default alert config', async () => {
     const persistence = {
       setDefaultAlertsConfig: jest

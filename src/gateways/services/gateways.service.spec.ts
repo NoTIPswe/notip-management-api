@@ -81,6 +81,33 @@ describe('GatewaysService', () => {
     await expect(service.findByIdUnscoped('gateway-1')).resolves.toBeNull();
   });
 
+  it('returns a gateway by factory id', async () => {
+    const persistence = {
+      findByFactoryId: jest.fn().mockResolvedValue(createGatewayEntity()),
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence);
+
+    await expect(service.findByFactoryId('factory-id')).resolves.toEqual(
+      expect.objectContaining({ id: 'gateway-1', factoryId: 'factory-id' }),
+    );
+  });
+
+  it('returns null when a factory id is missing', async () => {
+    const persistence = {
+      findByFactoryId: jest.fn().mockResolvedValue(null),
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence);
+
+    await expect(service.findByFactoryId('factory-id')).resolves.toBeNull();
+  });
+
+  it('returns empty alerts for a gateway placeholder method', () => {
+    const persistence = {} as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence);
+
+    expect(service.getAlertsForGateway('gateway-1')).toEqual([]);
+  });
+
   it('updates a gateway', async () => {
     const persistence = {
       updateGateway: jest.fn().mockResolvedValue(createGatewayEntity()),

@@ -1,4 +1,4 @@
-import { Between, IsNull } from 'typeorm';
+import { Between, IsNull, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { AlertsPersistenceService } from './alerts.persistence.service';
 
 describe('AlertsPersistenceService', () => {
@@ -107,6 +107,91 @@ describe('AlertsPersistenceService', () => {
         gatewayId: 'gateway-1',
       },
       order: { createdAt: 'DESC' },
+    });
+  });
+
+  it('returns whether deleting gateway config affected any rows', async () => {
+    const alertsRepo = {};
+    const configRepo = {
+      delete: jest
+        .fn()
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 0 }),
+    };
+    const service = new AlertsPersistenceService(
+      alertsRepo as never,
+      configRepo as never,
+    );
+
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).resolves.toBe(true);
+    await expect(
+      service.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).resolves.toBe(false);
+  });
+
+  it('filters alerts with only a start date', async () => {
+    const alertsRepo = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+    const configRepo = {};
+    const service = new AlertsPersistenceService(
+      alertsRepo as never,
+      configRepo as never,
+    );
+
+    await service.getAlerts({
+      tenantId: 'tenant-1',
+      from: '2024-01-01T00:00:00.000Z',
+    });
+
+    expect(alertsRepo.find).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        createdAt: MoreThanOrEqual(new Date('2024-01-01T00:00:00.000Z')),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  });
+
+  it('filters alerts with only an end date', async () => {
+    const alertsRepo = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+    const configRepo = {};
+    const service = new AlertsPersistenceService(
+      alertsRepo as never,
+      configRepo as never,
+    );
+
+    await service.getAlerts({
+      tenantId: 'tenant-1',
+      to: '2024-01-02T00:00:00.000Z',
+    });
+
+    expect(alertsRepo.find).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        createdAt: LessThanOrEqual(new Date('2024-01-02T00:00:00.000Z')),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  });
+
+  it('counts alerts for a tenant', async () => {
+    const alertsRepo = {
+      count: jest.fn().mockResolvedValue(5),
+    };
+    const configRepo = {};
+    const service = new AlertsPersistenceService(
+      alertsRepo as never,
+      configRepo as never,
+    );
+
+    await expect(service.countAlerts('tenant-1')).resolves.toBe(5);
+    expect(alertsRepo.count).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1' },
     });
   });
 });

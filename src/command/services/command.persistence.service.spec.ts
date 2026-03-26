@@ -8,6 +8,7 @@ const createRepositoryMock = () => ({
   create: jest.fn(),
   save: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(),
 });
 
 describe('CommandPersistenceService', () => {
@@ -59,5 +60,18 @@ describe('CommandPersistenceService', () => {
       },
     });
     expect(result?.id).toBe('cmd-1');
+  });
+
+  it('counts commands for a tenant', async () => {
+    const repository = createRepositoryMock();
+    repository.count.mockResolvedValue(3);
+    const service = new CommandPersistenceService(
+      repository as unknown as Repository<CommandEntity>,
+    );
+
+    await expect(service.countCommands('tenant-1')).resolves.toBe(3);
+    expect(repository.count).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1' },
+    });
   });
 });
