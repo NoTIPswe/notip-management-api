@@ -11,7 +11,7 @@ paths:
         - App
   /admin/gateways:
     get:
-      operationId: GatewaysController_getGateways
+      operationId: GatewaysController_getAdminGateways
       parameters:
         - name: tenant_id
           required: false
