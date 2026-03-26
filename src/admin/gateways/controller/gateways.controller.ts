@@ -18,7 +18,7 @@ export class GatewaysController {
   @ApiOperation({ summary: 'Get all Gateways' })
   @ApiQuery({ name: 'tenant_id', required: false, type: String })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async getGateways(
+  async getAdminGateways(
     @Query('tenant_id') tenantId?: string,
   ): Promise<GatewayResponseDto[]> {
     return this.gs.getGateways({ tenantId });
