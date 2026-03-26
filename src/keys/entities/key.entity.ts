@@ -7,6 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { keyMaterialTransformer } from '../encryption/key-material-encryption';
 
 @Entity('keys')
 export class KeyEntity {
@@ -20,7 +21,11 @@ export class KeyEntity {
   @Column({ name: 'gateway_id', type: 'uuid' })
   gatewayId: string;
 
-  @Column({ name: 'key_material', type: 'bytea' })
+  @Column({
+    name: 'key_material',
+    type: 'bytea',
+    transformer: keyMaterialTransformer,
+  })
   keyMaterial: Buffer;
 
   @Column({ name: 'key_version', type: 'int' })

@@ -27,11 +27,11 @@ const databaseImports =
           useFactory: (configService: ConfigService) => {
             return {
               type: 'postgres',
-              host: configService.get<string>('DB_HOST'),
-              port: configService.get<number>('DB_PORT'),
-              username: configService.get<string>('DB_USER'),
-              password: configService.get<string>('DB_PASSWORD'),
-              database: configService.get<string>('DB_NAME'),
+              host: configService.get<string>('MGMT_DB_HOST'),
+              port: configService.get<number>('MGMT_DB_PORT'),
+              username: configService.get<string>('MGMT_DB_USER'),
+              password: configService.get<string>('MGMT_DB_PASSWORD'),
+              database: configService.get<string>('MGMT_DB_NAME'),
               autoLoadEntities: true,
               synchronize: false,
             };

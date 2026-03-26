@@ -30,7 +30,7 @@ async function bootstrap() {
     new GlobalExceptionFilter(),
     new DatabaseExceptionFilter(),
   );
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.MGMT_API_PORT ?? 3000);
 }
 bootstrap().catch((error) => {
   console.error('Application bootstrap failed', error);

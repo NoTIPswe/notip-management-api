@@ -10,6 +10,7 @@ import {
   AddGatewayPersistenceInput,
   GetGatewaysPersistenceInput,
 } from '../interfaces/service-persistence.interfaces';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class GatewaysService {
@@ -24,10 +25,13 @@ export class GatewaysService {
   }
 
   async addGateway(input: AddGatewayInput): Promise<GatewayModel> {
+    const salt = await bcrypt.genSalt();
+    const hash = await bcrypt.hash(input.factoryKeyHash, salt);
+
     const persistenceInput: AddGatewayPersistenceInput = {
       factoryId: input.factoryId,
       tenantId: input.tenantId,
-      factoryKeyHash: input.factoryKeyHash,
+      factoryKeyHash: hash,
     };
     const entity = await this.gps.addGateway(persistenceInput);
     return GatewaysMapper.toModel(entity);

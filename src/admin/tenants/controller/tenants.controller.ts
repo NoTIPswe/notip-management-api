@@ -39,6 +39,29 @@ export class TenantsController {
     return models.map((model) => TenantsMapper.toResponseDto(model));
   }
 
+  @Get(':id/users')
+  @ApiOperation({ summary: 'Get all users of a tenant' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of users',
+    schema: {
+      type: 'array',
+      items: {
+        properties: {
+          user_id: { type: 'string' },
+          role: { type: 'string' },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async getTenantUsers(
+    @Param('id') id: string,
+  ): Promise<{ user_id: string; role: string }[]> {
+    return this.ts.getTenantUsers(id);
+  }
+
   @Post()
   @Audit({ action: 'CREATE_TENANT', resource: 'Tenants' })
   @ApiOperation({ summary: 'Create a new tenant' })

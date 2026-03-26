@@ -39,6 +39,56 @@ describe('GatewaysPersistenceService', () => {
     });
   });
 
+  it('finds a gateway by factory id with selected fields', async () => {
+    const repo = {
+      findOne: jest.fn().mockResolvedValue({ id: 'gateway-1' }),
+    };
+    const service = new GatewaysPersistenceService(repo as never);
+
+    await expect(service.findByFactoryId('factory-1')).resolves.toEqual({
+      id: 'gateway-1',
+    });
+    expect(repo.findOne).toHaveBeenCalledWith({
+      where: { factoryId: 'factory-1' },
+      select: [
+        'id',
+        'tenantId',
+        'factoryId',
+        'factoryKeyHash',
+        'provisioned',
+        'model',
+        'firmwareVersion',
+        'createdAt',
+        'updatedAt',
+      ],
+      relations: ['metadata'],
+    });
+  });
+
+  it('updates existing metadata when a name is provided', async () => {
+    const gateway = {
+      id: 'gateway-1',
+      metadata: { name: 'Old Name', sendFrequencyMs: 30000 },
+    };
+    const repo = {
+      save: jest.fn().mockResolvedValue({
+        ...gateway,
+        metadata: { ...gateway.metadata, name: 'New Name' },
+      }),
+    };
+    const service = new GatewaysPersistenceService(repo as never);
+    jest.spyOn(service, 'findById').mockResolvedValue(gateway as never);
+
+    const result = await service.updateGateway({
+      tenantId: 'tenant-1',
+      gatewayId: 'gateway-1',
+      name: 'New Name',
+    });
+
+    expect(result).not.toBeNull();
+    expect(result?.metadata?.name).toBe('New Name');
+  });
+
   it('returns null when updating a missing gateway', async () => {
     const repo = {};
     const service = new GatewaysPersistenceService(repo as never);

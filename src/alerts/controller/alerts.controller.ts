@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SetGatewayAlertsConfigResponseDto } from '../dto/set-gateway-alerts-config.response.dto';
 import { AlertsService } from '../services/alerts.service';
@@ -86,5 +94,28 @@ export class AlertsController {
       gatewayTimeoutMs: dto.gatewayUnreachableTimeoutMs,
     });
     return AlertsMapper.toSetGatewayAlertsConfigResponseDto(entity);
+  }
+
+  @Delete('config/gateway/:gatewayId')
+  @Audit({ action: 'DELETE_GATEWAY_ALERTS_CONFIG', resource: 'Alerts' })
+  @Roles(UsersRole.TENANT_ADMIN)
+  @ApiOperation({
+    summary: 'Delete alert configuration for a specific gateway',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Alert configuration deleted successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Gateway not associated with tenant of JWT',
+  })
+  @ApiResponse({ status: 404, description: 'Gateway not found' })
+  async deleteGatewayAlertsConfig(
+    @TenantId() tenantId: string,
+    @Param('gatewayId') gatewayId: string,
+  ): Promise<{ message: string }> {
+    await this.as.deleteGatewayAlertsConfig(tenantId, gatewayId);
+    return { message: 'deleted' };
   }
 }

@@ -42,6 +42,24 @@ export class GatewaysPersistenceService {
     });
   }
 
+  async findByFactoryId(factoryId: string): Promise<GatewayEntity | null> {
+    return this.r.findOne({
+      where: { factoryId },
+      select: [
+        'id',
+        'tenantId',
+        'factoryId',
+        'factoryKeyHash',
+        'provisioned',
+        'model',
+        'firmwareVersion',
+        'createdAt',
+        'updatedAt',
+      ],
+      relations: ['metadata'],
+    });
+  }
+
   async updateGateway(
     input: UpdateGatewayPersistenceInput,
   ): Promise<GatewayEntity | null> {

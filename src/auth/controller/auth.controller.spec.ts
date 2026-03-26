@@ -1,4 +1,3 @@
-import { UnauthorizedException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { ImpersonationService } from '../services/impersonation.service';
 import { UsersRole } from '../../users/enums/users.enum';
@@ -42,15 +41,26 @@ describe('AuthController', () => {
   });
 
   describe('impersonate', () => {
-    it('throws UnauthorizedException if user is not system_admin', async () => {
+    it('calls impersonationService with an empty token if authorization header is missing', async () => {
       const user = {
         effectiveRole: UsersRole.TENANT_ADMIN,
       } as AuthenticatedUser;
-      const req = { user } as unknown as ImpersonateRequest;
+      const req = {
+        user,
+        headers: {},
+      } as unknown as ImpersonateRequest;
+      impersonationService.impersonateUser.mockResolvedValue({
+        access_token: 'imp-token',
+        expires_in: 300,
+      });
 
-      await expect(
-        controller.impersonate({ user_id: 'target-1' }, req),
-      ).rejects.toThrow(UnauthorizedException);
+      await controller.impersonate({ user_id: 'target-1' }, req);
+
+      /* eslint-disable-next-line @typescript-eslint/unbound-method */
+      expect(impersonationService.impersonateUser).toHaveBeenCalledWith({
+        adminAccessToken: '',
+        targetUserId: 'target-1',
+      });
     });
 
     it('calls impersonationService if user is system_admin', async () => {

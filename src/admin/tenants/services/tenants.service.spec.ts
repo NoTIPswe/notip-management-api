@@ -100,6 +100,16 @@ describe('TenantsService', () => {
     ]);
   });
 
+  it('returns tenant users mapped to API shape', async () => {
+    getUsersByTenantMock.mockResolvedValue([
+      { id: 'user-1', role: 'tenant_admin' } as unknown as UserEntity,
+    ]);
+
+    await expect(service.getTenantUsers('tenant-1')).resolves.toEqual([
+      { user_id: 'user-1', role: 'tenant_admin' },
+    ]);
+  });
+
   it('creates a tenant', async () => {
     transactionMock.mockImplementation(
       (cb: (m: EntityManager) => Promise<any>) =>

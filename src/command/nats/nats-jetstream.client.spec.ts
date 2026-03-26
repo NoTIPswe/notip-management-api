@@ -90,6 +90,22 @@ describe('NatsJetStreamClient', () => {
     );
   });
 
+  it('should build a sanitized durable name for subscriptions', async () => {
+    process.env.NATS_DURABLE_PREFIX = 'prefix';
+    const durableMock = jest.fn().mockReturnThis();
+    consumerOptsMock.mockReturnValue({
+      manualAck: jest.fn().mockReturnThis(),
+      ackExplicit: jest.fn().mockReturnThis(),
+      deliverTo: jest.fn().mockReturnThis(),
+      deliverNew: jest.fn().mockReturnThis(),
+      durable: durableMock,
+    });
+
+    await client.subscribe('test.subject.with.dots', jest.fn());
+
+    expect(durableMock).toHaveBeenCalledWith('prefix_test_subject_with_dots');
+  });
+
   it('should close connection on destroy', async () => {
     await client.publish('test', Buffer.from('data'));
     await client.onModuleDestroy();
@@ -186,6 +202,48 @@ describe('NatsJetStreamClient', () => {
       );
       expect(loggerErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('Failed to publish') as unknown,
+        error,
+      );
+    });
+  });
+
+  describe('Request Handling', () => {
+    it('should request data and return the response payload', async () => {
+      const requestMock = jest
+        .fn()
+        .mockResolvedValue({ data: Uint8Array.from(Buffer.from('reply')) });
+      mockConnection = {
+        ...mockConnection,
+        request: requestMock,
+      } as unknown as nats.NatsConnection;
+      natsConnectMock.mockResolvedValue(mockConnection);
+
+      await expect(
+        client.request('test.subject', Buffer.from('ping')),
+      ).resolves.toEqual(Buffer.from('reply'));
+      expect(requestMock).toHaveBeenCalledWith(
+        'test.subject',
+        Buffer.from('ping'),
+        { timeout: 5000 },
+      );
+    });
+
+    it('should throw and log error on request failure', async () => {
+      const error = new Error('request failed');
+      const requestMock = jest.fn().mockRejectedValue(error);
+      mockConnection = {
+        ...mockConnection,
+        request: requestMock,
+      } as unknown as nats.NatsConnection;
+      natsConnectMock.mockResolvedValue(mockConnection);
+      /* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */
+      const loggerErrorSpy = jest.spyOn((client as any).logger, 'error');
+
+      await expect(
+        client.request('test.subject', Buffer.from('ping')),
+      ).rejects.toThrow(error);
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to request') as unknown,
         error,
       );
     });
