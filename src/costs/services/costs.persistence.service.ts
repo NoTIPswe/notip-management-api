@@ -1,14 +1,49 @@
 import { Injectable } from '@nestjs/common';
 import { CostData } from '../costs-data';
+import { JetStreamClient } from '../../command/nats/jetstream.client';
+import { AlertsPersistenceService } from '../../alerts/services/alerts.persistence.service';
+import { CommandPersistenceService } from '../../command/services/command.persistence.service';
 
 @Injectable()
 export class CostsPersistenceService {
+  constructor(
+    private readonly nats: JetStreamClient,
+    private readonly alerts: AlertsPersistenceService,
+    private readonly commands: CommandPersistenceService,
+  ) {}
+
   async getTenantCost(tenantId: string): Promise<CostData> {
-    void tenantId;
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    const costRequest = JSON.stringify({ tenant_id: tenantId });
+    const natsResponse = await this.nats.request(
+      'internal.cost',
+      Buffer.from(costRequest),
+    );
+
+    let dataSizeAtRest = 0;
+    try {
+      const parsed = JSON.parse(natsResponse.toString()) as {
+        dataSizeAtRest?: number;
+      };
+      dataSizeAtRest = parsed.dataSizeAtRest ?? 0;
+    } catch (e) {
+      console.error('Failed to parse NATS response for cost data:', e);
+      // Fallback to 0 if parsing fails
+    }
+
+    const alertsCount = await this.alerts.countAlerts(tenantId);
+    const commandsCount = await this.commands.countCommands(tenantId);
+
+    // Calculation logic:
+    // storageGb = dataSizeAtRest / (1024 * 1024 * 1024)
+    // bandwidthGb = (alerts + commands) * 1KB / (1024 * 1024 * 1024) -> dummy formula for bandwidth
+    const GB = 1024 * 1024 * 1024;
+    const KB = 1024;
+
     return {
-      storageGb: 120.5,
-      bandwidthGb: 89.3,
+      storageGb: Number((dataSizeAtRest / GB).toFixed(4)),
+      bandwidthGb: Number(
+        (((alertsCount + commandsCount) * KB) / GB).toFixed(4),
+      ),
     };
   }
 }

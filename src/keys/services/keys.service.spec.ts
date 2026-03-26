@@ -1,10 +1,19 @@
 import { KeysService } from './keys.service';
 import { GatewaysKeysPersistenceService } from './keys.persistence.service';
 import { GatewaysService } from '../../gateways/services/gateways.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { GatewayModel } from '../../gateways/models/gateway.model';
+import { DataSource, EntityManager } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
+
+jest.mock('bcrypt');
 
 const createKeyEntity = (overrides: Record<string, unknown> = {}) => ({
   id: 'key-1',
@@ -20,6 +29,8 @@ const createKeyEntity = (overrides: Record<string, unknown> = {}) => ({
 describe('KeysService', () => {
   let persistence: jest.Mocked<GatewaysKeysPersistenceService>;
   let gatewaysService: jest.Mocked<GatewaysService>;
+  let dataSource: jest.Mocked<DataSource>;
+  let manager: jest.Mocked<EntityManager>;
   let service: KeysService;
 
   beforeEach(() => {
@@ -29,8 +40,20 @@ describe('KeysService', () => {
     } as unknown as jest.Mocked<GatewaysKeysPersistenceService>;
     gatewaysService = {
       findByIdUnscoped: jest.fn(),
+      findByFactoryId: jest.fn(),
     } as unknown as jest.Mocked<GatewaysService>;
-    service = new KeysService(persistence, gatewaysService);
+    manager = {
+      find: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<EntityManager>;
+    dataSource = {
+      transaction: jest.fn((cb: (manager: EntityManager) => Promise<unknown>) =>
+        cb(manager),
+      ),
+    } as unknown as jest.Mocked<DataSource>;
+    service = new KeysService(persistence, gatewaysService, dataSource);
   });
 
   it('returns mapped keys', async () => {
@@ -81,5 +104,88 @@ describe('KeysService', () => {
         keyVersion: 1,
       }),
     );
+  });
+
+  describe('provisionGateway', () => {
+    const factoryId = 'factory-1';
+    const factoryKey = 'key-123';
+    const keyMaterial = Buffer.from('new-key').toString('base64');
+    const firmwareVersion = '1.0.0';
+    const model = 'M1';
+
+    it('provisions gateway successfully', async () => {
+      const gateway = {
+        id: 'gateway-1',
+        factoryId,
+        factoryKey: 'hashed-key',
+        provisioned: false,
+      } as unknown as GatewayModel;
+
+      gatewaysService.findByFactoryId.mockResolvedValue(gateway);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      manager.find.mockResolvedValue([]);
+
+      await service.provisionGateway(
+        factoryId,
+        factoryKey,
+        keyMaterial,
+        firmwareVersion,
+        model,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(dataSource.transaction).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.create).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        keyMaterial: Buffer.from(keyMaterial, 'base64'),
+        keyVersion: 1,
+      });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        'gateway-1',
+        {
+          provisioned: true,
+          factoryKeyHash: null,
+          firmwareVersion,
+          model,
+        },
+      );
+    });
+
+    it('throws ConflictException if already provisioned', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        provisioned: true,
+      } as unknown as GatewayModel);
+
+      await expect(
+        service.provisionGateway(
+          factoryId,
+          factoryKey,
+          keyMaterial,
+          firmwareVersion,
+          model,
+        ),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('throws UnauthorizedException if factory key is invalid', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        provisioned: false,
+        factoryKey: 'hashed-key',
+      } as unknown as GatewayModel);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.provisionGateway(
+          factoryId,
+          factoryKey,
+          keyMaterial,
+          firmwareVersion,
+          model,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
   });
 });

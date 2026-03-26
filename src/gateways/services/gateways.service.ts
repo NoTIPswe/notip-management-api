@@ -47,6 +47,14 @@ export class GatewaysService {
     return GatewaysMapper.toModel(entity);
   }
 
+  async findByFactoryId(factoryId: string): Promise<GatewayModel | null> {
+    const entity = await this.gps.findByFactoryId(factoryId);
+    if (!entity) {
+      return null;
+    }
+    return GatewaysMapper.toModel(entity);
+  }
+
   async updateGateway(input: UpdateGatewayInput): Promise<GatewayModel> {
     this.logger.log(`Updating gateway: ${input.gatewayId}`);
     const entity = await this.gps.updateGateway({

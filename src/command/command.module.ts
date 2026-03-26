@@ -27,5 +27,6 @@ import { NatsJetStreamClient } from './nats/nats-jetstream.client';
           : MockJetStreamClient,
     },
   ],
+  exports: [JetStreamClient, CommandPersistenceService],
 })
 export class CommandModule {}

@@ -38,6 +38,24 @@ export class AlertsService {
     });
   }
 
+  async deleteGatewayAlertsConfig(
+    tenantId: string,
+    gatewayId: string,
+  ): Promise<void> {
+    const gateway = await this.gatewayService.findByIdUnscoped(gatewayId);
+    if (!gateway) throw new NotFoundException('Gateway not found');
+    if (gateway.tenantId !== tenantId)
+      throw new ForbiddenException('Gateway does not belong to your tenant');
+
+    const deleted = await this.aps.deleteGatewayAlertsConfig(
+      tenantId,
+      gatewayId,
+    );
+    if (!deleted) {
+      throw new NotFoundException('Alert configuration not found for gateway');
+    }
+  }
+
   async setDefaultAlertsConfig(
     input: SetAlertsConfigDefaultInput,
   ): Promise<AlertsConfigEntity> {

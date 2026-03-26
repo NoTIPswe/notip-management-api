@@ -95,7 +95,7 @@ export class TenantsPersistenceService {
   async getUsersByTenant(tenantId: string): Promise<UserEntity[]> {
     return this.ur.find({
       where: { tenantId },
-      select: { id: true },
+      select: { id: true, role: true },
     });
   }
 }

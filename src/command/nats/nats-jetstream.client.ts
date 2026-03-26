@@ -74,6 +74,27 @@ export class NatsJetStreamClient
     }
   }
 
+  async request(subject: string, data: Buffer): Promise<Buffer> {
+    await this.ensureConnected();
+
+    if (!this.connection) {
+      throw new Error('NATS connection is not established');
+    }
+
+    try {
+      const response = await this.connection.request(subject, data, {
+        timeout: 5000,
+      });
+      return Buffer.from(response.data);
+    } catch (error) {
+      this.logger.error(
+        `Failed to request from NATS subject: ${subject}`,
+        error as Error,
+      );
+      throw error;
+    }
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.closeConnection();
   }
