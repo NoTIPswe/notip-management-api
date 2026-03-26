@@ -48,6 +48,21 @@ describe('TenantsController', () => {
     );
   });
 
+  it('returns tenant users', async () => {
+    const getTenantUsersMock = jest
+      .fn()
+      .mockResolvedValue([{ user_id: 'user-1', role: 'tenant_admin' }]);
+    const service = {
+      getTenantUsers: getTenantUsersMock,
+    } as unknown as TenantsService;
+    const controller = new TenantsController(service);
+
+    await expect(controller.getTenantUsers('tenant-1')).resolves.toEqual([
+      { user_id: 'user-1', role: 'tenant_admin' },
+    ]);
+    expect(getTenantUsersMock).toHaveBeenCalledWith('tenant-1');
+  });
+
   it('updates a tenant and maps the response', async () => {
     const service = {
       updateTenant: jest.fn().mockResolvedValue(tenantModel),

@@ -106,6 +106,76 @@ describe('KeysService', () => {
     );
   });
 
+  describe('validateFactoryKey', () => {
+    it('returns gateway and tenant ids when the factory key is valid', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        id: 'gateway-1',
+        tenantId: 'tenant-1',
+        factoryKey: 'hashed-key',
+        provisioned: false,
+      } as unknown as GatewayModel);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await expect(
+        service.validateFactoryKey('factory-1', 'key-123'),
+      ).resolves.toEqual({
+        gatewayId: 'gateway-1',
+        tenantId: 'tenant-1',
+      });
+    });
+
+    it('throws UnauthorizedException if gateway does not exist', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue(null);
+
+      await expect(
+        service.validateFactoryKey('factory-1', 'key-123'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('completeProvisioning', () => {
+    it('stores key material and marks the gateway as provisioned', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue({
+        id: 'gateway-1',
+      } as unknown as GatewayModel);
+      manager.create.mockReturnValue({ id: 'key-1' } as never);
+
+      await expect(
+        service.completeProvisioning(
+          'gateway-1',
+          Buffer.from('secret').toString('base64'),
+          2,
+        ),
+      ).resolves.toBeUndefined();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(dataSource.transaction).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.create).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        keyMaterial: Buffer.from('secret'),
+        keyVersion: 2,
+      });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        'gateway-1',
+        {
+          provisioned: true,
+          factoryKeyHash: null,
+        },
+      );
+    });
+
+    it('throws NotFoundException when provisioning an unknown gateway', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue(null);
+
+      await expect(
+        service.completeProvisioning('missing', 'a2V5', 1),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('provisionGateway', () => {
     const factoryId = 'factory-1';
     const factoryKey = 'key-123';
