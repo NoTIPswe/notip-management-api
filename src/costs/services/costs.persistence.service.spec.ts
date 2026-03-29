@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CostsPersistenceService } from './costs.persistence.service';
-import { JetStreamClient } from '../../command/nats/jetstream.client';
+import { JetStreamClient } from '../../nats/jetstream.client';
 import { AlertsPersistenceService } from '../../alerts/services/alerts.persistence.service';
 import { CommandPersistenceService } from '../../command/services/command.persistence.service';
 

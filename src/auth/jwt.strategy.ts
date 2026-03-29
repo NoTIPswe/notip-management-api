@@ -109,7 +109,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         jwksUri: `${keycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
       }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      audience: managementClientId,
       issuer: `${keycloakUrl}/realms/${keycloakRealm}`,
       algorithms: ['RS256'],
     });

@@ -15,7 +15,7 @@ import { CommandType } from '../enums/command-type.enum';
 import { CommandStatus } from '../enums/command-status.enum';
 import { CommandMapper } from '../command.mapper';
 import { GatewaysService } from '../../gateways/services/gateways.service';
-import { JetStreamClient } from '../nats/jetstream.client';
+import { JetStreamClient } from '../../nats/jetstream.client';
 
 @Injectable()
 export class CommandService {

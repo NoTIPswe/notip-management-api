@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CostData } from '../costs-data';
-import { JetStreamClient } from '../../command/nats/jetstream.client';
+import { JetStreamClient } from '../../nats/jetstream.client';
 import { AlertsPersistenceService } from '../../alerts/services/alerts.persistence.service';
 import { CommandPersistenceService } from '../../command/services/command.persistence.service';
 

@@ -8,12 +8,16 @@ import {
   UpdateGatewayInput,
 } from '../interfaces/controller-service.interfaces';
 import { GatewaysMapper } from '../gateways.mapper';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class GatewaysService {
   private readonly logger = new Logger(GatewaysService.name);
 
-  constructor(private readonly gps: GatewaysPersistenceService) {}
+  constructor(
+    private readonly gps: GatewaysPersistenceService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   getAlertsForGateway(gatewayId: string) {
     void gatewayId;
@@ -77,5 +81,13 @@ export class GatewaysService {
     if (!result) {
       throw new NotFoundException('Gateway not found');
     }
+
+    this.eventEmitter.emit('gateway.decommissioned', {
+      tenantId: input.tenantId,
+      gatewayId: input.gatewayId,
+    });
+    this.logger.log(
+      `Emitted decommissioning event for gateway ${input.gatewayId}`,
+    );
   }
 }

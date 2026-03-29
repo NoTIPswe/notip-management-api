@@ -5,7 +5,7 @@ import { GatewaysService } from '../../gateways/services/gateways.service';
 import { CommandType } from '../enums/command-type.enum';
 import { CommandStatus } from '../enums/command-status.enum';
 import { CommandEntity } from '../entities/command.entity';
-import { JetStreamClient } from '../nats/jetstream.client';
+import { JetStreamClient } from '../../nats/jetstream.client';
 
 const createCommandEntity = (
   overrides: Partial<CommandEntity> = {},

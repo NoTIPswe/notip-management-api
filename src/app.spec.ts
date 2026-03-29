@@ -18,4 +18,11 @@ describe('App', () => {
     expect(controller.getHello()).toBe('Hello World!');
     expect(getHelloMock).toHaveBeenCalledTimes(1);
   });
+
+  it('AppController.getHealth returns ok status', () => {
+    const appService = {} as AppService;
+    const controller = new AppController(appService);
+
+    expect(controller.getHealth()).toEqual({ status: 'ok' });
+  });
 });

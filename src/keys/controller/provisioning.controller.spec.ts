@@ -39,12 +39,14 @@ describe('ProvisioningController', () => {
         gateway_id: 'gateway-1',
         key_material: 'a2V5',
         key_version: 3,
+        send_frequency_ms: 1000,
       }),
     ).resolves.toEqual({ success: true });
     expect(completeProvisioningMock).toHaveBeenCalledWith(
       'gateway-1',
       'a2V5',
       3,
+      1000,
     );
   });
 });

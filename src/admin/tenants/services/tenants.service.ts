@@ -124,11 +124,13 @@ export class TenantsService {
     const allTenantUsers = await this.tps.getUsersByTenant(input.id);
 
     return await this.dataSource.transaction(async (manager) => {
-      for (const user of allTenantUsers) {
-        if (user.id) {
-          await this.keycloakAdminService.deleteUser(user.id);
-        }
-      }
+      await Promise.all(
+        allTenantUsers.map(async (user) => {
+          if (user.id) {
+            await this.keycloakAdminService.deleteUser(user.id);
+          }
+        }),
+      );
 
       await this.keycloakAdminService.deleteTenantGroup(input.id);
 

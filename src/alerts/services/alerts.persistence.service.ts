@@ -100,4 +100,13 @@ export class AlertsPersistenceService {
       where: { tenantId },
     });
   }
+
+  async saveAlert(alert: Partial<AlertsEntity>): Promise<AlertsEntity> {
+    const entity = this.r.create(alert);
+    return this.r.save(entity);
+  }
+
+  async findAllAlertsConfigs(): Promise<AlertsConfigEntity[]> {
+    return this.rac.find();
+  }
 }

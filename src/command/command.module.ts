@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommandController } from './controller/command.controller';
 import { CommandService } from './services/command.service';
@@ -7,26 +7,21 @@ import { CommandEntity } from './entities/command.entity';
 import { GatewaysModule } from '../gateways/gateways.module';
 import { CommandWritingPersistenceService } from './services/command-writing.persistence.service';
 import { CommandsAckConsumer } from './services/commands-ack.consumer';
-import { JetStreamClient } from './nats/jetstream.client';
-import { MockJetStreamClient } from './nats/mock-jetstream.client';
-import { NatsJetStreamClient } from './nats/nats-jetstream.client';
+import { NatsModule } from '../nats/nats.module';
 
 @Module({
-  imports: [GatewaysModule, TypeOrmModule.forFeature([CommandEntity])],
+  imports: [
+    forwardRef(() => GatewaysModule),
+    TypeOrmModule.forFeature([CommandEntity]),
+    NatsModule,
+  ],
   controllers: [CommandController],
   providers: [
     CommandService,
     CommandPersistenceService,
     CommandWritingPersistenceService,
     CommandsAckConsumer,
-    {
-      provide: JetStreamClient,
-      useClass:
-        process.env.MOCK_NATS === 'false'
-          ? NatsJetStreamClient
-          : MockJetStreamClient,
-    },
   ],
-  exports: [JetStreamClient, CommandPersistenceService],
+  exports: [CommandPersistenceService],
 })
 export class CommandModule {}

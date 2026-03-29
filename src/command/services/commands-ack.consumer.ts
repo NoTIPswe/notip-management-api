@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { JetStreamClient, JetStreamMessage } from '../nats/jetstream.client';
+import { JetStreamClient, JetStreamMessage } from '../../nats/jetstream.client';
 import { CommandWritingPersistenceService } from './command-writing.persistence.service';
 import { CommandAckPayload } from '../interfaces/command-ack.interface';
 import { CommandStatus } from '../enums/command-status.enum';

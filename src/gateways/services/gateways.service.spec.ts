@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { NotFoundException } from '@nestjs/common';
 import { GatewaysService } from './gateways.service';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const createGatewayEntity = (overrides: Record<string, unknown> = {}) => ({
   id: 'gateway-1',
@@ -21,12 +23,16 @@ const createGatewayEntity = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
+const mockEventEmitter = {
+  emit: jest.fn(),
+} as unknown as EventEmitter2;
+
 describe('GatewaysService', () => {
   it('returns mapped gateways', async () => {
     const persistence = {
       getGateways: jest.fn().mockResolvedValue([createGatewayEntity()]),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.getGateways({ tenantId: 'tenant-1' }),
@@ -43,7 +49,7 @@ describe('GatewaysService', () => {
     const persistence = {
       getGateways: jest.fn().mockResolvedValue([]),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(service.getGateways({ tenantId: 'tenant-1' })).rejects.toThrow(
       NotFoundException,
@@ -54,7 +60,7 @@ describe('GatewaysService', () => {
     const persistence = {
       findById: jest.fn().mockResolvedValue(createGatewayEntity()),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.findById({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
@@ -65,7 +71,7 @@ describe('GatewaysService', () => {
     const persistence = {
       findById: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.findById({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
@@ -76,7 +82,7 @@ describe('GatewaysService', () => {
     const persistence = {
       findByIdUnscoped: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(service.findByIdUnscoped('gateway-1')).resolves.toBeNull();
   });
@@ -85,7 +91,7 @@ describe('GatewaysService', () => {
     const persistence = {
       findByFactoryId: jest.fn().mockResolvedValue(createGatewayEntity()),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(service.findByFactoryId('factory-id')).resolves.toEqual(
       expect.objectContaining({ id: 'gateway-1', factoryId: 'factory-id' }),
@@ -96,14 +102,14 @@ describe('GatewaysService', () => {
     const persistence = {
       findByFactoryId: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(service.findByFactoryId('factory-id')).resolves.toBeNull();
   });
 
   it('returns empty alerts for a gateway placeholder method', () => {
     const persistence = {} as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     expect(service.getAlertsForGateway('gateway-1')).toEqual([]);
   });
@@ -112,7 +118,7 @@ describe('GatewaysService', () => {
     const persistence = {
       updateGateway: jest.fn().mockResolvedValue(createGatewayEntity()),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.updateGateway({
@@ -127,7 +133,7 @@ describe('GatewaysService', () => {
     const persistence = {
       updateGateway: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.updateGateway({
@@ -142,19 +148,19 @@ describe('GatewaysService', () => {
     const persistence = {
       deleteGateway: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.deleteGateway({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
     ).rejects.toThrow(NotFoundException);
   });
 
-  it('deletes an existing gateway', async () => {
+  it('deletes an existing gateway and publishes decommission event', async () => {
     const deleteGatewayMock = jest.fn().mockResolvedValue({ id: 'gateway-1' });
     const persistence = {
       deleteGateway: deleteGatewayMock,
     } as unknown as GatewaysPersistenceService;
-    const service = new GatewaysService(persistence);
+    const service = new GatewaysService(persistence, mockEventEmitter);
 
     await expect(
       service.deleteGateway({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
@@ -163,5 +169,12 @@ describe('GatewaysService', () => {
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
     });
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'gateway.decommissioned',
+      {
+        tenantId: 'tenant-1',
+        gatewayId: 'gateway-1',
+      },
+    );
   });
 });

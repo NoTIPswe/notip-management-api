@@ -5,7 +5,11 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       find: jest.fn().mockResolvedValue([{ id: 'gateway-1' }]),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
 
     await expect(
       service.getGateways({ tenantId: 'tenant-1' }),
@@ -21,7 +25,11 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       findOne: jest.fn().mockResolvedValue({ id: 'gateway-1' }),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
 
     await expect(
       service.findById({ tenantId: 'tenant-1', gatewayId: 'gateway-1' }),
@@ -32,7 +40,11 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       findOne: jest.fn().mockResolvedValue({ id: 'gateway-1' }),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
 
     await expect(service.findByIdUnscoped('gateway-1')).resolves.toEqual({
       id: 'gateway-1',
@@ -43,7 +55,11 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       findOne: jest.fn().mockResolvedValue({ id: 'gateway-1' }),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
 
     await expect(service.findByFactoryId('factory-1')).resolves.toEqual({
       id: 'gateway-1',
@@ -76,7 +92,11 @@ describe('GatewaysPersistenceService', () => {
         metadata: { ...gateway.metadata, name: 'New Name' },
       }),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
     jest.spyOn(service, 'findById').mockResolvedValue(gateway as never);
 
     const result = await service.updateGateway({
@@ -91,7 +111,11 @@ describe('GatewaysPersistenceService', () => {
 
   it('returns null when updating a missing gateway', async () => {
     const repo = {};
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
     jest.spyOn(service, 'findById').mockResolvedValue(null);
 
     await expect(
@@ -116,7 +140,13 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       save: jest.fn().mockResolvedValue(savedGateway),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {
+      create: jest.fn().mockReturnValue(savedGateway.metadata),
+    };
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
     jest.spyOn(service, 'findById').mockResolvedValue(gateway as never);
 
     const result = await service.updateGateway({
@@ -126,11 +156,20 @@ describe('GatewaysPersistenceService', () => {
     });
 
     expect(result).toEqual(savedGateway);
+    expect(metadataRepo.create).toHaveBeenCalledWith({
+      gatewayId: 'gateway-1',
+      name: 'New Name',
+      sendFrequencyMs: 0,
+    });
   });
 
   it('returns null when deleting a missing gateway', async () => {
     const repo = {};
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
     jest.spyOn(service, 'findById').mockResolvedValue(null);
 
     await expect(
@@ -146,7 +185,11 @@ describe('GatewaysPersistenceService', () => {
     const repo = {
       remove: jest.fn().mockResolvedValue(gateway),
     };
-    const service = new GatewaysPersistenceService(repo as never);
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
     jest.spyOn(service, 'findById').mockResolvedValue(gateway as never);
 
     await expect(

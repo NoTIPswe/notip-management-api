@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GatewayEntity } from '../entities/gateway.entity';
+import { GatewayMetadataEntity } from '../entities/gateway-metadata.entity';
+import { GatewayStatus } from '../enums/gateway.enum';
 import {
   DeleteGatewayPersistenceInput,
   GetGatewayByIdPersistenceInput,
@@ -14,6 +16,8 @@ export class GatewaysPersistenceService {
   constructor(
     @InjectRepository(GatewayEntity)
     private readonly r: Repository<GatewayEntity>,
+    @InjectRepository(GatewayMetadataEntity)
+    private readonly metadataRepo: Repository<GatewayMetadataEntity>,
   ) {}
 
   async getGateways(
@@ -60,6 +64,29 @@ export class GatewaysPersistenceService {
     });
   }
 
+  async updateStatus(
+    gatewayId: string,
+    status: GatewayStatus,
+    lastSeenAt: Date,
+  ): Promise<boolean> {
+    const gateway = await this.findByIdUnscoped(gatewayId);
+    if (!gateway) return false;
+
+    if (!gateway.metadata) {
+      gateway.metadata = this.metadataRepo.create({
+        gatewayId: gateway.id,
+        status,
+        lastSeenAt,
+      });
+    } else {
+      gateway.metadata.status = status;
+      gateway.metadata.lastSeenAt = lastSeenAt;
+    }
+
+    await this.metadataRepo.save(gateway.metadata);
+    return true;
+  }
+
   async updateGateway(
     input: UpdateGatewayPersistenceInput,
   ): Promise<GatewayEntity | null> {
@@ -70,12 +97,11 @@ export class GatewaysPersistenceService {
 
     if (typeof input.name === 'string') {
       if (!gateway.metadata) {
-        gateway.metadata = {
+        gateway.metadata = this.metadataRepo.create({
           gatewayId: gateway.id,
-          gateway,
           name: input.name,
           sendFrequencyMs: 0,
-        } as GatewayEntity['metadata'];
+        });
       } else {
         gateway.metadata.name = input.name;
       }

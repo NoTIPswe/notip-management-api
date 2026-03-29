@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -44,7 +45,9 @@ const databaseImports =
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
+      expandVariables: true,
     }),
+    EventEmitterModule.forRoot(),
     ...databaseImports,
     AuthModule,
     AdminModule,

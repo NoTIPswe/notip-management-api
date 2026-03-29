@@ -35,6 +35,10 @@ export class ProvisioningCompleteRequestDto {
   @ApiProperty({ name: 'key_version' })
   @IsNumber()
   key_version: number;
+
+  @ApiProperty({ name: 'send_frequency_ms', example: 1000 })
+  @IsNumber()
+  send_frequency_ms: number;
 }
 
 export class ProvisioningCompleteResponseDto {

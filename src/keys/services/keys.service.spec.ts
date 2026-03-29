@@ -44,6 +44,7 @@ describe('KeysService', () => {
     } as unknown as jest.Mocked<GatewaysService>;
     manager = {
       find: jest.fn(),
+      findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
       update: jest.fn(),
@@ -137,14 +138,24 @@ describe('KeysService', () => {
     it('stores key material and marks the gateway as provisioned', async () => {
       gatewaysService.findByIdUnscoped.mockResolvedValue({
         id: 'gateway-1',
+        name: 'Gateway A',
+        status: 'gateway_online',
+        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
       } as unknown as GatewayModel);
       manager.create.mockReturnValue({ id: 'key-1' } as never);
+      manager.findOne.mockResolvedValue({
+        gatewayId: 'gateway-1',
+        name: 'Gateway A',
+        status: 'gateway_online',
+        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
+      } as never);
 
       await expect(
         service.completeProvisioning(
           'gateway-1',
           Buffer.from('secret').toString('base64'),
           2,
+          1000,
         ),
       ).resolves.toBeUndefined();
 
@@ -155,6 +166,14 @@ describe('KeysService', () => {
         gatewayId: 'gateway-1',
         keyMaterial: Buffer.from('secret'),
         keyVersion: 2,
+      });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        name: 'Gateway A',
+        status: 'gateway_online',
+        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
+        sendFrequencyMs: 1000,
       });
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(manager.update).toHaveBeenCalledWith(
@@ -171,7 +190,7 @@ describe('KeysService', () => {
       gatewaysService.findByIdUnscoped.mockResolvedValue(null);
 
       await expect(
-        service.completeProvisioning('missing', 'a2V5', 1),
+        service.completeProvisioning('missing', 'a2V5', 1, 1000),
       ).rejects.toThrow(NotFoundException);
     });
   });

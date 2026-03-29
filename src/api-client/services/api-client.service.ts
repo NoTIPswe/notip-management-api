@@ -91,15 +91,17 @@ export class ApiClientService {
   async deleteApiClientsForTenant(tenantId: string): Promise<void> {
     this.logger.log(`Deleting all API clients for tenant ${tenantId}`);
     const apiClients = await this.acps.getApiClients(tenantId);
-    for (const apiClient of apiClients) {
-      try {
-        await this.deleteApiClient(apiClient.id);
-      } catch (e) {
-        this.logger.warn(
-          `Failed to delete API client ${apiClient.id} for tenant ${tenantId}, continuing...`,
-        );
-        void e;
-      }
-    }
+    await Promise.all(
+      apiClients.map(async (apiClient) => {
+        try {
+          await this.deleteApiClient(apiClient.id);
+        } catch (e) {
+          this.logger.warn(
+            `Failed to delete API client ${apiClient.id} for tenant ${tenantId}, continuing...`,
+          );
+          void e;
+        }
+      }),
+    );
   }
 }

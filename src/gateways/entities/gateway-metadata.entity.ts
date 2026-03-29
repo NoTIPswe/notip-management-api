@@ -19,7 +19,7 @@ export class GatewayMetadataEntity {
   status: GatewayStatus;
 
   @Column({ name: 'last_seen_at', type: 'timestamp', nullable: true })
-  lastSeenAt: Date;
+  lastSeenAt: Date | null;
 
   @Column({ name: 'send_frequency_ms', type: 'bigint', nullable: true })
   sendFrequencyMs: number | null;

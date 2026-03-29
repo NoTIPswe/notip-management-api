@@ -12,6 +12,8 @@ import { GatewaysService } from '../../gateways/services/gateways.service';
 import { DataSource } from 'typeorm';
 import { KeyEntity } from '../entities/key.entity';
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
+import { GatewayMetadataEntity } from '../../gateways/entities/gateway-metadata.entity';
+import { GatewayStatus } from '../../gateways/enums/gateway.enum';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -58,6 +60,10 @@ export class KeysService {
       throw new ConflictException('ALREADY_PROVISIONED');
     }
 
+    if (!gateway.factoryKey) {
+      throw new UnauthorizedException('INVALID');
+    }
+
     const isKeyValid = await bcrypt.compare(factoryKey, gateway.factoryKey);
     if (!isKeyValid) {
       throw new UnauthorizedException('INVALID');
@@ -70,6 +76,7 @@ export class KeysService {
     gatewayId: string,
     keyMaterial: string,
     keyVersion: number,
+    sendFrequencyMs: number,
   ): Promise<void> {
     const gateway = await this.gs.findByIdUnscoped(gatewayId);
     if (!gateway) {
@@ -84,6 +91,17 @@ export class KeysService {
         keyVersion,
       });
       await manager.save(key);
+
+      const existingMetadata = await manager.findOne(GatewayMetadataEntity, {
+        where: { gatewayId: gateway.id },
+      });
+      await manager.save(GatewayMetadataEntity, {
+        gatewayId: gateway.id,
+        name: existingMetadata?.name ?? undefined,
+        status: existingMetadata?.status ?? GatewayStatus.GATEWAY_OFFLINE,
+        lastSeenAt: existingMetadata?.lastSeenAt ?? undefined,
+        sendFrequencyMs,
+      });
 
       // Update gateway status
       await manager.update(GatewayEntity, gateway.id, {
@@ -103,7 +121,6 @@ export class KeysService {
     const { gatewayId } = await this.validateFactoryKey(factoryId, factoryKey);
 
     await this.dataSource.transaction(async (manager) => {
-      // 1. Get current keys to determine next version
       const keys = await manager.find(KeyEntity, {
         where: { gatewayId: gatewayId },
       });
@@ -118,7 +135,6 @@ export class KeysService {
       });
       await manager.save(key);
 
-      // 3. Update gateway status
       await manager.update(GatewayEntity, gatewayId, {
         provisioned: true,
         factoryKeyHash: null,

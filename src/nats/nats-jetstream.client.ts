@@ -4,6 +4,7 @@ import {
   OnApplicationShutdown,
   OnModuleDestroy,
 } from '@nestjs/common';
+import * as fs from 'node:fs';
 import {
   connect,
   ConnectionOptions,
@@ -12,11 +13,14 @@ import {
   JetStreamClient as NatsJetStream,
   JetStreamSubscription,
   NatsConnection,
+  Subscription as NatsSubscription,
 } from 'nats';
 import {
   JetStreamClient,
   JetStreamHandler,
   JetStreamMessage,
+  NatsHandler,
+  NatsMessage,
 } from './jetstream.client';
 
 @Injectable()
@@ -27,7 +31,8 @@ export class NatsJetStreamClient
   private readonly logger = new Logger(NatsJetStreamClient.name);
   private connection: NatsConnection | null = null;
   private jetStream: NatsJetStream | null = null;
-  private readonly subscriptions: JetStreamSubscription[] = [];
+  private readonly subscriptions: (JetStreamSubscription | NatsSubscription)[] =
+    [];
   private connectingPromise: Promise<void> | null = null;
 
   async subscribe(subject: string, handler: JetStreamHandler): Promise<void> {
@@ -42,13 +47,28 @@ export class NatsJetStreamClient
     options.ackExplicit();
     options.deliverTo(createInbox());
     options.deliverNew();
+    options.maxDeliver(3);
     options.durable(this.buildDurableName(subject));
 
     const subscription = await this.jetStream.subscribe(subject, options);
     this.subscriptions.push(subscription);
 
-    this.consumeMessages(subscription, handler, subject);
+    this.consumeJetStreamMessages(subscription, handler, subject);
     this.logger.log(`Subscribed to JetStream subject: ${subject}`);
+  }
+
+  async subscribeCore(subject: string, handler: NatsHandler): Promise<void> {
+    await this.ensureConnected();
+
+    if (!this.connection) {
+      throw new Error('NATS connection is not established');
+    }
+
+    const subscription = this.connection.subscribe(subject);
+    this.subscriptions.push(subscription);
+
+    this.consumeCoreMessages(subscription, handler, subject);
+    this.logger.log(`Subscribed to core NATS subject: ${subject}`);
   }
 
   async publish(subject: string, data: Buffer): Promise<void> {
@@ -103,7 +123,7 @@ export class NatsJetStreamClient
     await this.closeConnection();
   }
 
-  private consumeMessages(
+  private consumeJetStreamMessages(
     subscription: JetStreamSubscription,
     handler: JetStreamHandler,
     subject: string,
@@ -112,6 +132,7 @@ export class NatsJetStreamClient
       for await (const message of subscription) {
         const wrappedMessage: JetStreamMessage = {
           data: Buffer.from(message.data),
+          subject: message.subject,
           ack: () => message.ack(),
         };
 
@@ -120,6 +141,31 @@ export class NatsJetStreamClient
         } catch (error) {
           this.logger.error(
             `Unhandled error while processing JetStream message on ${subject}`,
+            error as Error,
+          );
+        }
+      }
+    })();
+  }
+
+  private consumeCoreMessages(
+    subscription: NatsSubscription,
+    handler: NatsHandler,
+    subject: string,
+  ): void {
+    void (async () => {
+      for await (const message of subscription) {
+        const wrappedMessage: NatsMessage = {
+          data: Buffer.from(message.data),
+          subject: message.subject,
+          respond: (data: Buffer) => message.respond(data),
+        };
+
+        try {
+          await handler(wrappedMessage);
+        } catch (error) {
+          this.logger.error(
+            `Unhandled error while processing core NATS message on ${subject}`,
             error as Error,
           );
         }
@@ -158,6 +204,24 @@ export class NatsJetStreamClient
       servers,
       name: process.env.NATS_CLIENT_NAME ?? 'management-api',
     };
+
+    const caFile = process.env.NATS_TLS_CA;
+    const certFile = process.env.NATS_TLS_CERT;
+    const keyFile = process.env.NATS_TLS_KEY;
+
+    if (caFile && certFile && keyFile) {
+      this.logger.log('Configuring mTLS for NATS connection');
+      try {
+        (options as { tls: any }).tls = {
+          ca: [fs.readFileSync(caFile)],
+          cert: fs.readFileSync(certFile),
+          key: fs.readFileSync(keyFile),
+        };
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Failed to load TLS certificates: ${msg}`);
+      }
+    }
 
     const token = process.env.NATS_TOKEN?.trim();
     const user = process.env.NATS_USER?.trim();

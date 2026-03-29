@@ -1,5 +1,5 @@
 import { CommandsAckConsumer } from './commands-ack.consumer';
-import { MockJetStreamClient } from '../nats/mock-jetstream.client';
+import { MockJetStreamClient } from '../../nats/mock-jetstream.client';
 import { CommandWritingPersistenceService } from './command-writing.persistence.service';
 import { CommandStatus } from '../enums/command-status.enum';
 
