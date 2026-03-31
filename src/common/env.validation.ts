@@ -22,22 +22,22 @@ class EnvironmentVariables {
 
   @IsNumber()
   @IsOptional()
-  PORT: number;
+  MGMT_API_PORT: number;
 
   @IsString()
-  DB_HOST: string;
+  MGMT_DB_HOST: string;
 
   @IsNumber()
-  DB_PORT: number;
+  MGMT_DB_PORT: number;
 
   @IsString()
-  DB_USER: string;
+  MGMT_DB_USER: string;
 
   @IsString()
-  DB_PASSWORD: string;
+  MGMT_DB_PASSWORD: string;
 
   @IsString()
-  DB_NAME: string;
+  MGMT_DB_NAME: string;
 
   @IsUrl({ require_tld: false })
   KEYCLOAK_URL: string;
@@ -50,6 +50,9 @@ class EnvironmentVariables {
 
   @IsString()
   KEYCLOAK_MGMT_CLIENT_SECRET: string;
+
+  @IsString()
+  DB_ENCRYPTION_KEY: string;
 }
 
 export function validate(config: Record<string, unknown>) {

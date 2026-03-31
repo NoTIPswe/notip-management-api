@@ -32,14 +32,14 @@ describe('GatewaysController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('getGateways', () => {
+  describe('getAdminGateways', () => {
     it('should return an array of gateways', async () => {
       const result: GatewayResponseDto[] = [{ id: '1', tenantId: 'tenant1' }];
       jest
         .spyOn(service, 'getGateways')
         .mockResolvedValue(result as GatewayModel[]);
 
-      expect(await controller.getGateways('tenant1')).toBe(result);
+      expect(await controller.getAdminGateways('tenant1')).toBe(result);
     });
   });
 

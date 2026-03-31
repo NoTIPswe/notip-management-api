@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuditLogModule } from '../audit-log/audit.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KeysController } from './controller/keys.controller';
+import { ProvisioningController } from './controller/provisioning.controller';
 import { KeysService } from './services/keys.service';
 import { GatewaysKeysPersistenceService } from './services/keys.persistence.service';
 import { KeyEntity } from './entities/key.entity';
@@ -13,7 +14,7 @@ import { GatewaysModule } from '../gateways/gateways.module';
     AuditLogModule,
     GatewaysModule,
   ],
-  controllers: [KeysController],
+  controllers: [KeysController, ProvisioningController],
   providers: [KeysService, GatewaysKeysPersistenceService],
 })
 export class KeysModule {}

@@ -14,5 +14,6 @@ import { AlertsConfigEntity } from './entities/alerts.config.entity';
   ],
   controllers: [AlertsController],
   providers: [AlertsService, AlertsPersistenceService],
+  exports: [AlertsPersistenceService],
 })
 export class AlertsModule {}

@@ -33,6 +33,16 @@ export class TenantsService {
     return entities.map((entity) => TenantsMapper.toModel(entity));
   }
 
+  async getTenantUsers(
+    tenantId: string,
+  ): Promise<{ user_id: string; role: string }[]> {
+    const users = await this.tps.getUsersByTenant(tenantId);
+    return users.map((u) => ({
+      user_id: u.id,
+      role: u.role,
+    }));
+  }
+
   async createTenant(input: CreateTenantInput): Promise<TenantsModel> {
     this.logger.log(`Creating tenant: ${input.name}`);
 

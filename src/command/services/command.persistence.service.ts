@@ -39,4 +39,10 @@ export class CommandPersistenceService {
       },
     });
   }
+
+  async countCommands(tenantId: string): Promise<number> {
+    return this.r.count({
+      where: { tenantId },
+    });
+  }
 }

@@ -90,4 +90,22 @@ describe('AlertsController', () => {
       updatedAt,
     });
   });
+
+  it('deletes gateway alerts config and returns a success message', async () => {
+    const deleteGatewayAlertsConfigMock = jest
+      .fn()
+      .mockResolvedValue(undefined);
+    const service = {
+      deleteGatewayAlertsConfig: deleteGatewayAlertsConfigMock,
+    } as unknown as AlertsService;
+    const controller = new AlertsController(service);
+
+    await expect(
+      controller.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
+    ).resolves.toEqual({ message: 'deleted' });
+    expect(deleteGatewayAlertsConfigMock).toHaveBeenCalledWith(
+      'tenant-1',
+      'gateway-1',
+    );
+  });
 });

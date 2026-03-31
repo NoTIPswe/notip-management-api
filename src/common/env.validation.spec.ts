@@ -9,18 +9,19 @@ describe('env.validation', () => {
 
   it('returns validated config when successful', () => {
     const config = {
-      DB_HOST: 'localhost',
-      DB_PORT: 5432,
-      DB_USER: 'user',
-      DB_PASSWORD: 'password',
-      DB_NAME: 'test',
+      MGMT_DB_HOST: 'localhost',
+      MGMT_DB_PORT: 5432,
+      MGMT_DB_USER: 'user',
+      MGMT_DB_PASSWORD: 'password',
+      MGMT_DB_NAME: 'test',
       KEYCLOAK_URL: 'http://localhost:8080',
       KEYCLOAK_REALM: 'notip',
       KEYCLOAK_MGMT_CLIENT_ID: 'client',
       KEYCLOAK_MGMT_CLIENT_SECRET: 'secret',
+      DB_ENCRYPTION_KEY: '12345678901234567890123456789012',
     };
     const result = validate(config);
-    expect(result.DB_HOST).toBe('localhost');
-    expect(result.DB_PORT).toBe(5432);
+    expect(result.MGMT_DB_HOST).toBe('localhost');
+    expect(result.MGMT_DB_PORT).toBe(5432);
   });
 });

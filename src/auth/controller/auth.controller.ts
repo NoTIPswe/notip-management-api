@@ -4,14 +4,13 @@ import {
   Req,
   Post,
   Body,
-  UnauthorizedException,
   Req as NestReq,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiOperation, ApiResponse, ApiTags, ApiBody } from '@nestjs/swagger';
 import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
 import { ImpersonationService } from '../services/impersonation.service';
-import { UsersRole } from '../../users/enums/users.enum';
+import { AdminOnly } from '../../common/decorators/access-policy.decorator';
 
 interface RequestWithUser {
   user?: AuthenticatedUser;
@@ -37,6 +36,7 @@ export class AuthController {
   }
 
   @Post('impersonate')
+  @AdminOnly()
   @ApiOperation({ summary: 'Impersonate a tenant user (admin only)' })
   @ApiBody({ schema: { properties: { user_id: { type: 'string' } } } })
   @ApiResponse({
@@ -53,10 +53,6 @@ export class AuthController {
     @Body() body: ImpersonateDto,
     @NestReq() req: Request,
   ): Promise<{ access_token: string; expires_in: number }> {
-    const user = req.user as AuthenticatedUser;
-    if (!user || user.effectiveRole !== (UsersRole.SYSTEM_ADMIN as UsersRole)) {
-      throw new UnauthorizedException('Only system_admin can impersonate');
-    }
     const { user_id } = body;
     return this.impersonationService.impersonateUser({
       adminAccessToken: (req.headers['authorization'] || '').replace(

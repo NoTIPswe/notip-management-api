@@ -40,6 +40,14 @@ export class AlertsPersistenceService {
     })) as AlertsConfigEntity;
   }
 
+  async deleteGatewayAlertsConfig(
+    tenantId: string,
+    gatewayId: string,
+  ): Promise<boolean> {
+    const result = await this.rac.delete({ tenantId, gatewayId });
+    return (result.affected ?? 0) > 0;
+  }
+
   async setDefaultAlertsConfig(
     input: SetAlertsConfigDefaultPersistenceInput,
   ): Promise<AlertsConfigEntity> {
@@ -84,6 +92,12 @@ export class AlertsPersistenceService {
       order: {
         createdAt: 'DESC',
       },
+    });
+  }
+
+  async countAlerts(tenantId: string): Promise<number> {
+    return this.r.count({
+      where: { tenantId },
     });
   }
 }

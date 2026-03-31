@@ -22,6 +22,14 @@ export class MockJetStreamClient extends JetStreamClient {
     return Promise.resolve();
   }
 
+  async request(
+    _subject: string, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _data: Buffer, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ): Promise<Buffer> {
+    const GB = 1024 * 1024 * 1024;
+    return Promise.resolve(Buffer.from(JSON.stringify({ dataSizeAtRest: GB })));
+  }
+
   async emit(
     payload: CommandAckPayload | Record<string, unknown>,
   ): Promise<void> {

@@ -4,6 +4,9 @@ import { GatewaysPersistenceService } from './gateways.persistence.service';
 import { GatewayModel } from '../models/gateway.model';
 import { GatewayEntity } from '../../../gateways/entities/gateway.entity';
 import { TenantEntity } from '../../../common/entities/tenant.entity';
+import * as bcrypt from 'bcrypt';
+
+jest.mock('bcrypt');
 
 describe('GatewaysService', () => {
   let service: GatewaysService;
@@ -73,6 +76,8 @@ describe('GatewaysService', () => {
         firmwareVersion: '0.0.0',
         model: 'unknown-model',
       };
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('salt-2');
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-key-2');
       mockGatewaysPersistenceService.addGateway.mockResolvedValue(mockEntity);
 
       const result = await service.addGateway({
@@ -83,11 +88,13 @@ describe('GatewaysService', () => {
 
       expect(result).toBeInstanceOf(GatewayModel);
       expect(result.id).toBe('2');
+      expect(bcrypt.genSalt).toHaveBeenCalled();
+      expect(bcrypt.hash).toHaveBeenCalledWith('hash-2', 'salt-2');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(persistenceService.addGateway).toHaveBeenCalledWith({
         factoryId: 'factory-2',
         tenantId: 'tenant-2',
-        factoryKeyHash: 'hash-2',
+        factoryKeyHash: 'hashed-key-2',
       });
     });
   });
