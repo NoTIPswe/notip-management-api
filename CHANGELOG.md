@@ -1,3 +1,24 @@
+# [1.3.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.2.0...v1.3.0) (2026-03-31)
+
+
+### Bug Fixes
+
+* automation scripts ([0f55efb](https://github.com/NoTIPswe/notip-management-api/commit/0f55efbaf4c0a4c700b98cccab786f06a7ffbec5))
+* automation scripts ([6ba16e5](https://github.com/NoTIPswe/notip-management-api/commit/6ba16e5fa427d58f1a6bfae02c80446a14d9f7e1))
+* delete migration file ([72489f6](https://github.com/NoTIPswe/notip-management-api/commit/72489f631501eca951639728f6378b5eaef0cf7c))
+* excluding the generated/ folder from sonarqube analysis ([e888e8a](https://github.com/NoTIPswe/notip-management-api/commit/e888e8a67b81ebdbdace6beacdb2537d0a7c4af5))
+* naming ([8422804](https://github.com/NoTIPswe/notip-management-api/commit/842280422dad154ef7e17eba83fe57cf7ac80bc3))
+* tests ([266233b](https://github.com/NoTIPswe/notip-management-api/commit/266233b1c20115a09e08b30f94f02ba058358dec))
+* tests ([a8df4ae](https://github.com/NoTIPswe/notip-management-api/commit/a8df4ae5347b7c1048a70c22085de92a056c86d4))
+* tests ([b6281b6](https://github.com/NoTIPswe/notip-management-api/commit/b6281b6f6456dd2c925b3dea2d1322a160183789))
+* updated scripts for openapi and asyncapi ([6bf1bdb](https://github.com/NoTIPswe/notip-management-api/commit/6bf1bdb154fdbaaa19fc648056b4f005ab42ee34))
+
+
+### Features
+
+* add command counting and cost calculation ([e0e06bc](https://github.com/NoTIPswe/notip-management-api/commit/e0e06bcf9345e4fe23bd22be49655703cc4169ee))
+* encryption keys ([f038577](https://github.com/NoTIPswe/notip-management-api/commit/f0385778a103ddab095e8a177aa5738fd1dddf6f))
+
 # [1.2.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.1.0...v1.2.0) (2026-03-25)
 
 
