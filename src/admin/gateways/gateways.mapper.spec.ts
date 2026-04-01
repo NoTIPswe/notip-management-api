@@ -47,9 +47,13 @@ describe('GatewaysMapper', () => {
       factoryId: 'f1',
       tenantId: 't1',
       factoryKeyHash: 'h1',
+      firmwareVersion: '1.0.0',
+      model: 'Model X',
     };
     const input = GatewaysMapper.toAddGatewayInput(dto);
     expect(input.factoryId).toBe(dto.factoryId);
+    expect(input.firmwareVersion).toBe(dto.firmwareVersion);
+    expect(input.model).toBe(dto.model);
   });
 
   it('toAddGatewayResponseDto maps model to add response dto', () => {

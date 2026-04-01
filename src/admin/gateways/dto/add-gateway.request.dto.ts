@@ -20,4 +20,12 @@ export class AddGatewayRequestDto {
   @IsString()
   @IsNotEmpty()
   factoryKeyHash: string;
+
+  @ApiProperty({ name: 'firmware_version', example: '1.0.0' })
+  @IsString()
+  firmwareVersion: string;
+
+  @ApiProperty({ name: 'model', example: 'Model X' })
+  @IsString()
+  model: string;
 }

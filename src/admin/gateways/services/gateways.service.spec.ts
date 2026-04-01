@@ -84,6 +84,8 @@ describe('GatewaysService', () => {
         factoryId: 'factory-2',
         tenantId: 'tenant-2',
         factoryKeyHash: 'hash-2',
+        firmwareVersion: '1.0.0',
+        model: 'model-2',
       });
 
       expect(result).toBeInstanceOf(GatewayModel);
@@ -95,6 +97,8 @@ describe('GatewaysService', () => {
         factoryId: 'factory-2',
         tenantId: 'tenant-2',
         factoryKeyHash: 'hashed-key-2',
+        firmwareVersion: '1.0.0',
+        model: 'model-2',
       });
     });
   });

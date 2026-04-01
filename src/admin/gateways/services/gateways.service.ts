@@ -32,6 +32,8 @@ export class GatewaysService {
       factoryId: input.factoryId,
       tenantId: input.tenantId,
       factoryKeyHash: hash,
+      firmwareVersion: input.firmwareVersion,
+      model: input.model,
     };
     const entity = await this.gps.addGateway(persistenceInput);
     return GatewaysMapper.toModel(entity);

@@ -767,10 +767,18 @@ components:
           type: string
         factory_key_hash:
           type: string
+        firmware_version:
+          type: string
+          example: 1.0.0
+        model:
+          type: string
+          example: Model X
       required:
         - factory_id
         - tenant_id
         - factory_key_hash
+        - firmware_version
+        - model
     TenantsResponseDto:
       type: object
       properties:
@@ -933,6 +941,7 @@ components:
             - gateway_online
             - gateway_offline
             - gateway_suspended
+            - gateway_provisioning
           example: gateway_online
         last_seen_at:
           type: string
@@ -979,6 +988,7 @@ components:
             - gateway_online
             - gateway_offline
             - gateway_suspended
+            - gateway_provisioning
         updated_at:
           type: string
           format: date-time

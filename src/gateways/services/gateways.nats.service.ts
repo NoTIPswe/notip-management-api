@@ -101,6 +101,58 @@ export class GatewaysNatsService implements OnModuleInit {
       },
     );
 
+    await this.nats.subscribeCore(
+      'internal.mgmt.gateway.get-status',
+      async (msg) => {
+        try {
+          const payload = JSON.parse(msg.data.toString()) as {
+            gateway_id: string;
+            tenant_id: string;
+          };
+
+          const gateway = await this.persistence.findByIdUnscoped(
+            payload.gateway_id,
+          );
+
+          msg.respond(
+            Buffer.from(
+              JSON.stringify({
+                gateway_id: payload.gateway_id,
+                state: this.toLifecycleState(gateway?.metadata?.status),
+              }),
+            ),
+          );
+        } catch (error) {
+          this.logger.error(
+            'Failed to get gateway lifecycle state',
+            error as Error,
+          );
+          msg.respond(
+            Buffer.from(
+              JSON.stringify({
+                error: 'INTERNAL_ERROR',
+                message: (error as Error).message,
+              }),
+            ),
+          );
+        }
+      },
+    );
+
     this.logger.log('Gateways NATS internal listeners initialized');
+  }
+
+  private toLifecycleState(status?: GatewayStatus): string {
+    switch (status) {
+      case GatewayStatus.GATEWAY_ONLINE:
+        return 'online';
+      case GatewayStatus.GATEWAY_SUSPENDED:
+        return 'paused';
+      case GatewayStatus.GATEWAYS_PROVISIONING:
+        return 'provisioning';
+      case GatewayStatus.GATEWAY_OFFLINE:
+      default:
+        return 'offline';
+    }
   }
 }

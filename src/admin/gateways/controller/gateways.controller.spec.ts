@@ -49,6 +49,8 @@ describe('GatewaysController', () => {
         factoryId: 'f1',
         tenantId: 't1',
         factoryKeyHash: 'h1',
+        firmwareVersion: '1.0.0',
+        model: 'Model X',
       };
       const result: AddGatewayResponseDto = { id: '1' };
       jest
