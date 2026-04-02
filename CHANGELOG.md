@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.3...v1.4.0) (2026-04-02)
+
+
+### Features
+
+* status tenant and suspensions days ([01b195d](https://github.com/NoTIPswe/notip-management-api/commit/01b195d565f21ff4b22727b8d7e78b732f75a352))
+
 ## [1.3.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.2...v1.3.3) (2026-04-02)
 
 
