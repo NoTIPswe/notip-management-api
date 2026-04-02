@@ -47,6 +47,7 @@ describe('GatewaysMapper', () => {
       factoryId: 'f1',
       tenantId: 't1',
       factoryKeyHash: 'h1',
+      model: 'M1',
     };
     const input = GatewaysMapper.toAddGatewayInput(dto);
     expect(input.factoryId).toBe(dto.factoryId);

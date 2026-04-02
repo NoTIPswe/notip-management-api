@@ -84,6 +84,7 @@ describe('GatewaysService', () => {
         factoryId: 'factory-2',
         tenantId: 'tenant-2',
         factoryKeyHash: 'hash-2',
+        model: 'model-2',
       });
 
       expect(result).toBeInstanceOf(GatewayModel);

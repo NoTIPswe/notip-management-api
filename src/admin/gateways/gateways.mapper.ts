@@ -31,6 +31,7 @@ export class GatewaysMapper {
       factoryId: dto.factoryId,
       tenantId: dto.tenantId,
       factoryKeyHash: dto.factoryKeyHash,
+      model: dto.model,
     };
   }
 

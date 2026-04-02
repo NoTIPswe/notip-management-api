@@ -20,4 +20,10 @@ export class AddGatewayRequestDto {
   @IsString()
   @IsNotEmpty()
   factoryKeyHash: string;
+
+  @ApiProperty({ name: 'model' })
+  @Expose({ name: 'model' })
+  @IsString()
+  @IsNotEmpty()
+  model: string;
 }

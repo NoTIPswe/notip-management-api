@@ -738,7 +738,7 @@ paths:
 info:
   title: NoTIP Management API
   description: NoTIP Management API OpenAPI specification
-  version: 1.3.1
+  version: 1.3.2
   contact: {}
 tags: []
 servers: []
@@ -758,10 +758,13 @@ components:
           type: string
         factory_key_hash:
           type: string
+        model:
+          type: string
       required:
         - factory_id
         - tenant_id
         - factory_key_hash
+        - model
     TenantsResponseDto:
       type: object
       properties:

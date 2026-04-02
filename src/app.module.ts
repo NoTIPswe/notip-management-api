@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { join } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -26,6 +27,18 @@ const databaseImports =
         TypeOrmModule.forRootAsync({
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
+            const migrationsDir = join(__dirname, 'migrations');
+            const hasMigrationFiles =
+              existsSync(migrationsDir) &&
+              readdirSync(migrationsDir).some(
+                (file) => file.endsWith('.js') || file.endsWith('.ts'),
+              );
+            const autoSyncIfNoMigrations =
+              String(
+                configService.get<string>('DB_AUTO_SYNC_IF_NO_MIGRATIONS') ??
+                  'false',
+              ).toLowerCase() === 'true';
+
             return {
               type: 'postgres',
               host: configService.get<string>('MGMT_DB_HOST'),
@@ -37,9 +50,9 @@ const databaseImports =
                 join(__dirname, 'migrations', '*.js'),
                 join(__dirname, 'migrations', '*.ts'),
               ],
-              migrationsRun: true,
+              migrationsRun: hasMigrationFiles,
               autoLoadEntities: true,
-              synchronize: false,
+              synchronize: !hasMigrationFiles && autoSyncIfNoMigrations,
             };
           },
         }),
