@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.1...v1.3.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* typeorm migration ([f9bd96b](https://github.com/NoTIPswe/notip-management-api/commit/f9bd96bbd2a2d2c69fef2645d2a8ea7348b79859))
+
 ## [1.3.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.0...v1.3.1) (2026-04-02)
 
 
