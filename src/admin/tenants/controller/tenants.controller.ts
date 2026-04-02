@@ -109,10 +109,7 @@ export class TenantsController {
     type: DeleteTenantResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Tenant not found' })
-  async deleteTenant(
-    @Param('id') id: string,
-  ): Promise<DeleteTenantResponseDto> {
+  async deleteTenant(@Param('id') id: string): Promise<void> {
     await this.ts.deleteTenant({ id });
-    return { message: 'Tenant deleted successfully' };
   }
 }

@@ -83,8 +83,11 @@ export class KeysService {
       throw new NotFoundException('Gateway not found');
     }
 
+    if (gateway.provisioned) {
+      throw new ConflictException('ALREADY_PROVISIONED');
+    }
+
     await this.dataSource.transaction(async (manager) => {
-      // Save new key material
       const key = manager.create(KeyEntity, {
         gatewayId: gateway.id,
         keyMaterial: Buffer.from(keyMaterial, 'base64'),

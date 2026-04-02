@@ -2,6 +2,13 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { JetStreamClient } from '../../nats/jetstream.client';
 import { KeysService } from './keys.service';
 
+interface ProvisioningCompletePayload {
+  gateway_id: string;
+  key_material: string;
+  key_version: number;
+  send_frequency_ms: number;
+}
+
 @Injectable()
 export class KeysNatsService implements OnModuleInit {
   private readonly logger = new Logger(KeysNatsService.name);
@@ -16,21 +23,13 @@ export class KeysNatsService implements OnModuleInit {
       'internal.mgmt.provisioning.complete',
       async (msg) => {
         try {
-          const payload = JSON.parse(msg.data.toString()) as {
-            gateway_id: string;
-            key_material: string;
-            key_version: number;
-          };
+          const payload = this.parseProvisioningCompletePayload(msg.data);
 
-          // Use completeProvisioning from KeysService
-          // Since sendFrequencyMs is not in the NATS payload, we pass null or a default.
-          // The existing method expects a number, so we'll use a default if it's missing or update the method.
-          // Looking at KeysService, it uses it to update GatewayMetadataEntity.
           await this.keysService.completeProvisioning(
             payload.gateway_id,
             payload.key_material,
             payload.key_version,
-            60000, // Default sendFrequencyMs
+            payload.send_frequency_ms,
           );
 
           msg.respond(Buffer.from(JSON.stringify({ success: true })));
@@ -49,5 +48,33 @@ export class KeysNatsService implements OnModuleInit {
     );
 
     this.logger.log('Keys NATS internal listeners initialized');
+  }
+
+  private parseProvisioningCompletePayload(
+    raw: Buffer,
+  ): ProvisioningCompletePayload {
+    const parsed = JSON.parse(
+      raw.toString(),
+    ) as Partial<ProvisioningCompletePayload>;
+
+    if (
+      typeof parsed.gateway_id !== 'string' ||
+      typeof parsed.key_material !== 'string' ||
+      typeof parsed.key_version !== 'number' ||
+      !Number.isInteger(parsed.key_version) ||
+      parsed.key_version <= 0 ||
+      typeof parsed.send_frequency_ms !== 'number' ||
+      !Number.isInteger(parsed.send_frequency_ms) ||
+      parsed.send_frequency_ms <= 0
+    ) {
+      throw new Error('INVALID_PAYLOAD');
+    }
+
+    return {
+      gateway_id: parsed.gateway_id,
+      key_material: parsed.key_material,
+      key_version: parsed.key_version,
+      send_frequency_ms: parsed.send_frequency_ms,
+    };
   }
 }

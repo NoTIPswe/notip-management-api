@@ -11,6 +11,7 @@ export interface CreateUserPersistenceInput {
 
 export interface UpdateUserPersistenceInput {
   id: string;
+  tenantId: string;
   email?: string;
   name?: string;
   role?: UsersRole;

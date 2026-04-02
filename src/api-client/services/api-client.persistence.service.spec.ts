@@ -60,7 +60,13 @@ describe('ApiClientPersistenceService', () => {
     };
     const service = new ApiClientPersistenceService(repo as never);
 
-    await expect(service.deleteApiClient('client-1')).resolves.toBeNull();
+    await expect(
+      service.deleteApiClient('tenant-1', 'client-1'),
+    ).resolves.toBeNull();
+    expect(repo.findOneBy).toHaveBeenCalledWith({
+      id: 'client-1',
+      tenantId: 'tenant-1',
+    });
   });
 
   it('deletes an existing api client', async () => {
@@ -71,7 +77,9 @@ describe('ApiClientPersistenceService', () => {
     };
     const service = new ApiClientPersistenceService(repo as never);
 
-    await expect(service.deleteApiClient('client-1')).resolves.toBe('client-1');
+    await expect(service.deleteApiClient('tenant-1', 'client-1')).resolves.toBe(
+      'client-1',
+    );
     expect(repo.remove).toHaveBeenCalledWith(apiClient);
   });
 });

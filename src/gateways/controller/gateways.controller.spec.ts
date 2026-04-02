@@ -65,7 +65,7 @@ describe('GatewaysController', () => {
     );
   });
 
-  it('deletes a gateway and returns the expected message', async () => {
+  it('deletes a gateway without returning a body', async () => {
     const service = {
       deleteGateway: jest.fn().mockResolvedValue(undefined),
     } as unknown as GatewaysService;
@@ -73,6 +73,6 @@ describe('GatewaysController', () => {
 
     await expect(
       controller.deleteGateway('tenant-1', 'gateway-1'),
-    ).resolves.toEqual({ message: 'deleted' });
+    ).resolves.toBeUndefined();
   });
 });

@@ -306,6 +306,8 @@ paths:
           schema:
             type: string
       responses:
+        '200':
+          description: API client deleted
         '404':
           description: API client not found
       summary: Delete an API client for the tenant

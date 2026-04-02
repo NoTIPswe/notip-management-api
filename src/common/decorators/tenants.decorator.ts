@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { AuthenticatedUser } from '../../auth/interfaces/authenticated-user.interface';
-import { UsersRole } from 'src/users/enums/users.enum';
+import { UsersRole } from '../../users/enums/users.enum';
 
 interface RequestWithUser {
   user?: AuthenticatedUser;

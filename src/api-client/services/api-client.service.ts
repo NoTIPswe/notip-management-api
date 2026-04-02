@@ -71,9 +71,9 @@ export class ApiClientService {
     return apiClients.map((apiClient) => ApiClientMapper.toModel(apiClient));
   }
 
-  async deleteApiClient(id: string): Promise<void> {
-    this.logger.log(`Deleting API client ${id}`);
-    const keycloakUuid = await this.acps.deleteApiClient(id);
+  async deleteApiClient(tenantId: string, id: string): Promise<void> {
+    this.logger.log(`Deleting API client ${id} for tenant ${tenantId}`);
+    const keycloakUuid = await this.acps.deleteApiClient(tenantId, id);
     if (!keycloakUuid) {
       throw new NotFoundException(`API Client with id ${id} not found`);
     }
@@ -94,7 +94,7 @@ export class ApiClientService {
     await Promise.all(
       apiClients.map(async (apiClient) => {
         try {
-          await this.deleteApiClient(apiClient.id);
+          await this.deleteApiClient(tenantId, apiClient.id);
         } catch (e) {
           this.logger.warn(
             `Failed to delete API client ${apiClient.id} for tenant ${tenantId}, continuing...`,

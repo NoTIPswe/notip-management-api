@@ -68,8 +68,7 @@ export class GatewaysController {
   async deleteGateway(
     @TenantId() tenantId: string,
     @Param('id') gatewayId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.gs.deleteGateway({ tenantId, gatewayId });
-    return { message: 'deleted' };
   }
 }

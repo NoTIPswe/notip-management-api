@@ -106,11 +106,13 @@ export class UsersController {
   @ApiResponse({ status: 200, type: DeleteUserResponseDto })
   @Roles(UsersRole.TENANT_ADMIN)
   async deleteUsers(
+    @TenantId() tenantId: string,
     @CurrentUserId() requesterId: string,
     @CurrentUserRole() requesterRole: UsersRole,
     @Body() dto: DeleteUserRequestDto,
   ): Promise<DeleteUserResponseDto> {
     const deleted = await this.s.deleteUsers({
+      tenantId,
       ids: dto.ids,
       requesterId,
       requesterRole,

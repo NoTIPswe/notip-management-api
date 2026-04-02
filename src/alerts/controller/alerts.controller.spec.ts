@@ -91,7 +91,7 @@ describe('AlertsController', () => {
     });
   });
 
-  it('deletes gateway alerts config and returns a success message', async () => {
+  it('deletes gateway alerts config without returning a body', async () => {
     const deleteGatewayAlertsConfigMock = jest
       .fn()
       .mockResolvedValue(undefined);
@@ -102,7 +102,7 @@ describe('AlertsController', () => {
 
     await expect(
       controller.deleteGatewayAlertsConfig('tenant-1', 'gateway-1'),
-    ).resolves.toEqual({ message: 'deleted' });
+    ).resolves.toBeUndefined();
     expect(deleteGatewayAlertsConfigMock).toHaveBeenCalledWith(
       'tenant-1',
       'gateway-1',

@@ -23,6 +23,7 @@ export interface UpdateUserInput {
 }
 
 export interface DeleteUsersInput {
+  tenantId: string;
   ids: string[];
   requesterId?: string;
   requesterRole?: UsersRole;

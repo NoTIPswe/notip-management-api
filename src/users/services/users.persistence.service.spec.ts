@@ -51,8 +51,15 @@ describe('UsersPersistenceService', () => {
     const service = new UsersPersistenceService(repo as never);
 
     await expect(
-      service.updateUser({ id: 'user-1', name: 'New' } as never),
+      service.updateUser({
+        id: 'user-1',
+        tenantId: 'tenant-1',
+        name: 'New',
+      } as never),
     ).resolves.toEqual(expect.objectContaining({ name: 'New' }));
+    expect(repo.findOne).toHaveBeenCalledWith({
+      where: { id: 'user-1', tenantId: 'tenant-1' },
+    });
     expect(repo.save).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'user-1', name: 'New' }),
     );
@@ -65,7 +72,7 @@ describe('UsersPersistenceService', () => {
     const service = new UsersPersistenceService(repo as never);
 
     await expect(
-      service.updateUser({ id: 'user-1' } as never),
+      service.updateUser({ id: 'user-1', tenantId: 'tenant-1' } as never),
     ).resolves.toBeNull();
   });
 
@@ -75,7 +82,12 @@ describe('UsersPersistenceService', () => {
     };
     const service = new UsersPersistenceService(repo as never);
 
-    await expect(service.deleteUsersByIds(['1', '2'])).resolves.toBe(2);
-    expect(repo.delete).toHaveBeenCalledWith({ id: In(['1', '2']) });
+    await expect(
+      service.deleteUsersByIds(['1', '2'], 'tenant-1'),
+    ).resolves.toBe(2);
+    expect(repo.delete).toHaveBeenCalledWith({
+      id: In(['1', '2']),
+      tenantId: 'tenant-1',
+    });
   });
 });

@@ -12,6 +12,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
+import { GatewayStatus } from '../../gateways/enums/gateway.enum';
 
 jest.mock('bcrypt');
 
@@ -34,6 +35,8 @@ describe('KeysService', () => {
   let service: KeysService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     persistence = {
       getKeys: jest.fn(),
       saveKeys: jest.fn(),
@@ -132,6 +135,21 @@ describe('KeysService', () => {
         service.validateFactoryKey('factory-1', 'key-123'),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('throws UnauthorizedException if factory key hash is missing', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        id: 'gateway-1',
+        tenantId: 'tenant-1',
+        factoryKey: null,
+        provisioned: false,
+      } as unknown as GatewayModel);
+
+      await expect(
+        service.validateFactoryKey('factory-1', 'key-123'),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+    });
   });
 
   describe('completeProvisioning', () => {
@@ -192,6 +210,44 @@ describe('KeysService', () => {
       await expect(
         service.completeProvisioning('missing', 'a2V5', 1, 1000),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws ConflictException when gateway is already provisioned', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue({
+        id: 'gateway-1',
+        provisioned: true,
+      } as unknown as GatewayModel);
+
+      await expect(
+        service.completeProvisioning('gateway-1', 'a2V5', 1, 1000),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('uses default metadata values when no metadata exists yet', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue({
+        id: 'gateway-1',
+        provisioned: false,
+      } as unknown as GatewayModel);
+      manager.create.mockReturnValue({ id: 'key-1' } as never);
+      manager.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.completeProvisioning(
+          'gateway-1',
+          Buffer.from('secret').toString('base64'),
+          3,
+          2500,
+        ),
+      ).resolves.toBeUndefined();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        name: undefined,
+        status: GatewayStatus.GATEWAY_OFFLINE,
+        lastSeenAt: undefined,
+        sendFrequencyMs: 2500,
+      });
     });
   });
 
@@ -275,6 +331,35 @@ describe('KeysService', () => {
           model,
         ),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('increments key version from existing persisted keys', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        id: 'gateway-1',
+        factoryId,
+        factoryKey: 'hashed-key',
+        provisioned: false,
+      } as unknown as GatewayModel);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      manager.find.mockResolvedValue([
+        { keyVersion: 2 } as never,
+        { keyVersion: 7 } as never,
+      ]);
+
+      await service.provisionGateway(
+        factoryId,
+        factoryKey,
+        keyMaterial,
+        firmwareVersion,
+        model,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.create).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        keyMaterial: Buffer.from(keyMaterial, 'base64'),
+        keyVersion: 8,
+      });
     });
   });
 });

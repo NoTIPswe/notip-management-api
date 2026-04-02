@@ -28,6 +28,7 @@ describe('KeysNatsService', () => {
           gateway_id: 'gateway-1',
           key_material: 'base64-key',
           key_version: 1,
+          send_frequency_ms: 1500,
         }),
       ),
       subject: 'internal.mgmt.provisioning.complete',
@@ -38,7 +39,7 @@ describe('KeysNatsService', () => {
       'gateway-1',
       'base64-key',
       1,
-      60000,
+      1500,
     );
     expect(respond).toHaveBeenCalledWith(
       Buffer.from(JSON.stringify({ success: true })),
@@ -71,6 +72,7 @@ describe('KeysNatsService', () => {
           gateway_id: 'gateway-1',
           key_material: 'base64-key',
           key_version: 1,
+          send_frequency_ms: 1500,
         }),
       ),
       subject: 'internal.mgmt.provisioning.complete',
@@ -82,6 +84,134 @@ describe('KeysNatsService', () => {
         JSON.stringify({
           success: false,
           error: 'persistence failed',
+        }),
+      ),
+    );
+  });
+
+  it('responds with invalid payload when send frequency is missing', async () => {
+    const handlers = new Map<string, NatsHandler>();
+    const completeProvisioning = jest.fn().mockResolvedValue(undefined);
+    const nats = {
+      subscribeCore: jest.fn((subject: string, handler: NatsHandler) => {
+        handlers.set(subject, handler);
+      }),
+    } as unknown as JetStreamClient;
+    const keysService = {
+      completeProvisioning,
+    } as unknown as KeysService;
+
+    const service = new KeysNatsService(nats, keysService);
+
+    await service.onModuleInit();
+
+    const handler = handlers.get('internal.mgmt.provisioning.complete');
+    const respond = jest.fn();
+
+    await handler?.({
+      data: Buffer.from(
+        JSON.stringify({
+          gateway_id: 'gateway-1',
+          key_material: 'base64-key',
+          key_version: 1,
+        }),
+      ),
+      subject: 'internal.mgmt.provisioning.complete',
+      respond,
+    });
+
+    expect(completeProvisioning).not.toHaveBeenCalled();
+    expect(respond).toHaveBeenCalledWith(
+      Buffer.from(
+        JSON.stringify({
+          success: false,
+          error: 'INVALID_PAYLOAD',
+        }),
+      ),
+    );
+  });
+
+  it('responds with invalid payload when send frequency is not an integer', async () => {
+    const handlers = new Map<string, NatsHandler>();
+    const completeProvisioning = jest.fn().mockResolvedValue(undefined);
+    const nats = {
+      subscribeCore: jest.fn((subject: string, handler: NatsHandler) => {
+        handlers.set(subject, handler);
+      }),
+    } as unknown as JetStreamClient;
+    const keysService = {
+      completeProvisioning,
+    } as unknown as KeysService;
+
+    const service = new KeysNatsService(nats, keysService);
+
+    await service.onModuleInit();
+
+    const handler = handlers.get('internal.mgmt.provisioning.complete');
+    const respond = jest.fn();
+
+    await handler?.({
+      data: Buffer.from(
+        JSON.stringify({
+          gateway_id: 'gateway-1',
+          key_material: 'base64-key',
+          key_version: 1,
+          send_frequency_ms: 1500.5,
+        }),
+      ),
+      subject: 'internal.mgmt.provisioning.complete',
+      respond,
+    });
+
+    expect(completeProvisioning).not.toHaveBeenCalled();
+    expect(respond).toHaveBeenCalledWith(
+      Buffer.from(
+        JSON.stringify({
+          success: false,
+          error: 'INVALID_PAYLOAD',
+        }),
+      ),
+    );
+  });
+
+  it('responds with invalid payload when send frequency is not positive', async () => {
+    const handlers = new Map<string, NatsHandler>();
+    const completeProvisioning = jest.fn().mockResolvedValue(undefined);
+    const nats = {
+      subscribeCore: jest.fn((subject: string, handler: NatsHandler) => {
+        handlers.set(subject, handler);
+      }),
+    } as unknown as JetStreamClient;
+    const keysService = {
+      completeProvisioning,
+    } as unknown as KeysService;
+
+    const service = new KeysNatsService(nats, keysService);
+
+    await service.onModuleInit();
+
+    const handler = handlers.get('internal.mgmt.provisioning.complete');
+    const respond = jest.fn();
+
+    await handler?.({
+      data: Buffer.from(
+        JSON.stringify({
+          gateway_id: 'gateway-1',
+          key_material: 'base64-key',
+          key_version: 1,
+          send_frequency_ms: 0,
+        }),
+      ),
+      subject: 'internal.mgmt.provisioning.complete',
+      respond,
+    });
+
+    expect(completeProvisioning).not.toHaveBeenCalled();
+    expect(respond).toHaveBeenCalledWith(
+      Buffer.from(
+        JSON.stringify({
+          success: false,
+          error: 'INVALID_PAYLOAD',
         }),
       ),
     );

@@ -57,7 +57,6 @@ export class ThresholdsController {
       sensorId,
       minValue: input.minValue,
       maxValue: input.maxValue,
-      sensorType: input.sensorType,
     });
     return ThresholdsMapper.toSetThresholdSensorResponseDto(model);
   }
@@ -68,9 +67,8 @@ export class ThresholdsController {
   async deleteSensorThreshold(
     @TenantId() tenantId: string,
     @Param('sensorId') sensorId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.ts.deleteSensorThreshold({ tenantId, sensorId });
-    return { message: 'deleted' };
   }
 
   @Delete('type/:sensorType')
@@ -79,8 +77,7 @@ export class ThresholdsController {
   async deleteThresholdType(
     @TenantId() tenantId: string,
     @Param('sensorType') sensorType: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.ts.deleteThresholdType({ tenantId, sensorType });
-    return { message: 'deleted' };
   }
 }

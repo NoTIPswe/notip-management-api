@@ -52,8 +52,12 @@ export class ApiClientController {
   @Delete(':id')
   @Audit({ action: 'DELETE_API_CLIENT', resource: 'ApiClients' })
   @ApiOperation({ summary: 'Delete an API client for the tenant' })
+  @ApiResponse({ status: 200, description: 'API client deleted' })
   @ApiResponse({ status: 404, description: 'API client not found' })
-  async deleteApiClient(@Param('id') id: string): Promise<void> {
-    await this.acs.deleteApiClient(id);
+  async deleteApiClient(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.acs.deleteApiClient(tenantId, id);
   }
 }

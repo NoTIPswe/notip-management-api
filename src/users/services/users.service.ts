@@ -85,6 +85,7 @@ export class UsersService {
     this.logger.log(`Updating user: ${input.id}`);
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
+      tenantId: input.tenantId,
       email: input.email,
       name: input.name,
       role: input.role,
@@ -114,7 +115,7 @@ export class UsersService {
 
   async deleteUsers(input: DeleteUsersInput): Promise<number> {
     this.logger.log(`Deleting users: ${input.ids.join(', ')}`);
-    const users = await this.ps.getUsersByIds(input.ids);
+    const users = await this.ps.getUsersByIds(input.ids, input.tenantId);
 
     const usersToDelete = users.filter((u) => {
       // Cannot delete self
@@ -174,6 +175,6 @@ export class UsersService {
       .filter((id): id is string => !!id);
     if (idsToDelete.length === 0) return 0;
 
-    return this.ps.deleteUsersByIds(idsToDelete);
+    return this.ps.deleteUsersByIds(idsToDelete, input.tenantId);
   }
 }

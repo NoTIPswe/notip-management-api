@@ -109,13 +109,19 @@ describe('UsersController', () => {
       service.deleteUsers.mockResolvedValue(2);
 
       await expect(
-        controller.deleteUsers('req-1', UsersRole.TENANT_ADMIN, dto),
+        controller.deleteUsers(
+          'tenant-1',
+          'req-1',
+          UsersRole.TENANT_ADMIN,
+          dto,
+        ),
       ).resolves.toEqual({
         deleted: 2,
         failed: [],
       });
       /* eslint-disable-next-line @typescript-eslint/unbound-method */
       expect(service.deleteUsers).toHaveBeenCalledWith({
+        tenantId: 'tenant-1',
         ids: ['u1', 'u2'],
         requesterId: 'req-1',
         requesterRole: UsersRole.TENANT_ADMIN,

@@ -82,9 +82,9 @@ describe('ApiClientService', () => {
     } as unknown as jest.Mocked<KeycloakAdminService>;
     const service = new ApiClientService(persistence, keycloakAdminService);
 
-    await expect(service.deleteApiClient('client-1')).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.deleteApiClient('tenant-1', 'client-1'),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('resolves when deleting an existing api client', async () => {
@@ -96,7 +96,9 @@ describe('ApiClientService', () => {
     } as unknown as jest.Mocked<KeycloakAdminService>;
     const service = new ApiClientService(persistence, keycloakAdminService);
 
-    await expect(service.deleteApiClient('client-1')).resolves.toBeUndefined();
+    await expect(
+      service.deleteApiClient('tenant-1', 'client-1'),
+    ).resolves.toBeUndefined();
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(keycloakAdminService.deleteApiClient).toHaveBeenCalledWith(
@@ -165,7 +167,9 @@ describe('ApiClientService', () => {
     } as unknown as jest.Mocked<KeycloakAdminService>;
     const service = new ApiClientService(persistence, keycloakAdminService);
 
-    await expect(service.deleteApiClient('client-1')).resolves.toBeUndefined();
+    await expect(
+      service.deleteApiClient('tenant-1', 'client-1'),
+    ).resolves.toBeUndefined();
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(keycloakAdminService.deleteApiClient).toHaveBeenCalledWith(
       'client-uuid-1',

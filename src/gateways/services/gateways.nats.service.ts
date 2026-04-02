@@ -110,9 +110,15 @@ export class GatewaysNatsService implements OnModuleInit {
             tenant_id: string;
           };
 
-          const gateway = await this.persistence.findByIdUnscoped(
-            payload.gateway_id,
-          );
+          if (!payload.tenant_id) {
+            msg.respond(Buffer.from(JSON.stringify({ error: 'INVALID' })));
+            return;
+          }
+
+          const gateway = await this.persistence.findById({
+            gatewayId: payload.gateway_id,
+            tenantId: payload.tenant_id,
+          });
 
           msg.respond(
             Buffer.from(

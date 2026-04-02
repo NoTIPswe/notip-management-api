@@ -114,8 +114,7 @@ export class AlertsController {
   async deleteGatewayAlertsConfig(
     @TenantId() tenantId: string,
     @Param('gatewayId') gatewayId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.as.deleteGatewayAlertsConfig(tenantId, gatewayId);
-    return { message: 'deleted' };
   }
 }

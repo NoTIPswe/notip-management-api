@@ -74,7 +74,7 @@ describe('ThresholdsController', () => {
     });
   });
 
-  it('returns acknowledgements when deleting thresholds', async () => {
+  it('returns no body when deleting thresholds', async () => {
     const service = {
       deleteSensorThreshold: jest.fn().mockResolvedValue(undefined),
       deleteThresholdType: jest.fn().mockResolvedValue(undefined),
@@ -83,13 +83,9 @@ describe('ThresholdsController', () => {
 
     await expect(
       controller.deleteSensorThreshold('tenant-1', 'sensor-1'),
-    ).resolves.toEqual({
-      message: 'deleted',
-    });
+    ).resolves.toBeUndefined();
     await expect(
       controller.deleteThresholdType('tenant-1', 'temperature'),
-    ).resolves.toEqual({
-      message: 'deleted',
-    });
+    ).resolves.toBeUndefined();
   });
 });
