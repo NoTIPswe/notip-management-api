@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.2...v1.3.3) (2026-04-02)
+
+
+### Bug Fixes
+
+* migration ([0c2ec59](https://github.com/NoTIPswe/notip-management-api/commit/0c2ec59859b824be00c331c85768835bca5697dc))
+
 ## [1.3.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.1...v1.3.2) (2026-04-02)
 
 
