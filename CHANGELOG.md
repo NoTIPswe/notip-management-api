@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.0...v1.3.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* issuer ([f13ae75](https://github.com/NoTIPswe/notip-management-api/commit/f13ae754969469c0c5c40792637fd7b17d391eb7))
+
 # [1.3.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.2.0...v1.3.0) (2026-03-31)
 
 
