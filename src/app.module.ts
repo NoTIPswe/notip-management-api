@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { join } from 'node:path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -32,6 +33,11 @@ const databaseImports =
               username: configService.get<string>('MGMT_DB_USER'),
               password: configService.get<string>('MGMT_DB_PASSWORD'),
               database: configService.get<string>('MGMT_DB_NAME'),
+              migrations: [
+                join(__dirname, 'migrations', '*.js'),
+                join(__dirname, 'migrations', '*.ts'),
+              ],
+              migrationsRun: true,
               autoLoadEntities: true,
               synchronize: false,
             };
