@@ -2,6 +2,8 @@ import { AuthController } from './auth.controller';
 import { ImpersonationService } from '../services/impersonation.service';
 import { UsersRole } from '../../users/enums/users.enum';
 import { AuthenticatedUser } from '../interfaces/authenticated-user.interface';
+import { DataSource } from 'typeorm';
+import { TenantStatus } from '../../common/enums/tenants.enum';
 
 type GetMeRequest = Parameters<AuthController['getMe']>[0];
 type ImpersonateRequest = Parameters<AuthController['impersonate']>[1];
@@ -9,12 +11,22 @@ type ImpersonateRequest = Parameters<AuthController['impersonate']>[1];
 describe('AuthController', () => {
   let controller: AuthController;
   let impersonationService: jest.Mocked<ImpersonationService>;
+  let dataSource: jest.Mocked<DataSource>;
+  let findOneBy: jest.Mock;
+  let save: jest.Mock;
 
   beforeEach(() => {
     impersonationService = {
       impersonateUser: jest.fn(),
     } as unknown as jest.Mocked<ImpersonationService>;
-    controller = new AuthController(impersonationService);
+    findOneBy = jest.fn();
+    save = jest.fn();
+    dataSource = {
+      isInitialized: true,
+      getRepository: jest.fn().mockReturnValue({ findOneBy, save }),
+    } as unknown as jest.Mocked<DataSource>;
+
+    controller = new AuthController(impersonationService, dataSource);
   });
 
   describe('getMe', () => {
@@ -84,6 +96,83 @@ describe('AuthController', () => {
         targetUserId: 'target-1',
       });
       expect(result).toEqual({ access_token: 'imp-token', expires_in: 300 });
+    });
+  });
+
+  describe('getTenantStatus', () => {
+    it('returns tenant status and read-only flag', async () => {
+      findOneBy.mockResolvedValue({
+        id: 'tenant-1',
+        status: TenantStatus.SUSPENDED,
+      });
+
+      await expect(
+        controller.getTenantStatus({
+          user: {
+            effectiveTenantId: 'tenant-1',
+          },
+        } as GetMeRequest),
+      ).resolves.toEqual({
+        tenant_id: 'tenant-1',
+        status: TenantStatus.SUSPENDED,
+        read_only: true,
+      });
+    });
+
+    it('throws when tenant context is missing', async () => {
+      await expect(
+        controller.getTenantStatus({
+          user: {
+            effectiveTenantId: undefined,
+          },
+        } as GetMeRequest),
+      ).rejects.toThrow('Missing tenant context');
+    });
+
+    it('throws when tenant is not found', async () => {
+      findOneBy.mockResolvedValue(null);
+
+      await expect(
+        controller.getTenantStatus({
+          user: {
+            effectiveTenantId: 'tenant-404',
+          },
+        } as GetMeRequest),
+      ).rejects.toThrow('Tenant not found');
+    });
+
+    it('reactivates tenant when suspension is expired', async () => {
+      findOneBy.mockResolvedValue({
+        id: 'tenant-1',
+        status: TenantStatus.SUSPENDED,
+        suspensionUntil: new Date(Date.now() - 60_000),
+        suspensionIntervalDays: 7,
+      });
+      save.mockResolvedValue({
+        id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+        suspensionUntil: null,
+        suspensionIntervalDays: null,
+      });
+
+      await expect(
+        controller.getTenantStatus({
+          user: {
+            effectiveTenantId: 'tenant-1',
+          },
+        } as GetMeRequest),
+      ).resolves.toEqual({
+        tenant_id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+        read_only: false,
+      });
+      expect(save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: TenantStatus.ACTIVE,
+          suspensionUntil: null,
+          suspensionIntervalDays: null,
+        }),
+      );
     });
   });
 });

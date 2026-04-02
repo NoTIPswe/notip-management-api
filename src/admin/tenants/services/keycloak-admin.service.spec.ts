@@ -335,6 +335,28 @@ describe('KeycloakAdminService', () => {
     );
   });
 
+  it('updates user enabled status', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+    await service.setUserEnabled('user-uuid-1', false);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/users/user-uuid-1'),
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ enabled: false }),
+      }),
+    );
+  });
+
   it('deletes a user', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;

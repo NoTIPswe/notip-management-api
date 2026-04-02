@@ -5,6 +5,7 @@ export class TenantsModel {
   name: string;
   status: TenantStatus;
   suspensionIntervalDays: number | null;
+  suspensionUntil: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }

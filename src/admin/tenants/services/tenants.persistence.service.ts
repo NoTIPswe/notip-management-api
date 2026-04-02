@@ -18,6 +18,8 @@ interface CreateTenantAdminLocalUserInput {
   role: UsersRole;
 }
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 @Injectable()
 export class TenantsPersistenceService {
   constructor(
@@ -53,11 +55,22 @@ export class TenantsPersistenceService {
     manager?: EntityManager,
   ): Promise<TenantEntity | null> {
     const repo = this.getTenantRepo(manager);
-    const tenant = await repo.findOneBy({ id: input.id });
+    const { id, suspensionIntervalDays, ...updatableFields } = input;
+    const tenant = await repo.findOneBy({ id });
     if (!tenant) {
       return null;
     }
-    Object.assign(tenant, input);
+
+    Object.assign(tenant, updatableFields);
+
+    if (suspensionIntervalDays !== undefined) {
+      tenant.suspensionIntervalDays = suspensionIntervalDays;
+      tenant.suspensionUntil =
+        suspensionIntervalDays === null
+          ? null
+          : new Date(Date.now() + suspensionIntervalDays * DAY_IN_MS);
+    }
+
     return repo.save(tenant);
   }
 

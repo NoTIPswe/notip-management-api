@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { TenantStatus } from '../../../common/enums/tenants.enum';
 import { TenantsService } from './tenants.service';
 import { TenantsPersistenceService } from './tenants.persistence.service';
@@ -38,6 +38,7 @@ describe('TenantsService', () => {
   let deleteUserMock: jest.Mock;
   let updateTenantGroupMock: jest.Mock;
   let deleteTenantGroupMock: jest.Mock;
+  let setUserEnabledMock: jest.Mock;
 
   let transactionMock: jest.Mock;
 
@@ -64,12 +65,14 @@ describe('TenantsService', () => {
     deleteUserMock = jest.fn();
     updateTenantGroupMock = jest.fn();
     deleteTenantGroupMock = jest.fn();
+    setUserEnabledMock = jest.fn();
 
     keycloak = {
       createTenantAdminUser: createTenantAdminUserMock,
       deleteUser: deleteUserMock,
       updateTenantGroup: updateTenantGroupMock,
       deleteTenantGroup: deleteTenantGroupMock,
+      setUserEnabled: setUserEnabledMock,
     } as unknown as jest.Mocked<KeycloakAdminService>;
 
     transactionMock = jest.fn();
@@ -151,6 +154,138 @@ describe('TenantsService', () => {
     ).resolves.toBeDefined();
 
     expect(updateTenantGroupMock).toHaveBeenCalledWith('tenant-1', 'tenant-1');
+    expect(setUserEnabledMock).not.toHaveBeenCalled();
+  });
+
+  it('throws when status is active and suspension days are positive', async () => {
+    getTenantsMock.mockResolvedValue([createTenantEntity()]);
+
+    await expect(
+      service.updateTenant({
+        id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: 3,
+      }),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(updateTenantMock).not.toHaveBeenCalled();
+  });
+
+  it('clears suspension days when status is set to active', async () => {
+    getTenantsMock.mockResolvedValue([
+      createTenantEntity({
+        status: TenantStatus.SUSPENDED,
+        suspensionIntervalDays: 10,
+      }),
+    ]);
+    updateTenantMock.mockResolvedValue(
+      createTenantEntity({
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+      }),
+    );
+    getUsersByTenantMock.mockResolvedValue([
+      { id: 'u1', role: 'tenant_admin' } as unknown as UserEntity,
+    ]);
+
+    await expect(
+      service.updateTenant({
+        id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+      }),
+    ).resolves.toBeDefined();
+
+    expect(updateTenantMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+      }),
+    );
+    expect(setUserEnabledMock).toHaveBeenCalledWith('u1', true);
+  });
+
+  it('normalizes suspension days 0 to null and activates tenant', async () => {
+    getTenantsMock.mockResolvedValue([
+      createTenantEntity({
+        status: TenantStatus.SUSPENDED,
+        suspensionIntervalDays: 3,
+      }),
+    ]);
+    updateTenantMock.mockResolvedValue(
+      createTenantEntity({
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+      }),
+    );
+    getUsersByTenantMock.mockResolvedValue([
+      { id: 'u1', role: 'tenant_admin' } as unknown as UserEntity,
+    ]);
+
+    await expect(
+      service.updateTenant({
+        id: 'tenant-1',
+        suspensionIntervalDays: 0,
+      }),
+    ).resolves.toBeDefined();
+
+    expect(updateTenantMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'tenant-1',
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+      }),
+    );
+    expect(setUserEnabledMock).toHaveBeenCalledWith('u1', true);
+  });
+
+  it('forces suspended status when suspension days are set and disables tenant users', async () => {
+    getTenantsMock.mockResolvedValue([createTenantEntity()]);
+    updateTenantMock.mockResolvedValue(
+      createTenantEntity({
+        status: TenantStatus.SUSPENDED,
+        suspensionIntervalDays: 7,
+      }),
+    );
+    getUsersByTenantMock.mockResolvedValue([
+      { id: 'u1', role: 'tenant_admin' } as unknown as UserEntity,
+      { id: 'u2', role: 'tenant_user' } as unknown as UserEntity,
+    ]);
+
+    await expect(
+      service.updateTenant({
+        id: 'tenant-1',
+        suspensionIntervalDays: 7,
+      }),
+    ).resolves.toBeDefined();
+
+    expect(updateTenantMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'tenant-1',
+        status: TenantStatus.SUSPENDED,
+        suspensionIntervalDays: 7,
+      }),
+    );
+    expect(setUserEnabledMock).toHaveBeenCalledWith('u1', false);
+    expect(setUserEnabledMock).toHaveBeenCalledWith('u2', false);
+  });
+
+  it('enables tenant users when tenant moves from suspended to active', async () => {
+    getTenantsMock.mockResolvedValue([
+      createTenantEntity({ status: TenantStatus.SUSPENDED }),
+    ]);
+    updateTenantMock.mockResolvedValue(
+      createTenantEntity({ status: TenantStatus.ACTIVE }),
+    );
+    getUsersByTenantMock.mockResolvedValue([
+      { id: 'u1', role: 'tenant_admin' } as unknown as UserEntity,
+    ]);
+
+    await expect(
+      service.updateTenant({ id: 'tenant-1', status: TenantStatus.ACTIVE }),
+    ).resolves.toBeDefined();
+
+    expect(setUserEnabledMock).toHaveBeenCalledWith('u1', true);
   });
 
   it('throws NotFoundException when updating missing tenant', async () => {
@@ -185,6 +320,35 @@ describe('TenantsService', () => {
     expect(deleteTenantMock).toHaveBeenCalledWith(
       { id: 'tenant-1' },
       'manager',
+    );
+  });
+
+  it('reactivates expired suspended tenants when listing tenants', async () => {
+    const expiredDate = new Date(Date.now() - 60_000);
+    getTenantsMock.mockResolvedValue([
+      createTenantEntity({
+        status: TenantStatus.SUSPENDED,
+        suspensionIntervalDays: 2,
+        suspensionUntil: expiredDate,
+      }),
+    ]);
+    updateTenantMock.mockResolvedValue(
+      createTenantEntity({
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+        suspensionUntil: null,
+      }),
+    );
+
+    await expect(service.getTenants()).resolves.toEqual([
+      expect.objectContaining({ status: TenantStatus.ACTIVE }),
+    ]);
+
+    expect(updateTenantMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: TenantStatus.ACTIVE,
+        suspensionIntervalDays: null,
+      }),
     );
   });
 });

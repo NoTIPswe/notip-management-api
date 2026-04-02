@@ -448,6 +448,34 @@ export class KeycloakAdminService {
     }
   }
 
+  async setUserEnabled(userId: string, enabled: boolean): Promise<void> {
+    if (!userId) return;
+    this.logger.log(`Setting enabled=${enabled} for user ${userId}`);
+    const accessToken = await this.getAdminAccessToken();
+    const keycloakBaseUrl = this.getRequiredEnv('KEYCLOAK_URL');
+    const keycloakRealm = this.getRequiredEnv('KEYCLOAK_REALM');
+
+    const response = await fetch(
+      `${keycloakBaseUrl}/admin/realms/${keycloakRealm}/users/${userId}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled }),
+      },
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      this.logger.error(`Keycloak user status update failed: ${body}`);
+      throw new InternalServerErrorException(
+        'Keycloak user status update failed',
+      );
+    }
+  }
+
   async updateTenantGroup(
     oldTenantId: string,
     newTenantId: string,

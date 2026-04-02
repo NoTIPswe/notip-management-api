@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { TenantsPersistenceService } from './tenants.persistence.service';
 import { TenantsModel } from '../models/tenant.model';
 import { TenantsMapper } from '../tenants.mapper';
@@ -16,6 +21,7 @@ import { KeycloakAdminService } from './keycloak-admin.service';
 import { UsersRole } from '../../../users/enums/users.enum';
 import { DataSource } from 'typeorm';
 import { ApiClientService } from '../../../api-client/services/api-client.service';
+import { TenantStatus } from '../../../common/enums/tenants.enum';
 
 @Injectable()
 export class TenantsService {
@@ -30,7 +36,10 @@ export class TenantsService {
 
   async getTenants(): Promise<TenantsModel[]> {
     const entities = await this.tps.getTenants();
-    return entities.map((entity) => TenantsMapper.toModel(entity));
+    const normalizedEntities = await Promise.all(
+      entities.map((entity) => this.reactivateTenantIfExpired(entity)),
+    );
+    return normalizedEntities.map((entity) => TenantsMapper.toModel(entity));
   }
 
   async getTenantUsers(
@@ -97,16 +106,45 @@ export class TenantsService {
   async updateTenant(input: UpdateTenantInput): Promise<TenantsModel> {
     this.logger.log(`Updating tenant: ${input.id}`);
 
-    const existing = await this.tps
+    const existingRaw = await this.tps
       .getTenants()
       .then((ts) => ts.find((t) => t.id === input.id));
-    if (!existing) throw new NotFoundException('Tenant not found');
+    if (!existingRaw) throw new NotFoundException('Tenant not found');
+
+    const existing = await this.reactivateTenantIfExpired(existingRaw);
+
+    const normalizedSuspensionIntervalDays =
+      input.suspensionIntervalDays === 0 ? null : input.suspensionIntervalDays;
+    const requestedDaysReset = input.suspensionIntervalDays === 0;
+
+    if (
+      input.status === TenantStatus.ACTIVE &&
+      normalizedSuspensionIntervalDays !== undefined &&
+      normalizedSuspensionIntervalDays !== null
+    ) {
+      throw new BadRequestException(
+        'Cannot set suspension_interval_days when status is active',
+      );
+    }
+
+    const targetStatus =
+      input.status === TenantStatus.ACTIVE || requestedDaysReset
+        ? TenantStatus.ACTIVE
+        : normalizedSuspensionIntervalDays !== undefined &&
+            normalizedSuspensionIntervalDays !== null
+          ? TenantStatus.SUSPENDED
+          : input.status;
+
+    const targetSuspensionIntervalDays =
+      input.status === TenantStatus.ACTIVE || requestedDaysReset
+        ? null
+        : normalizedSuspensionIntervalDays;
 
     const persistenceInput: UpdateTenantPersistenceInput = {
       id: input.id,
       name: input.name,
-      status: input.status,
-      suspensionIntervalDays: input.suspensionIntervalDays,
+      status: targetStatus,
+      suspensionIntervalDays: targetSuspensionIntervalDays,
     };
 
     const entity = await this.tps.updateTenant(persistenceInput);
@@ -116,7 +154,57 @@ export class TenantsService {
       await this.keycloakAdminService.updateTenantGroup(input.id, input.id);
     }
 
+    if (existing.status !== entity.status) {
+      await this.syncTenantUsersEnabledState(input.id, entity.status);
+    }
+
     return TenantsMapper.toModel(entity);
+  }
+
+  private isSuspensionExpired(tenant: {
+    status: TenantStatus;
+    suspensionUntil: Date | null;
+  }): boolean {
+    return (
+      tenant.status === TenantStatus.SUSPENDED &&
+      !!tenant.suspensionUntil &&
+      tenant.suspensionUntil.getTime() <= Date.now()
+    );
+  }
+
+  private async reactivateTenantIfExpired<
+    T extends { id: string } & {
+      status: TenantStatus;
+      suspensionUntil: Date | null;
+    },
+  >(tenant: T): Promise<T> {
+    if (!this.isSuspensionExpired(tenant)) {
+      return tenant;
+    }
+
+    const updated = await this.tps.updateTenant({
+      id: tenant.id,
+      status: TenantStatus.ACTIVE,
+      suspensionIntervalDays: null,
+    });
+
+    return (updated ?? tenant) as T;
+  }
+
+  private async syncTenantUsersEnabledState(
+    tenantId: string,
+    status: TenantStatus,
+  ): Promise<void> {
+    const shouldEnable = status !== TenantStatus.SUSPENDED;
+    const users = await this.tps.getUsersByTenant(tenantId);
+
+    await Promise.all(
+      users
+        .filter((user) => !!user.id)
+        .map((user) =>
+          this.keycloakAdminService.setUserEnabled(user.id, shouldEnable),
+        ),
+    );
   }
 
   async deleteTenant(input: DeleteTenantInput): Promise<void> {

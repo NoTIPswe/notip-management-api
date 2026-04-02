@@ -16,7 +16,7 @@ export class UpdateTenantRequestDto {
 
   @IsOptional()
   @IsInt()
-  @Min(1)
+  @Min(0)
   @ApiProperty({ name: 'suspension_interval_days' })
   @Expose({ name: 'suspension_interval_days' })
   suspensionIntervalDays?: number;

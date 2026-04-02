@@ -24,6 +24,9 @@ export class TenantEntity {
   @Column({ name: 'suspension_interval_days', type: 'int', nullable: true })
   suspensionIntervalDays: number | null;
 
+  @Column({ name: 'suspension_until', type: 'timestamptz', nullable: true })
+  suspensionUntil: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
