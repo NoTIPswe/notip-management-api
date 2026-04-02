@@ -95,10 +95,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly managementClientId: string;
 
   constructor(configService: ConfigService) {
-    const keycloakUrl = configService.get<string>('KEYCLOAK_URL');
-    const keycloakRealm = configService.get<string>('KEYCLOAK_REALM');
+    const keycloakUrl = configService.get<string>('KEYCLOAK_URL') ?? '';
+    const keycloakRealm = configService.get<string>('KEYCLOAK_REALM') ?? '';
+    const keycloakIssuerUrl =
+      configService.get<string>('KEYCLOAK_ISSUER_URL') ??
+      `${keycloakUrl}/realms/${keycloakRealm}`;
     const managementClientId =
       configService.get<string>('KEYCLOAK_MGMT_CLIENT_ID') ?? '';
+    const normalizedKeycloakUrl = keycloakUrl.replace(/\/$/, '');
+    const normalizedIssuerUrl = keycloakIssuerUrl.replace(/\/$/, '');
 
     super({
       secretOrKeyProvider: passportJwtSecret({
@@ -106,11 +111,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cacheMaxAge: 24 * 60 * 60 * 1000,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `${keycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
+        jwksUri: `${normalizedKeycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
       }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       audience: managementClientId,
-      issuer: `${keycloakUrl}/realms/${keycloakRealm}`,
+      issuer: normalizedIssuerUrl,
       algorithms: ['RS256'],
     });
 
