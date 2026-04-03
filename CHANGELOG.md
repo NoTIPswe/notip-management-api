@@ -1,3 +1,10 @@
+## [1.4.4](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.3...v1.4.4) (2026-04-03)
+
+
+### Bug Fixes
+
+* audit ([a55fe61](https://github.com/NoTIPswe/notip-management-api/commit/a55fe6149e0aa6d13367c9d6fb4391ac56fb3fa0))
+
 ## [1.4.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.2...v1.4.3) (2026-04-03)
 
 
