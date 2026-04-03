@@ -1,3 +1,10 @@
+## [1.4.6](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.5...v1.4.6) (2026-04-03)
+
+
+### Bug Fixes
+
+* username convertion ([3a3c7c4](https://github.com/NoTIPswe/notip-management-api/commit/3a3c7c4fec35e8b639bceb8c70cadd380746be07))
+
 ## [1.4.5](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.4...v1.4.5) (2026-04-03)
 
 
