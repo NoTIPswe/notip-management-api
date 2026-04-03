@@ -66,7 +66,7 @@ export class TenantsService {
       try {
         keycloakUserId = await this.keycloakAdminService.createTenantAdminUser({
           email: input.adminEmail,
-          name: input.adminName,
+          username: input.adminUsername,
           password: input.adminPassword,
           tenantId: tenant.id,
         });
@@ -76,7 +76,7 @@ export class TenantsService {
             tenantId: tenant.id,
             id: keycloakUserId,
             email: input.adminEmail,
-            name: input.adminName,
+            username: input.adminUsername,
             role: UsersRole.TENANT_ADMIN,
           },
           manager,

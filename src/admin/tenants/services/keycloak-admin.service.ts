@@ -9,14 +9,14 @@ import { UsersRole } from '../../../users/enums/users.enum';
 
 interface CreateTenantAdminUserInput {
   email: string;
-  name: string;
+  username: string;
   password: string;
   tenantId: string;
 }
 
 interface CreateTenantUserInput {
   email: string;
-  name: string;
+  username: string;
   password: string;
   tenantId: string;
   role: UsersRole;
@@ -254,7 +254,7 @@ export class KeycloakAdminService {
   ): Promise<string> {
     return this.createTenantUser({
       email: input.email,
-      name: input.name,
+      username: input.username,
       password: input.password,
       tenantId: input.tenantId,
       role: UsersRole.TENANT_ADMIN,
@@ -268,8 +268,6 @@ export class KeycloakAdminService {
     const accessToken = await this.getAdminAccessToken();
     const keycloakBaseUrl = this.getRequiredEnv('KEYCLOAK_URL');
     const keycloakRealm = this.getRequiredEnv('KEYCLOAK_REALM');
-    const { firstName, lastName } = this.splitName(input.name);
-
     const response = await fetch(
       `${keycloakBaseUrl}/admin/realms/${keycloakRealm}/users`,
       {
@@ -279,11 +277,9 @@ export class KeycloakAdminService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: input.email,
+          username: input.username,
           email: input.email,
           enabled: true,
-          firstName,
-          lastName,
           emailVerified: true,
           requiredActions: [],
           attributes: this.buildUserAttributes(input),
@@ -404,7 +400,7 @@ export class KeycloakAdminService {
 
   async updateUser(
     userId: string,
-    input: { email?: string; name?: string },
+    input: { email?: string; username?: string },
   ): Promise<void> {
     this.logger.log(`Updating user ${userId} details`);
     const accessToken = await this.getAdminAccessToken();
@@ -414,19 +410,14 @@ export class KeycloakAdminService {
     interface KeycloakUserUpdate {
       email?: string;
       username?: string;
-      firstName?: string;
-      lastName?: string;
     }
 
     const updateData: KeycloakUserUpdate = {};
     if (input.email) {
       updateData.email = input.email;
-      updateData.username = input.email;
     }
-    if (input.name) {
-      const { firstName, lastName } = this.splitName(input.name);
-      updateData.firstName = firstName;
-      updateData.lastName = lastName;
+    if (input.username) {
+      updateData.username = input.username;
     }
 
     const response = await fetch(
@@ -847,17 +838,6 @@ export class KeycloakAdminService {
       throw new InternalServerErrorException('Configuration error');
     }
     return value;
-  }
-
-  private splitName(name: string): { firstName: string; lastName: string } {
-    const normalized = name.trim().replace(/\s+/g, ' ');
-    if (!normalized) {
-      return { firstName: 'Tenant', lastName: 'Admin' };
-    }
-
-    const [firstName, ...rest] = normalized.split(' ');
-    const lastName = rest.join(' ').trim() || 'Admin';
-    return { firstName, lastName };
   }
 
   private buildTenantGroupName(tenantId: string): string {

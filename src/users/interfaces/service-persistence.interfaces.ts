@@ -2,7 +2,7 @@ import { UsersRole } from '../enums/users.enum';
 
 export interface CreateUserPersistenceInput {
   email: string;
-  name: string;
+  username: string;
   role: UsersRole;
   tenantId: string;
   id: string;
@@ -12,7 +12,7 @@ export interface CreateUserPersistenceInput {
 export interface UpdateUserPersistenceInput {
   id: string;
   email?: string;
-  name?: string;
+  username?: string;
   role?: UsersRole;
   permissions?: string[];
 }

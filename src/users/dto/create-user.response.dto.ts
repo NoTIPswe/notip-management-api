@@ -5,8 +5,8 @@ import { Expose } from 'class-transformer';
 export class CreateUserResponseDto {
   @ApiProperty({ name: 'id' })
   id: string;
-  @ApiProperty({ name: 'name' })
-  name: string;
+  @ApiProperty({ name: 'username' })
+  username: string;
   @ApiProperty({ name: 'email' })
   email: string;
   @ApiProperty({ name: 'role', type: String, enum: UsersRole })

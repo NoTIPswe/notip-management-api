@@ -17,8 +17,8 @@ export class UserEntity {
   @Column({ name: 'tenant_id' })
   tenantId: string;
 
-  @Column()
-  name: string;
+  @Column({ name: 'username' })
+  username: string;
 
   @Column()
   email: string;

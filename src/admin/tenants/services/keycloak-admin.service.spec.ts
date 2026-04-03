@@ -94,7 +94,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantAdminUser({
         email: 'tenant-admin@example.com',
-        name: 'Tenant Admin',
+        username: 'Tenant Admin',
         password: 'Password_123!',
         tenantId: 'tenant-1',
       }),
@@ -190,7 +190,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-7',
         role: UsersRole.TENANT_USER,
@@ -225,7 +225,7 @@ describe('KeycloakAdminService', () => {
     );
   });
 
-  it('creates SYSTEM_ADMIN user with fallback name and without tenant_id attribute', async () => {
+  it('creates SYSTEM_ADMIN user with username and without tenant_id attribute', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
 
@@ -259,7 +259,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'sys-admin@example.com',
-        name: '   ',
+        username: 'system-admin-user',
         password: 'Password_123!',
         tenantId: 'tenant-system',
         role: UsersRole.SYSTEM_ADMIN,
@@ -274,13 +274,11 @@ describe('KeycloakAdminService', () => {
     }
 
     const parsed = JSON.parse(requestBody) as {
-      firstName?: string;
-      lastName?: string;
+      username?: string;
       attributes?: Record<string, string[]>;
     };
 
-    expect(parsed.firstName).toBe('Tenant');
-    expect(parsed.lastName).toBe('Admin');
+    expect(parsed.username).toBe('system-admin-user');
     expect(parsed.attributes).toEqual({
       role: [UsersRole.SYSTEM_ADMIN],
     });
@@ -301,7 +299,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -326,7 +324,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -349,7 +347,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -377,7 +375,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -410,7 +408,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -450,7 +448,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_USER,
@@ -489,7 +487,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_ADMIN,
@@ -529,7 +527,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_ADMIN,
@@ -570,7 +568,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_ADMIN,
@@ -609,7 +607,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_ADMIN,
@@ -654,7 +652,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.createTenantUser({
         email: 'tenant-user@example.com',
-        name: 'Tenant User',
+        username: 'Tenant User',
         password: 'Password_123!',
         tenantId: 'tenant-1',
         role: UsersRole.TENANT_ADMIN,
@@ -898,7 +896,7 @@ describe('KeycloakAdminService', () => {
     ).rejects.toThrow('Keycloak client update failed');
   });
 
-  it('updates a user email and name', async () => {
+  it('updates a user email and username', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
 
@@ -911,16 +909,14 @@ describe('KeycloakAdminService', () => {
     const service = new KeycloakAdminService(configService);
     await service.updateUser('user-uuid-1', {
       email: 'new@example.com',
-      name: 'New Name',
+      username: 'new-username',
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/users/user-uuid-1'),
       expect.objectContaining({
         method: 'PUT',
-        body: expect.stringContaining(
-          '"username":"new@example.com"',
-        ) as unknown,
+        body: expect.stringContaining('"username":"new-username"') as unknown,
       }),
     );
   });
@@ -942,7 +938,7 @@ describe('KeycloakAdminService', () => {
     await expect(
       service.updateUser('user-uuid-1', {
         email: 'new@example.com',
-        name: 'New Name',
+        username: 'new-username',
       }),
     ).rejects.toThrow('Keycloak user update failed');
   });

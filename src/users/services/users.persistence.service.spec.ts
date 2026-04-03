@@ -19,7 +19,7 @@ describe('UsersPersistenceService', () => {
       tenantId: 'tenant-1',
       id: 'kc-user-1',
       email: 'user@example.com',
-      name: 'User',
+      username: 'User',
       role: 'tenant_user',
       permissions: null,
     };
@@ -35,15 +35,15 @@ describe('UsersPersistenceService', () => {
         tenantId: 'tenant-1',
         id: 'kc-user-1',
         email: 'user@example.com',
-        name: 'User',
+        username: 'User',
         role: 'tenant_user',
       } as never),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
   });
 
   it('updates an existing user', async () => {
-    const existing = { id: 'user-1', name: 'Old' };
-    const savedUser = { id: 'user-1', name: 'New' };
+    const existing = { id: 'user-1', username: 'Old' };
+    const savedUser = { id: 'user-1', username: 'New' };
     const repo = {
       findOne: jest.fn().mockResolvedValue(existing),
       save: jest.fn().mockResolvedValue(savedUser),
@@ -51,10 +51,10 @@ describe('UsersPersistenceService', () => {
     const service = new UsersPersistenceService(repo as never);
 
     await expect(
-      service.updateUser({ id: 'user-1', name: 'New' } as never),
-    ).resolves.toEqual(expect.objectContaining({ name: 'New' }));
+      service.updateUser({ id: 'user-1', username: 'New' } as never),
+    ).resolves.toEqual(expect.objectContaining({ username: 'New' }));
     expect(repo.save).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'user-1', name: 'New' }),
+      expect.objectContaining({ id: 'user-1', username: 'New' }),
     );
   });
 

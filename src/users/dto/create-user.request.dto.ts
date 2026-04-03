@@ -4,8 +4,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserRequestDto {
   @IsString()
-  @ApiProperty({ name: 'name' })
-  name: string;
+  @ApiProperty({ name: 'username' })
+  username: string;
   @IsString()
   @IsEmail()
   @ApiProperty({ name: 'email' })

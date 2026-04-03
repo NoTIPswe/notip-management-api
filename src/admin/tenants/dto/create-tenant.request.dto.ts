@@ -13,9 +13,9 @@ export class CreateTenantRequestDto {
   adminEmail: string;
 
   @IsString()
-  @ApiProperty({ name: 'admin_name' })
-  @Expose({ name: 'admin_name' })
-  adminName: string;
+  @ApiProperty({ name: 'admin_username' })
+  @Expose({ name: 'admin_username' })
+  adminUsername: string;
 
   @IsString()
   @ApiProperty({

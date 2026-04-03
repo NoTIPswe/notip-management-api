@@ -11,7 +11,7 @@ const createUserModel = (overrides: Partial<UserModel> = {}): UserModel => {
   model.id = 'user-1';
   model.tenantId = 'tenant-1';
   model.email = 'a@b.com';
-  model.name = 'Name';
+  model.username = 'Name';
   model.role = UsersRole.TENANT_USER;
   model.lastAccess = null;
   model.createdAt = new Date('2024-01-01T00:00:00.000Z');
@@ -63,12 +63,16 @@ describe('UsersController', () => {
     it('creates a user', async () => {
       const dto: CreateUserRequestDto = {
         email: 'new@b.com',
-        name: 'New',
+        username: 'new-user',
         role: UsersRole.TENANT_USER,
         password: 'password123',
       };
       service.createUser.mockResolvedValue(
-        createUserModel({ ...dto, id: 'new-id' }),
+        createUserModel({
+          id: 'new-id',
+          username: dto.username,
+          email: dto.email,
+        }),
       );
 
       await expect(controller.createUser('tenant-1', dto)).resolves.toEqual(
@@ -84,7 +88,7 @@ describe('UsersController', () => {
     it('updates a user', async () => {
       const dto: UpdateUserRequestDto = {
         email: 'upd@b.com',
-        name: 'Upd',
+        username: 'upd-user',
         role: UsersRole.TENANT_ADMIN,
         permissions: [],
       };

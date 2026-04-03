@@ -71,7 +71,7 @@ export class UsersController {
     const model = await this.s.createUser({
       tenantId,
       email: dto.email,
-      name: dto.name,
+      username: dto.username,
       role: dto.role,
       password: dto.password,
     });
@@ -92,7 +92,7 @@ export class UsersController {
       id,
       tenantId,
       email: dto.email,
-      name: dto.name,
+      username: dto.username,
       role: dto.role,
       permissions: dto.permissions,
     });

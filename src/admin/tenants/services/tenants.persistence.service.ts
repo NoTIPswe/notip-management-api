@@ -14,7 +14,7 @@ interface CreateTenantAdminLocalUserInput {
   tenantId: string;
   id: string;
   email: string;
-  name: string;
+  username: string;
   role: UsersRole;
 }
 
@@ -92,7 +92,7 @@ export class TenantsPersistenceService {
       tenantId: input.tenantId,
       id: input.id,
       email: input.email,
-      name: input.name,
+      username: input.username,
       role: input.role,
     });
     return repo.save(user);

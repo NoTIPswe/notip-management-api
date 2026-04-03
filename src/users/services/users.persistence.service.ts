@@ -30,7 +30,7 @@ export class UsersPersistenceService {
       id: input.id,
       tenantId: input.tenantId,
       email: input.email,
-      name: input.name,
+      username: input.username,
       role: input.role,
       permissions: input.permissions ?? null,
     });
@@ -45,7 +45,7 @@ export class UsersPersistenceService {
       return null;
     }
     if (input.email !== undefined) user.email = input.email;
-    if (input.name !== undefined) user.name = input.name;
+    if (input.username !== undefined) user.username = input.username;
     if (input.role !== undefined) user.role = input.role;
     if (input.permissions !== undefined) {
       user.permissions = input.permissions;

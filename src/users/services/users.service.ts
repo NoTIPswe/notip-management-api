@@ -42,7 +42,7 @@ export class UsersService {
     this.logger.log(`Creating user: ${input.email}`);
     const keycloakId = await this.keycloakAdminService.createTenantUser({
       email: input.email,
-      name: input.name,
+      username: input.username,
       password: input.password,
       tenantId: input.tenantId,
       role: input.role,
@@ -50,7 +50,7 @@ export class UsersService {
 
     const persistenceInput: CreateUserPersistenceInput = {
       email: input.email,
-      name: input.name,
+      username: input.username,
       role: input.role,
       tenantId: input.tenantId,
       id: keycloakId,
@@ -86,7 +86,7 @@ export class UsersService {
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
       email: input.email,
-      name: input.name,
+      username: input.username,
       role: input.role,
       permissions: input.permissions,
     };
@@ -102,10 +102,10 @@ export class UsersService {
       );
     }
 
-    if (entity.id && (input.email || input.name)) {
+    if (entity.id && (input.email || input.username)) {
       await this.keycloakAdminService.updateUser(entity.id, {
         email: input.email,
-        name: input.name,
+        username: input.username,
       });
     }
 

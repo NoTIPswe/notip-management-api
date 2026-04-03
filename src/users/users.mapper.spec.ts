@@ -10,7 +10,7 @@ describe('UsersMapper', () => {
       entity.id = 'id';
       entity.tenantId = 'tenant';
       entity.email = 'email@test.com';
-      entity.name = 'Name';
+      entity.username = 'Name';
       entity.role = UsersRole.TENANT_ADMIN;
       entity.permissions = ['p1'];
       entity.lastAccess = new Date('2026-01-01');
@@ -21,7 +21,7 @@ describe('UsersMapper', () => {
       expect(model.id).toBe(entity.id);
       expect(model.tenantId).toBe(entity.tenantId);
       expect(model.email).toBe(entity.email);
-      expect(model.name).toBe(entity.name);
+      expect(model.username).toBe(entity.username);
       expect(model.role).toBe(entity.role);
       expect(model.permissions).toEqual(entity.permissions);
       expect(model.lastAccess).toEqual(entity.lastAccess);
@@ -46,14 +46,14 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
 
       const dto = UsersMapper.toUpdateUserResponseDto(model);
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
       expect(dto.updateAt).toBeInstanceOf(Date);
     });
@@ -64,7 +64,7 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
       model.lastAccess = new Date();
 
@@ -72,7 +72,7 @@ describe('UsersMapper', () => {
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
       expect(dto.lastAccess).toEqual(model.lastAccess);
     });
@@ -83,14 +83,14 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
 
       const dto = UsersMapper.toCreateUserResponseDto(model);
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
       expect(dto.createdAt).toBeInstanceOf(Date);
     });

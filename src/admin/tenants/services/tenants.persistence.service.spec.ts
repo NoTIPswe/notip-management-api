@@ -104,7 +104,7 @@ describe('TenantsPersistenceService', () => {
       tenantId: 'tenant-1',
       id: 'kc-user-1',
       email: 'admin@example.com',
-      name: 'Admin User',
+      username: 'Admin User',
       role: UsersRole.TENANT_ADMIN,
     };
     const userRepo = {
@@ -121,7 +121,7 @@ describe('TenantsPersistenceService', () => {
         tenantId: 'tenant-1',
         id: 'kc-user-1',
         email: 'admin@example.com',
-        name: 'Admin User',
+        username: 'Admin User',
         role: UsersRole.TENANT_ADMIN,
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));

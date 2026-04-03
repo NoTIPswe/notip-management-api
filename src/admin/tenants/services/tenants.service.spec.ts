@@ -125,7 +125,7 @@ describe('TenantsService', () => {
       service.createTenant({
         name: 'Tenant One',
         adminEmail: 'admin@example.com',
-        adminName: 'Admin User',
+        adminUsername: 'Admin User',
         adminPassword: 'Passw0rd!',
       }),
     ).resolves.toEqual(

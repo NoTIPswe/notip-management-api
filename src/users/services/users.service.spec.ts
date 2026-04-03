@@ -10,7 +10,7 @@ const createUserEntity = (overrides: Record<string, unknown> = {}) =>
     id: 'kc-user-1',
     tenantId: 'tenant-1',
     email: 'user@example.com',
-    name: 'User One',
+    username: 'User One',
     role: UsersRole.TENANT_ADMIN,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     ...overrides,
@@ -92,7 +92,7 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 'tenant-1',
         email: 'user@example.com',
-        name: 'User One',
+        username: 'User One',
         role: UsersRole.TENANT_ADMIN,
         password: 'password',
       }),
@@ -112,7 +112,7 @@ describe('UsersService', () => {
         id: 'kc-user-1',
         tenantId: 'tenant-1',
         email: 'new@example.com',
-        name: 'New Name',
+        username: 'new-username',
         role: UsersRole.TENANT_USER,
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
@@ -123,7 +123,7 @@ describe('UsersService', () => {
     );
     expect(updateUserKeycloakMock).toHaveBeenCalledWith('kc-user-1', {
       email: 'new@example.com',
-      name: 'New Name',
+      username: 'new-username',
     });
   });
 
@@ -219,7 +219,7 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 't1',
         email: 'e',
-        name: 'n',
+        username: 'n',
         role: UsersRole.TENANT_USER,
         password: 'p',
       }),
@@ -237,7 +237,7 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 't1',
         email: 'e',
-        name: 'n',
+        username: 'n',
         role: UsersRole.TENANT_USER,
         password: 'p',
       }),
@@ -271,7 +271,7 @@ describe('UsersService', () => {
     expect(syncUserApplicationRoleMock).not.toHaveBeenCalled();
     expect(updateUserKeycloakMock).toHaveBeenCalledWith('kc-user-1', {
       email: 'new@e.com',
-      name: undefined,
+      username: undefined,
     });
   });
 
