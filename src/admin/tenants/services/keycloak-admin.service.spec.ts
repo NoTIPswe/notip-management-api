@@ -225,6 +225,443 @@ describe('KeycloakAdminService', () => {
     );
   });
 
+  it('creates SYSTEM_ADMIN user with fallback name and without tenant_id attribute', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-sys',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'system-admin-role-id', name: UsersRole.SYSTEM_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'group-system', name: 'Tenant-tenant-system' }],
+        }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'sys-admin@example.com',
+        name: '   ',
+        password: 'Password_123!',
+        tenantId: 'tenant-system',
+        role: UsersRole.SYSTEM_ADMIN,
+      }),
+    ).resolves.toBe('kc-user-sys');
+
+    const createUserCall = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    const requestBody = createUserCall.body;
+
+    if (typeof requestBody !== 'string') {
+      throw new Error('Expected create user request body to be a string');
+    }
+
+    const parsed = JSON.parse(requestBody) as {
+      firstName?: string;
+      lastName?: string;
+      attributes?: Record<string, string[]>;
+    };
+
+    expect(parsed.firstName).toBe('Tenant');
+    expect(parsed.lastName).toBe('Admin');
+    expect(parsed.attributes).toEqual({
+      role: [UsersRole.SYSTEM_ADMIN],
+    });
+  });
+
+  it('throws conflict when tenant user already exists', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 409 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('User already exists in Keycloak');
+  });
+
+  it('throws when tenant user creation request fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'user create failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('Keycloak user creation failed');
+  });
+
+  it('throws when tenant user location header is missing', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 201 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('Keycloak user creation failed');
+  });
+
+  it('throws when tenant user location header is invalid', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location: 'http://localhost:8080/admin/realms/notip/users/',
+        }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('Keycloak user creation failed');
+  });
+
+  it('rolls back user creation when role assignment fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-rollback',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'role lookup failed' }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('Role sync failed');
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.stringContaining('/users/kc-user-rollback'),
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  it('throws cleanup error when rollback fails after assignment error', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-rollback-fail',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'role lookup failed' }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'delete failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_USER,
+      }),
+    ).rejects.toThrow('cleanup was not possible');
+  });
+
+  it('rolls back when tenant group lookup fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-group-lookup',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'tenant-admin-role-id', name: UsersRole.TENANT_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'group lookup failed' }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_ADMIN,
+      }),
+    ).rejects.toThrow('Group sync failed');
+  });
+
+  it('rolls back when tenant group creation fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-group-create',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'tenant-admin-role-id', name: UsersRole.TENANT_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'group create failed' }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_ADMIN,
+      }),
+    ).rejects.toThrow('Group sync failed');
+  });
+
+  it('rolls back when refreshed tenant group lookup fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-group-refresh-fail',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'tenant-admin-role-id', name: UsersRole.TENANT_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(createResponse({ status: 201 }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'group refresh failed' }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_ADMIN,
+      }),
+    ).rejects.toThrow('Group sync failed');
+  });
+
+  it('rolls back when tenant group is still missing after creation', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-group-missing',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'tenant-admin-role-id', name: UsersRole.TENANT_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(createResponse({ status: 201 }))
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_ADMIN,
+      }),
+    ).rejects.toThrow('Group sync failed');
+  });
+
+  it('rolls back when assigning user to tenant group fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 201,
+          location:
+            'http://localhost:8080/admin/realms/notip/users/kc-user-group-assign-fail',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'tenant-admin-role-id', name: UsersRole.TENANT_ADMIN }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'group-1', name: 'Tenant-tenant-1' }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'group assignment failed' }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 204 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createTenantUser({
+        email: 'tenant-user@example.com',
+        name: 'Tenant User',
+        password: 'Password_123!',
+        tenantId: 'tenant-1',
+        role: UsersRole.TENANT_ADMIN,
+      }),
+    ).rejects.toThrow('Group sync failed');
+  });
+
   it('creates API client for a tenant', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
@@ -267,6 +704,104 @@ describe('KeycloakAdminService', () => {
     });
   });
 
+  it('throws when API client creation fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'client create failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createApiClient('My Client', 'tenant-1'),
+    ).rejects.toThrow('Keycloak client creation failed');
+  });
+
+  it('throws when created API client cannot be found', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 201 }))
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createApiClient('My Client', 'tenant-1'),
+    ).rejects.toThrow('Failed to find created client');
+  });
+
+  it('throws when service account user is missing after client creation', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 201 }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: [{ id: 'client-uuid-1' }] }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { value: 'client-secret-1' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: { username: 'service-account-client' },
+        }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createApiClient('My Client', 'tenant-1'),
+    ).rejects.toThrow('Failed to find service account user');
+  });
+
+  it('throws when setting service account tenant attributes fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 201 }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: [{ id: 'client-uuid-1' }] }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { value: 'client-secret-1' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: { id: 'sa-user-id', username: 'service-account-client' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'attribute update failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.createApiClient('My Client', 'tenant-1'),
+    ).rejects.toThrow('Failed to set tenant attributes on Keycloak');
+  });
+
   it('deletes an API client', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
@@ -283,6 +818,42 @@ describe('KeycloakAdminService', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining('/clients/client-uuid-1'),
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  it('returns without error when deleting a missing API client', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 404 }));
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.deleteApiClient('missing-client'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('throws when deleting an API client fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'client delete failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(service.deleteApiClient('client-uuid-1')).rejects.toThrow(
+      'Keycloak client deletion failed',
     );
   });
 
@@ -306,6 +877,25 @@ describe('KeycloakAdminService', () => {
         body: JSON.stringify({ name: 'New Name' }),
       }),
     );
+  });
+
+  it('throws when updating an API client fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'client update failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.updateApiClient('client-uuid-1', 'New Name'),
+    ).rejects.toThrow('Keycloak client update failed');
   });
 
   it('updates a user email and name', async () => {
@@ -335,6 +925,28 @@ describe('KeycloakAdminService', () => {
     );
   });
 
+  it('throws when updating user details fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'user update failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.updateUser('user-uuid-1', {
+        email: 'new@example.com',
+        name: 'New Name',
+      }),
+    ).rejects.toThrow('Keycloak user update failed');
+  });
+
   it('updates user enabled status', async () => {
     const configService = createConfigService();
     const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
@@ -355,6 +967,150 @@ describe('KeycloakAdminService', () => {
         body: JSON.stringify({ enabled: false }),
       }),
     );
+  });
+
+  it('throws when updating user enabled status fails', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'status update failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(service.setUserEnabled('user-uuid-1', false)).rejects.toThrow(
+      'Keycloak user status update failed',
+    );
+  });
+
+  it('returns early when syncUserApplicationRole is called without user id', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('', UsersRole.TENANT_ADMIN),
+    ).resolves.toBeUndefined();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('syncs user role when user already has target role', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'role-1', name: UsersRole.TENANT_ADMIN }],
+        }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('user-uuid-1', UsersRole.TENANT_ADMIN),
+    ).resolves.toBeUndefined();
+  });
+
+  it('throws when role cleanup fails during sync', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: [{ id: 'role-1', name: UsersRole.TENANT_USER }],
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'cleanup failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('user-uuid-1', UsersRole.TENANT_ADMIN),
+    ).rejects.toThrow('Role sync cleanup failed');
+  });
+
+  it('throws when target role lookup fails during sync', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'role lookup failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('user-uuid-1', UsersRole.TENANT_ADMIN),
+    ).rejects.toThrow('Role sync failed');
+  });
+
+  it('throws when target role payload is invalid during sync', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { id: 'role-only' } }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('user-uuid-1', UsersRole.TENANT_ADMIN),
+    ).rejects.toThrow('Keycloak realm role payload is invalid');
+  });
+
+  it('throws when role assignment fails during sync', async () => {
+    const configService = createConfigService();
+    const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+    fetchMock
+      .mockResolvedValueOnce(
+        createResponse({ status: 200, json: { access_token: 'admin-token' } }),
+      )
+      .mockResolvedValueOnce(createResponse({ status: 200, json: [] }))
+      .mockResolvedValueOnce(
+        createResponse({
+          status: 200,
+          json: { id: 'role-id', name: UsersRole.TENANT_ADMIN },
+        }),
+      )
+      .mockResolvedValueOnce(
+        createResponse({ status: 500, text: 'assignment failed' }),
+      );
+
+    const service = new KeycloakAdminService(configService);
+
+    await expect(
+      service.syncUserApplicationRole('user-uuid-1', UsersRole.TENANT_ADMIN),
+    ).rejects.toThrow('Role sync failed');
   });
 
   it('deletes a user', async () => {
@@ -490,6 +1246,31 @@ describe('KeycloakAdminService', () => {
         'Keycloak group update failed',
       );
     });
+
+    it('throws error if group rename fails', async () => {
+      const configService = createConfigService();
+      const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+      fetchMock
+        .mockResolvedValueOnce(
+          createResponse({ status: 200, json: { access_token: 'token' } }),
+        )
+        .mockResolvedValueOnce(
+          createResponse({
+            status: 200,
+            json: [{ id: 'group-id', name: 'Tenant-old' }],
+          }),
+        )
+        .mockResolvedValueOnce(
+          createResponse({ status: 500, text: 'rename failed' }),
+        );
+
+      const service = new KeycloakAdminService(configService);
+
+      await expect(service.updateTenantGroup('old', 'new')).rejects.toThrow(
+        'Keycloak group update failed',
+      );
+    });
   });
 
   describe('deleteTenantGroup', () => {
@@ -557,6 +1338,20 @@ describe('KeycloakAdminService', () => {
       const service = new KeycloakAdminService(configService);
       await expect(service.getClientCredentialsToken()).rejects.toThrow(
         'Keycloak authentication failed',
+      );
+    });
+
+    it('throws error when access token is missing in payload', async () => {
+      const configService = createConfigService();
+      const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+
+      fetchMock.mockResolvedValueOnce(
+        createResponse({ status: 200, json: {} }),
+      );
+
+      const service = new KeycloakAdminService(configService);
+      await expect(service.getClientCredentialsToken()).rejects.toThrow(
+        'Keycloak client credentials response missing access_token',
       );
     });
   });

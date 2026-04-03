@@ -92,11 +92,14 @@ describe('GatewaysService', () => {
       expect(bcrypt.genSalt).toHaveBeenCalledWith(12);
       expect(bcrypt.hash).toHaveBeenCalledWith('factory-key-2', 'salt-2');
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(persistenceService.addGateway).toHaveBeenCalledWith({
-        factoryId: 'factory-2',
-        tenantId: 'tenant-2',
-        factoryKeyHash: 'hashed-key-2',
-      });
+      expect(persistenceService.addGateway).toHaveBeenCalledWith(
+        expect.objectContaining({
+          factoryId: 'factory-2',
+          tenantId: 'tenant-2',
+          factoryKeyHash: 'hashed-key-2',
+          model: 'model-2',
+        }),
+      );
     });
   });
 });
