@@ -25,5 +25,5 @@ export class GatewayResponseDto {
 
   @ApiProperty({ name: 'created_at' })
   @Expose({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: string;
 }

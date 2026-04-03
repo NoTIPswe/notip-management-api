@@ -21,7 +21,8 @@ export class GatewaysController {
   async getAdminGateways(
     @Query('tenant_id') tenantId?: string,
   ): Promise<GatewayResponseDto[]> {
-    return this.gs.getGateways({ tenantId });
+    const models = await this.gs.getGateways({ tenantId });
+    return models.map((model) => GatewaysMapper.toResponseDto(model));
   }
 
   @Post()

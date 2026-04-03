@@ -33,13 +33,20 @@ describe('GatewaysMapper', () => {
   });
 
   it('toResponseDto maps model to dto', () => {
+    const createdAt = new Date('2026-04-03T00:00:00.000Z');
     const model = new GatewayModel();
     model.id = 'gw-1';
     model.tenantId = 'tenant-1';
+    model.factoryId = 'factory-1';
+    model.model = 'M1';
+    model.provisioned = true;
+    model.firmwareVersion = '1.0.0';
+    model.createdAt = createdAt;
 
     const dto = GatewaysMapper.toResponseDto(model);
     expect(dto.id).toBe(model.id);
     expect(dto.tenantId).toBe(model.tenantId);
+    expect(dto.createdAt).toBe(createdAt.toISOString());
   });
 
   it('toAddGatewayInput maps dto to input', () => {

@@ -23,6 +23,11 @@ export class GatewaysMapper {
     const dto = new GatewayResponseDto();
     dto.id = model.id;
     dto.tenantId = model.tenantId;
+    dto.createdAt = model.createdAt.toISOString();
+    dto.factoryId = model.factoryId;
+    dto.model = model.model;
+    dto.provisioned = model.provisioned;
+    dto.firmwareVersion = model.firmwareVersion;
     return dto;
   }
 
