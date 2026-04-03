@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.0...v1.4.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* factorykey naming ([c7f6335](https://github.com/NoTIPswe/notip-management-api/commit/c7f63354719b644f3023c399e7b2ee2c40ace278))
+
 # [1.4.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.3...v1.4.0) (2026-04-02)
 
 
