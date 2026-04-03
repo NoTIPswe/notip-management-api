@@ -1,3 +1,11 @@
+## [1.4.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.2...v1.4.3) (2026-04-03)
+
+
+### Bug Fixes
+
+* model and firmware ([5d90594](https://github.com/NoTIPswe/notip-management-api/commit/5d9059499f4ff5eabcbafe9a6029d06a9e6df1aa))
+* model and firmware ([865aea7](https://github.com/NoTIPswe/notip-management-api/commit/865aea7f9be16849512c1da073ba7f7bd7437e95))
+
 ## [1.4.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.1...v1.4.2) (2026-04-03)
 
 
