@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.1...v1.4.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* gateway response ([58c37b8](https://github.com/NoTIPswe/notip-management-api/commit/58c37b8476de7aa5feb7e33e43bb793c1a7c6ff9))
+
 ## [1.4.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.0...v1.4.1) (2026-04-03)
 
 
