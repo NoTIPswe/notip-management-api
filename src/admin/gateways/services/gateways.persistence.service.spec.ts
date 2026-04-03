@@ -46,6 +46,7 @@ describe('GatewaysPersistenceService', () => {
         factoryId: 'f1',
         tenantId: 't1',
         factoryKeyHash: 'h1',
+        model: 'm1',
       };
       const entity = new GatewayEntity();
       jest.spyOn(repository, 'create').mockReturnValue(entity);

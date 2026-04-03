@@ -7,4 +7,5 @@ export interface AddGatewayInput {
   tenantId: string;
   factoryKey: string;
   model: string;
+  firmwareVersion?: string;
 }

@@ -7,9 +7,6 @@ import {
   GetGatewaysPersistenceInput,
 } from '../interfaces/service-persistence.interfaces';
 
-const DEFAULT_GATEWAY_MODEL = 'unknown-model';
-const DEFAULT_GATEWAY_FIRMWARE_VERSION = '0.0.0';
-
 @Injectable()
 export class GatewaysPersistenceService {
   constructor(
@@ -31,8 +28,8 @@ export class GatewaysPersistenceService {
       tenant: { id: input.tenantId },
       factoryId: input.factoryId,
       factoryKeyHash: input.factoryKeyHash,
-      model: DEFAULT_GATEWAY_MODEL,
-      firmwareVersion: DEFAULT_GATEWAY_FIRMWARE_VERSION,
+      model: input.model,
+      firmwareVersion: input.firmwareVersion,
       createdAt: new Date(),
     });
     return this.r.save(entity);
