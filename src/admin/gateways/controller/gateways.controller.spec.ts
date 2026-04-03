@@ -34,7 +34,16 @@ describe('GatewaysController', () => {
 
   describe('getAdminGateways', () => {
     it('should return an array of gateways', async () => {
-      const result: GatewayResponseDto[] = [{ id: '1', tenantId: 'tenant1' }];
+      const result: GatewayResponseDto[] = [
+        {
+          id: '1',
+          tenantId: 'tenant1',
+          factoryId: 'factory-1',
+          model: 'model-1',
+          provisioned: false,
+          createdAt: new Date(),
+        },
+      ];
       jest
         .spyOn(service, 'getGateways')
         .mockResolvedValue(result as GatewayModel[]);
