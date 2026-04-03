@@ -46,7 +46,7 @@ describe('GatewaysMapper', () => {
     const dto: AddGatewayRequestDto = {
       factoryId: 'f1',
       tenantId: 't1',
-      factoryKeyHash: 'h1',
+      factoryKey: 'k1',
       model: 'M1',
     };
     const input = GatewaysMapper.toAddGatewayInput(dto);

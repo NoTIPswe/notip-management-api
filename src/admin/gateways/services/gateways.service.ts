@@ -25,8 +25,8 @@ export class GatewaysService {
   }
 
   async addGateway(input: AddGatewayInput): Promise<GatewayModel> {
-    const salt = await bcrypt.genSalt();
-    const hash = await bcrypt.hash(input.factoryKeyHash, salt);
+    const salt = await bcrypt.genSalt(12);
+    const hash = await bcrypt.hash(input.factoryKey, salt);
 
     const persistenceInput: AddGatewayPersistenceInput = {
       factoryId: input.factoryId,

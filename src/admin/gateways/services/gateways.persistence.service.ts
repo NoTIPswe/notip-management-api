@@ -33,6 +33,7 @@ export class GatewaysPersistenceService {
       factoryKeyHash: input.factoryKeyHash,
       model: DEFAULT_GATEWAY_MODEL,
       firmwareVersion: DEFAULT_GATEWAY_FIRMWARE_VERSION,
+      createdAt: new Date(),
     });
     return this.r.save(entity);
   }

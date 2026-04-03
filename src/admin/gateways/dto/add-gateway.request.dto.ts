@@ -15,11 +15,11 @@ export class AddGatewayRequestDto {
   @IsNotEmpty()
   tenantId: string;
 
-  @ApiProperty({ name: 'factory_key_hash' })
-  @Expose({ name: 'factory_key_hash' })
+  @ApiProperty({ name: 'factory_key' })
+  @Expose({ name: 'factory_key' })
   @IsString()
   @IsNotEmpty()
-  factoryKeyHash: string;
+  factoryKey: string;
 
   @ApiProperty({ name: 'model' })
   @Expose({ name: 'model' })

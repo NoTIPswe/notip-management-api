@@ -5,6 +5,6 @@ export interface GetGatewaysInput {
 export interface AddGatewayInput {
   factoryId: string;
   tenantId: string;
-  factoryKeyHash: string;
+  factoryKey: string;
   model: string;
 }

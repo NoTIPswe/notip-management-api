@@ -30,7 +30,7 @@ export class GatewaysMapper {
     return {
       factoryId: dto.factoryId,
       tenantId: dto.tenantId,
-      factoryKeyHash: dto.factoryKeyHash,
+      factoryKey: dto.factoryKey,
       model: dto.model,
     };
   }

@@ -48,7 +48,7 @@ describe('GatewaysController', () => {
       const dto: AddGatewayRequestDto = {
         factoryId: 'f1',
         tenantId: 't1',
-        factoryKeyHash: 'h1',
+        factoryKey: 'k1',
         model: 'M1',
       };
       const result: AddGatewayResponseDto = { id: '1' };

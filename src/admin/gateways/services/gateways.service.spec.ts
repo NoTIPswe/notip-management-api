@@ -83,14 +83,14 @@ describe('GatewaysService', () => {
       const result = await service.addGateway({
         factoryId: 'factory-2',
         tenantId: 'tenant-2',
-        factoryKeyHash: 'hash-2',
+        factoryKey: 'factory-key-2',
         model: 'model-2',
       });
 
       expect(result).toBeInstanceOf(GatewayModel);
       expect(result.id).toBe('2');
-      expect(bcrypt.genSalt).toHaveBeenCalled();
-      expect(bcrypt.hash).toHaveBeenCalledWith('hash-2', 'salt-2');
+      expect(bcrypt.genSalt).toHaveBeenCalledWith(12);
+      expect(bcrypt.hash).toHaveBeenCalledWith('factory-key-2', 'salt-2');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(persistenceService.addGateway).toHaveBeenCalledWith({
         factoryId: 'factory-2',
