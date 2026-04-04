@@ -9,6 +9,7 @@ import { GatewaysController } from './gateways/controller/gateways.controller';
 import { GatewaysService } from './gateways/services/gateways.service';
 import { GatewaysPersistenceService } from './gateways/services/gateways.persistence.service';
 import { GatewayEntity } from '../gateways/entities/gateway.entity';
+import { GatewayMetadataEntity } from '../gateways/entities/gateway-metadata.entity';
 import { TenantEntity } from '../common/entities/tenant.entity';
 import { UserEntity } from '../users/entities/user.entity';
 import { KeycloakAdminService } from './tenants/services/keycloak-admin.service';
@@ -16,7 +17,12 @@ import { ApiClientModule } from '../api-client/api-client.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TenantEntity, GatewayEntity, UserEntity]),
+    TypeOrmModule.forFeature([
+      TenantEntity,
+      GatewayEntity,
+      GatewayMetadataEntity,
+      UserEntity,
+    ]),
     ApiClientModule,
   ],
   controllers: [TenantsController, GatewaysController],

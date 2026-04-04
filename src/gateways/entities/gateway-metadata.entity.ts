@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 
 import { GatewayStatus } from '../enums/gateway.enum';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
 import { GatewayEntity } from './gateway.entity';
 
 @Entity('gateways_metadata')
@@ -21,8 +22,13 @@ export class GatewayMetadataEntity {
   @Column({ name: 'last_seen_at', type: 'timestamp', nullable: true })
   lastSeenAt: Date;
 
-  @Column({ name: 'send_frequency_ms', type: 'bigint', nullable: true })
-  sendFrequencyMs: number | null;
+  @Column({
+    name: 'send_frequency_ms',
+    type: 'bigint',
+    nullable: false,
+    default: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+  })
+  sendFrequencyMs: number;
 
   @OneToOne(() => GatewayEntity, (gateway) => gateway.metadata, {
     onDelete: 'CASCADE',

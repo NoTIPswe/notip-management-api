@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class ValidateFactoryKeyRequestDto {
   @ApiProperty({ name: 'factory_id' })
@@ -35,6 +41,16 @@ export class ProvisioningCompleteRequestDto {
   @ApiProperty({ name: 'key_version' })
   @IsNumber()
   key_version: number;
+
+  @ApiProperty({ name: 'send_frequency_ms' })
+  @IsNumber()
+  @Min(1)
+  send_frequency_ms: number;
+
+  @ApiProperty({ name: 'firmware_version', required: false })
+  @IsOptional()
+  @IsString()
+  firmware_version?: string;
 }
 
 export class ProvisioningCompleteResponseDto {

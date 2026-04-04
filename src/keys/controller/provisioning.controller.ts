@@ -46,6 +46,8 @@ export class ProvisioningController {
       dto.gateway_id,
       dto.key_material,
       dto.key_version,
+      dto.send_frequency_ms,
+      dto.firmware_version,
     );
     return { success: true };
   }

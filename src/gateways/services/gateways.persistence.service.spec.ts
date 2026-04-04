@@ -1,4 +1,5 @@
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
 
 describe('GatewaysPersistenceService', () => {
   it('returns tenant gateways with relations and ordering', async () => {
@@ -111,6 +112,7 @@ describe('GatewaysPersistenceService', () => {
         gatewayId: 'gateway-1',
         gateway,
         name: 'New Name',
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
       },
     };
     const repo = {

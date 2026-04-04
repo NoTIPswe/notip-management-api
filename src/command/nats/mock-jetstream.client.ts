@@ -6,12 +6,17 @@ import {
 } from './jetstream.client';
 import { CommandAckPayload } from '../interfaces/command-ack.interface';
 
+type SubscriptionHandler = {
+  subject: string;
+  handler: JetStreamHandler;
+};
+
 @Injectable()
 export class MockJetStreamClient extends JetStreamClient {
-  private handler: JetStreamHandler | null = null;
+  private readonly handlers: SubscriptionHandler[] = [];
 
-  async subscribe(_subject: string, handler: JetStreamHandler): Promise<void> {
-    this.handler = handler;
+  async subscribe(subject: string, handler: JetStreamHandler): Promise<void> {
+    this.handlers.push({ subject, handler });
     return Promise.resolve();
   }
 
@@ -32,12 +37,36 @@ export class MockJetStreamClient extends JetStreamClient {
 
   async emit(
     payload: CommandAckPayload | Record<string, unknown>,
+    subject?: string,
   ): Promise<void> {
-    if (!this.handler) return;
-    const message: JetStreamMessage = {
-      data: Buffer.from(JSON.stringify(payload)),
-      ack: () => undefined,
-    };
-    await this.handler(message);
+    if (this.handlers.length === 0) return;
+
+    const matchingHandlers = subject
+      ? this.handlers.filter(({ subject: pattern }) =>
+          this.matchesSubject(pattern, subject),
+        )
+      : this.handlers;
+
+    for (const subscription of matchingHandlers) {
+      const message: JetStreamMessage = {
+        data: Buffer.from(JSON.stringify(payload)),
+        subject: subject ?? subscription.subject,
+        ack: () => undefined,
+      };
+      await subscription.handler(message);
+    }
+  }
+
+  private matchesSubject(pattern: string, subject: string): boolean {
+    if (pattern === '>') {
+      return true;
+    }
+
+    if (pattern.endsWith('>')) {
+      const prefix = pattern.slice(0, -1);
+      return subject.startsWith(prefix);
+    }
+
+    return pattern === subject;
   }
 }

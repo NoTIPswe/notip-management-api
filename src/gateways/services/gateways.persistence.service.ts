@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GatewayEntity } from '../entities/gateway.entity';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
 import {
   DeleteGatewayPersistenceInput,
   GetGatewayByIdPersistenceInput,
@@ -74,7 +75,7 @@ export class GatewaysPersistenceService {
           gatewayId: gateway.id,
           gateway,
           name: input.name,
-          sendFrequencyMs: 0,
+          sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
         } as GatewayEntity['metadata'];
       } else {
         gateway.metadata.name = input.name;

@@ -5,6 +5,7 @@ import { KeysController } from './controller/keys.controller';
 import { ProvisioningController } from './controller/provisioning.controller';
 import { KeysService } from './services/keys.service';
 import { GatewaysKeysPersistenceService } from './services/keys.persistence.service';
+import { ProvisioningNatsResponderService } from './services/provisioning-nats-responder.service';
 import { KeyEntity } from './entities/key.entity';
 import { GatewaysModule } from '../gateways/gateways.module';
 
@@ -15,6 +16,10 @@ import { GatewaysModule } from '../gateways/gateways.module';
     GatewaysModule,
   ],
   controllers: [KeysController, ProvisioningController],
-  providers: [KeysService, GatewaysKeysPersistenceService],
+  providers: [
+    KeysService,
+    GatewaysKeysPersistenceService,
+    ProvisioningNatsResponderService,
+  ],
 })
 export class KeysModule {}

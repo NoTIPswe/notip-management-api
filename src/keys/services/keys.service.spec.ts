@@ -138,13 +138,17 @@ describe('KeysService', () => {
       gatewaysService.findByIdUnscoped.mockResolvedValue({
         id: 'gateway-1',
       } as unknown as GatewayModel);
-      manager.create.mockReturnValue({ id: 'key-1' } as never);
+      manager.create.mockImplementation(
+        (_entity: unknown, payload: unknown) => payload as never,
+      );
 
       await expect(
         service.completeProvisioning(
           'gateway-1',
           Buffer.from('secret').toString('base64'),
           2,
+          5000,
+          '1.2.3',
         ),
       ).resolves.toBeUndefined();
 
@@ -163,7 +167,15 @@ describe('KeysService', () => {
         {
           provisioned: true,
           factoryKeyHash: null,
+          firmwareVersion: '1.2.3',
         },
+      );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gatewayId: 'gateway-1',
+          sendFrequencyMs: 5000,
+        }),
       );
     });
 
@@ -171,8 +183,44 @@ describe('KeysService', () => {
       gatewaysService.findByIdUnscoped.mockResolvedValue(null);
 
       await expect(
-        service.completeProvisioning('missing', 'a2V5', 1),
+        service.completeProvisioning('missing', 'a2V5', 1, 5000),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('does not overwrite firmware when firmwareVersion is empty', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue({
+        id: 'gateway-1',
+      } as unknown as GatewayModel);
+      manager.create.mockImplementation(
+        (_entity: unknown, payload: unknown) => payload as never,
+      );
+
+      await expect(
+        service.completeProvisioning(
+          'gateway-1',
+          Buffer.from('secret').toString('base64'),
+          2,
+          3000,
+          '',
+        ),
+      ).resolves.toBeUndefined();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        'gateway-1',
+        {
+          provisioned: true,
+          factoryKeyHash: null,
+        },
+      );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gatewayId: 'gateway-1',
+          sendFrequencyMs: 3000,
+        }),
+      );
     });
   });
 

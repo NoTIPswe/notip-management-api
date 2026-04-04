@@ -112,6 +112,7 @@ export class NatsJetStreamClient
       for await (const message of subscription) {
         const wrappedMessage: JetStreamMessage = {
           data: Buffer.from(message.data),
+          subject: message.subject,
           ack: () => message.ack(),
         };
 
@@ -159,7 +160,7 @@ export class NatsJetStreamClient
       name: process.env.NATS_CLIENT_NAME ?? 'management-api',
     };
 
-    this.applyTlsOptions(options);
+    const tlsEnabled = this.applyTlsOptions(options);
 
     const token = process.env.NATS_TOKEN?.trim();
     const user = process.env.NATS_USER?.trim();
@@ -178,17 +179,21 @@ export class NatsJetStreamClient
       return options;
     }
 
+    if (tlsEnabled) {
+      return options;
+    }
+
     this.logger.log('Using unauthenticated NATS connection');
     return options;
   }
 
-  private applyTlsOptions(options: ConnectionOptions): void {
+  private applyTlsOptions(options: ConnectionOptions): boolean {
     const caFile = process.env.NATS_TLS_CA;
     const certFile = process.env.NATS_TLS_CERT;
     const keyFile = process.env.NATS_TLS_KEY;
 
     if (!(caFile && certFile && keyFile)) {
-      return;
+      return false;
     }
 
     options.tls = {
@@ -197,6 +202,7 @@ export class NatsJetStreamClient
       keyFile,
     };
     this.logger.log('Using mTLS for NATS connection');
+    return true;
   }
 
   private resolveServers(): string[] {

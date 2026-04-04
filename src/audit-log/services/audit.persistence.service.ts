@@ -26,6 +26,11 @@ export class AuditLogPersistenceService {
       query.andWhere('audit_log.action = :action', { action: input.action });
     }
 
+    // Enforce deterministic ordering for API consumers.
+    query
+      .orderBy('audit_log.timestamp', 'DESC')
+      .addOrderBy('audit_log.id', 'DESC');
+
     return await query.getMany();
   }
 

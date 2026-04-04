@@ -12,6 +12,7 @@ import { GatewaysService } from '../../gateways/services/gateways.service';
 import { DataSource } from 'typeorm';
 import { KeyEntity } from '../entities/key.entity';
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
+import { GatewayMetadataEntity } from '../../gateways/entities/gateway-metadata.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -70,6 +71,8 @@ export class KeysService {
     gatewayId: string,
     keyMaterial: string,
     keyVersion: number,
+    sendFrequencyMs: number,
+    firmwareVersion?: string,
   ): Promise<void> {
     const gateway = await this.gs.findByIdUnscoped(gatewayId);
     if (!gateway) {
@@ -89,7 +92,16 @@ export class KeysService {
       await manager.update(GatewayEntity, gateway.id, {
         provisioned: true,
         factoryKeyHash: null,
+        ...(firmwareVersion && firmwareVersion.trim().length > 0
+          ? { firmwareVersion }
+          : {}),
       });
+
+      const metadata = manager.create(GatewayMetadataEntity, {
+        gatewayId: gateway.id,
+        sendFrequencyMs,
+      });
+      await manager.save(metadata);
     });
   }
 

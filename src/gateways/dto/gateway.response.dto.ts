@@ -58,5 +58,5 @@ export class GatewayResponseDto {
     type: 'number',
   })
   @Expose({ name: 'send_frequency_ms' })
-  sendFrequencyMs?: number | null;
+  sendFrequencyMs: number;
 }
