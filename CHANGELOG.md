@@ -1,3 +1,11 @@
+## [1.4.7](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.6...v1.4.7) (2026-04-04)
+
+
+### Bug Fixes
+
+* bugs ([0e461c8](https://github.com/NoTIPswe/notip-management-api/commit/0e461c86df3fa8943f118a0aab42d569dc072fcf))
+* bugs ([d597e60](https://github.com/NoTIPswe/notip-management-api/commit/d597e608292c3e9196a7b2ffb62ceb149d0f1c5c))
+
 ## [1.4.6](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.5...v1.4.6) (2026-04-03)
 
 
