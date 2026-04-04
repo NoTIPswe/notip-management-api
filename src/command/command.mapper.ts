@@ -21,7 +21,7 @@ export class CommandMapper {
     return {
       commandId: model.id,
       status: model.status,
-      issuedAt: model.issuedAt,
+      issuedAt: model.issuedAt.toISOString(),
     };
   }
 
@@ -31,7 +31,7 @@ export class CommandMapper {
     return {
       commandId: model.id,
       status: model.status,
-      timestamp: model.ackReceivedAt ?? model.issuedAt,
+      timestamp: (model.ackReceivedAt ?? model.issuedAt).toISOString(),
     };
   }
 }

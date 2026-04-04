@@ -125,6 +125,9 @@ describe('NatsJetStreamClient', () => {
       delete process.env.NATS_PASSWORD;
       delete process.env.NATS_SERVERS;
       delete process.env.NATS_URL;
+      delete process.env.NATS_TLS_CA;
+      delete process.env.NATS_TLS_CERT;
+      delete process.env.NATS_TLS_KEY;
     });
 
     afterAll(() => {
@@ -172,6 +175,24 @@ describe('NatsJetStreamClient', () => {
       expect(nats.connect).toHaveBeenCalledWith(
         expect.objectContaining({
           servers: ['nats://1.1.1.1:4222', 'nats://2.2.2.2:4222'],
+        }),
+      );
+    });
+
+    it('should configure TLS when certificate paths are provided', async () => {
+      process.env.NATS_TLS_CA = '/certs/ca.crt';
+      process.env.NATS_TLS_CERT = '/certs/management-api.crt';
+      process.env.NATS_TLS_KEY = '/certs/management-api.key';
+
+      await client.publish('test', Buffer.from('data'));
+
+      expect(nats.connect).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tls: {
+            caFile: '/certs/ca.crt',
+            certFile: '/certs/management-api.crt',
+            keyFile: '/certs/management-api.key',
+          },
         }),
       );
     });

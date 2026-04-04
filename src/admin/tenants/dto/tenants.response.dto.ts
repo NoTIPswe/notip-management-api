@@ -9,9 +9,9 @@ export class TenantsResponseDto {
   name: string;
   @ApiProperty({ name: 'status', type: String, enum: TenantStatus })
   status: TenantStatus;
-  @ApiProperty({ name: 'created_at' })
+  @ApiProperty({ name: 'created_at', type: String, format: 'date-time' })
   @Expose({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: string;
   @ApiProperty({ name: 'suspension_interval_days', required: false })
   suspensionIntervalDays: number | null;
 }

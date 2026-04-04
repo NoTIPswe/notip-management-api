@@ -13,5 +13,5 @@ export class CreateUserResponseDto {
   role: UsersRole;
   @ApiProperty({ name: 'created_at', type: String, format: 'date-time' })
   @Expose({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: string;
 }

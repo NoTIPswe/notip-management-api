@@ -23,6 +23,7 @@ export class AlertsMapper {
 
     return plainToInstance(AlertsConfigModel, {
       defaultTimeoutMs: defaultConfig?.gatewayTimeoutMs ?? 60000,
+      defaultUpdatedAt: defaultConfig?.updatedAt,
       gatewayOverrides: overrides.map((o) => ({
         gatewayId: o.gatewayId,
         gatewayTimeoutMs: o.gatewayTimeoutMs,
@@ -35,8 +36,11 @@ export class AlertsMapper {
     dto.id = model.id;
     dto.gatewayId = model.gatewayId;
     dto.type = model.type;
-    dto.details = model.details as AlertsResponseDto['details'];
-    dto.createdAt = model.createdAt;
+    dto.details = {
+      lastSeen: model.details.lastSeen.toISOString(),
+      timeoutConfigured: model.details.timeoutConfigured,
+    };
+    dto.createdAt = model.createdAt.toISOString();
     return dto;
   }
   static toSetAlertsConfigDefaultResponseDto(
@@ -45,7 +49,7 @@ export class AlertsMapper {
     const dto = new SetAlertsConfigDefaultResponseDto();
     dto.tenantId = entity.tenantId;
     dto.defaultTimeoutMs = entity.gatewayTimeoutMs;
-    dto.updatedAt = entity.updatedAt;
+    dto.updatedAt = entity.updatedAt.toISOString();
     return dto;
   }
   static toSetGatewayAlertsConfigResponseDto(
@@ -54,7 +58,7 @@ export class AlertsMapper {
     const dto = new SetGatewayAlertsConfigResponseDto();
     dto.gatewayId = entity.gatewayId ?? '';
     dto.timeoutMs = entity.gatewayTimeoutMs;
-    dto.updatedAt = entity.updatedAt;
+    dto.updatedAt = entity.updatedAt.toISOString();
     return dto;
   }
   static toAlertsConfigResponseDto(
@@ -64,10 +68,21 @@ export class AlertsMapper {
       const overrideDto = new AlertsGatewayOverridesResponseDto();
       overrideDto.gatewayId = override.gatewayId;
       overrideDto.timeoutMs = override.gatewayTimeoutMs;
+
+      if (override.updatedAt) {
+        overrideDto.updatedAt = override.updatedAt.toISOString();
+      }
+
       return overrideDto;
     });
+
     const dto = new AlertsConfigResponseDto();
     dto.defaultTimeoutMs = model.defaultTimeoutMs;
+
+    if (model.defaultUpdatedAt) {
+      dto.defaultUpdatedAt = model.defaultUpdatedAt.toISOString();
+    }
+
     dto.gatewayOverrides = overrides;
     return dto;
   }

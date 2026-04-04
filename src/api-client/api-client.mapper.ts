@@ -21,7 +21,7 @@ export class ApiClientMapper {
       id: apiClientModel.id,
       name: apiClientModel.name,
       clientId: apiClientModel.keycloakClientId,
-      createdAt: apiClientModel.createdAt,
+      createdAt: apiClientModel.createdAt.toISOString(),
     };
   }
 
@@ -34,7 +34,7 @@ export class ApiClientMapper {
       name: apiClientModel.name,
       clientId: apiClientModel.keycloakClientId,
       clientSecret,
-      createdAt: apiClientModel.createdAt,
+      createdAt: apiClientModel.createdAt.toISOString(),
     };
   }
 }

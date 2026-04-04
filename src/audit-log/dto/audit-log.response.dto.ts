@@ -14,5 +14,5 @@ export class AuditLogResponseDto {
   @ApiProperty({ name: 'details', type: Object })
   details: Record<string, unknown>;
   @ApiProperty({ name: 'timestamp', type: String, format: 'date-time' })
-  timestamp: Date;
+  timestamp: string;
 }

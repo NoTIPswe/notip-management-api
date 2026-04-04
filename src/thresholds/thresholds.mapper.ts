@@ -24,7 +24,7 @@ export class ThresholdsMapper {
       sensorId: model.sensorId ?? null,
       minValue: model.minValue,
       maxValue: model.maxValue,
-      updatedAt: model.updatedAt,
+      updatedAt: model.updatedAt.toISOString(),
     };
   }
 
@@ -35,7 +35,7 @@ export class ThresholdsMapper {
       sensorType: model.sensorType ?? null,
       minValue: model.minValue,
       maxValue: model.maxValue,
-      updatedAt: model.updatedAt,
+      updatedAt: model.updatedAt.toISOString(),
     };
   }
 
@@ -47,7 +47,7 @@ export class ThresholdsMapper {
       sensorType: model.sensorType ?? null,
       minValue: model.minValue,
       maxValue: model.maxValue,
-      updatedAt: model.updatedAt,
+      updatedAt: model.updatedAt.toISOString(),
     };
   }
 }

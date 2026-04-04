@@ -25,11 +25,12 @@ describe('GatewaysMapper', () => {
   it('toModel handles missing tenant gracefully', () => {
     const entity = {
       id: 'gw-1',
+      tenantId: 'tenant-1',
       tenant: null,
     } as unknown as GatewayEntity;
 
     const model = GatewaysMapper.toModel(entity);
-    expect(model.tenantId).toBe('');
+    expect(model.tenantId).toBe('tenant-1');
   });
 
   it('toResponseDto maps model to dto', () => {

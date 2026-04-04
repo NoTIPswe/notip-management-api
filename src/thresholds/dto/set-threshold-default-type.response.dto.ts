@@ -11,7 +11,7 @@ export class SetThresholdDefaultTypeResponseDto {
   @ApiProperty({ name: 'max_value' })
   @Expose({ name: 'max_value' })
   maxValue: number;
-  @ApiProperty({ name: 'updated_at' })
+  @ApiProperty({ name: 'updated_at', type: String, format: 'date-time' })
   @Expose({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt: string;
 }

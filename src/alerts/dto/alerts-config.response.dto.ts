@@ -5,6 +5,16 @@ export class AlertsConfigResponseDto {
   @ApiProperty({ name: 'default_timeout_ms' })
   @Expose({ name: 'default_timeout_ms' })
   defaultTimeoutMs: number;
+
+  @ApiProperty({
+    name: 'default_updated_at',
+    type: String,
+    format: 'date-time',
+    required: false,
+  })
+  @Expose({ name: 'default_updated_at' })
+  defaultUpdatedAt?: string;
+
   @ApiProperty({
     name: 'gateway_overrides',
     type: () => [AlertsGatewayOverridesResponseDto],
@@ -17,7 +27,17 @@ export class AlertsGatewayOverridesResponseDto {
   @ApiProperty({ name: 'gateway_id' })
   @Expose({ name: 'gateway_id' })
   gatewayId: string;
+
   @ApiProperty({ name: 'timeout_ms' })
   @Expose({ name: 'timeout_ms' })
   timeoutMs: number;
+
+  @ApiProperty({
+    name: 'updated_at',
+    type: String,
+    format: 'date-time',
+    required: false,
+  })
+  @Expose({ name: 'updated_at' })
+  updatedAt?: string;
 }

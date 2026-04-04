@@ -12,5 +12,5 @@ export class CommandResponseDto {
 
   @ApiProperty({ name: 'issued_at', type: String, format: 'date-time' })
   @Expose({ name: 'issued_at' })
-  issuedAt: Date;
+  issuedAt: string;
 }

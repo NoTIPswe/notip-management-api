@@ -39,15 +39,15 @@ describe('GatewaysService', () => {
     ]);
   });
 
-  it('throws when no gateways are found', async () => {
+  it('returns an empty list when no gateways are found', async () => {
     const persistence = {
       getGateways: jest.fn().mockResolvedValue([]),
     } as unknown as GatewaysPersistenceService;
     const service = new GatewaysService(persistence);
 
-    await expect(service.getGateways({ tenantId: 'tenant-1' })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.getGateways({ tenantId: 'tenant-1' }),
+    ).resolves.toEqual([]);
   });
 
   it('returns a gateway by id', async () => {

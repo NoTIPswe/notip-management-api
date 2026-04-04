@@ -27,7 +27,7 @@ export class GatewaysMapper {
       id: model.id,
       name: model.name,
       status: model.status,
-      lastSeenAt: model.lastSeenAt,
+      lastSeenAt: model.lastSeenAt ? model.lastSeenAt.toISOString() : null,
       provisioned: model.provisioned,
       firmwareVersion: model.firmwareVersion,
       sendFrequencyMs: model.sendFrequencyMs,
@@ -39,7 +39,7 @@ export class GatewaysMapper {
       id: model.id,
       name: model.name,
       status: model.status,
-      updatedAt: model.updatedAt ?? new Date(),
+      updatedAt: (model.updatedAt ?? new Date()).toISOString(),
     };
   }
 }

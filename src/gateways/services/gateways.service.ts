@@ -22,9 +22,6 @@ export class GatewaysService {
 
   async getGateways(input: GetGatewaysInput): Promise<GatewayModel[]> {
     const entities = await this.gps.getGateways({ tenantId: input.tenantId });
-    if (entities.length === 0) {
-      throw new NotFoundException('No gateways found for this tenant');
-    }
     return entities.map((entity) => GatewaysMapper.toModel(entity));
   }
 

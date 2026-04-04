@@ -55,7 +55,8 @@ describe('UsersMapper', () => {
       expect(dto.email).toBe(model.email);
       expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.updateAt).toBeInstanceOf(Date);
+      expect(typeof dto.updateAt).toBe('string');
+      expect(Number.isNaN(Date.parse(dto.updateAt))).toBe(false);
     });
   });
 
@@ -66,7 +67,7 @@ describe('UsersMapper', () => {
       model.email = 'e';
       model.username = 'n';
       model.role = UsersRole.TENANT_USER;
-      model.lastAccess = new Date();
+      model.lastAccess = new Date('2026-01-01T00:00:00.000Z');
 
       const dto = UsersMapper.toUserResponseDto(model);
 
@@ -74,7 +75,7 @@ describe('UsersMapper', () => {
       expect(dto.email).toBe(model.email);
       expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.lastAccess).toEqual(model.lastAccess);
+      expect(dto.lastAccess).toBe(model.lastAccess.toISOString());
     });
   });
 
@@ -85,6 +86,7 @@ describe('UsersMapper', () => {
       model.email = 'e';
       model.username = 'n';
       model.role = UsersRole.TENANT_USER;
+      model.createdAt = new Date('2026-01-01T00:00:00.000Z');
 
       const dto = UsersMapper.toCreateUserResponseDto(model);
 
@@ -92,7 +94,7 @@ describe('UsersMapper', () => {
       expect(dto.email).toBe(model.email);
       expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.createdAt).toBeInstanceOf(Date);
+      expect(dto.createdAt).toBe(model.createdAt.toISOString());
     });
   });
 });

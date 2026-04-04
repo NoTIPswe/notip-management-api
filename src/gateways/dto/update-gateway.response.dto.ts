@@ -9,5 +9,5 @@ export class UpdateGatewayResponseDto {
   @ApiProperty({ name: 'status', type: String, enum: GatewayStatus })
   status: GatewayStatus;
   @ApiProperty({ name: 'updated_at', type: String, format: 'date-time' })
-  updatedAt: Date;
+  updatedAt: string;
 }

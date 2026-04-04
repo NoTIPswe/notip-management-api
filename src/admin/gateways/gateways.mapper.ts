@@ -14,7 +14,7 @@ export class GatewaysMapper {
     model.createdAt = entity.createdAt;
     model.firmwareVersion = entity.firmwareVersion;
     model.model = entity.model;
-    model.tenantId = entity.tenant?.id ?? '';
+    model.tenantId = entity.tenantId ?? entity.tenant?.id ?? '';
     model.provisioned = entity.provisioned;
     return model;
   }

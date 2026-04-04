@@ -14,6 +14,7 @@ describe('AuditLogPersistenceService', () => {
 
     await expect(
       service.getAuditLogs({
+        tenantId: 'tenant-1',
         from: new Date('2024-01-01T00:00:00.000Z'),
         to: new Date('2024-01-02T00:00:00.000Z'),
         userId: 'user-1',
@@ -22,7 +23,7 @@ describe('AuditLogPersistenceService', () => {
     ).resolves.toEqual([{ id: 'audit-1' }]);
 
     expect(query.where).toHaveBeenCalled();
-    expect(query.andWhere).toHaveBeenCalledTimes(3);
+    expect(query.andWhere).toHaveBeenCalledTimes(4);
   });
 
   it('skips optional filters when they are absent', async () => {
@@ -37,10 +38,11 @@ describe('AuditLogPersistenceService', () => {
     const service = new AuditLogPersistenceService(repo as never);
 
     await service.getAuditLogs({
+      tenantId: 'tenant-1',
       from: new Date('2024-01-01T00:00:00.000Z'),
       to: new Date('2024-01-02T00:00:00.000Z'),
     });
 
-    expect(query.andWhere).toHaveBeenCalledTimes(1);
+    expect(query.andWhere).toHaveBeenCalledTimes(2);
   });
 });

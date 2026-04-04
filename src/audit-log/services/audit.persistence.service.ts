@@ -14,7 +14,8 @@ export class AuditLogPersistenceService {
     input: GetAuditLogsPersistenceInput,
   ): Promise<AuditLogEntity[]> {
     const query = this.r.createQueryBuilder('audit_log');
-    query.where('audit_log.timestamp >= :from', { from: input.from });
+    query.where('audit_log.tenantId = :tenantId', { tenantId: input.tenantId });
+    query.andWhere('audit_log.timestamp >= :from', { from: input.from });
     query.andWhere('audit_log.timestamp <= :to', { to: input.to });
 
     if (input.userId) {

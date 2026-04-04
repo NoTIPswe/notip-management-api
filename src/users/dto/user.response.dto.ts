@@ -16,5 +16,5 @@ export class UserResponseDto {
     format: 'date-time',
     nullable: true,
   })
-  lastAccess: Date | null;
+  lastAccess: string | null;
 }

@@ -23,7 +23,7 @@ export class GatewayResponseDto {
   @Expose({ name: 'firmware_version' })
   firmwareVersion?: string;
 
-  @ApiProperty({ name: 'created_at' })
+  @ApiProperty({ name: 'created_at', type: String, format: 'date-time' })
   @Expose({ name: 'created_at' })
   createdAt: string;
 }

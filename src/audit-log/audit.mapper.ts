@@ -8,7 +8,7 @@ export class AuditLogMapper {
       id: auditLogModel.id,
       action: auditLogModel.action,
       userId: auditLogModel.userId,
-      timestamp: auditLogModel.timestamp,
+      timestamp: auditLogModel.timestamp.toISOString(),
       details: auditLogModel.details,
       resource: auditLogModel.resource,
     };

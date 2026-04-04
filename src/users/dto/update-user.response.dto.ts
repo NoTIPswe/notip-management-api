@@ -11,5 +11,5 @@ export class UpdateUserResponseDto {
   @ApiProperty({ name: 'role', type: String, enum: UsersRole })
   role: UsersRole;
   @ApiProperty({ name: 'updated_at', type: String, format: 'date-time' })
-  updateAt: Date;
+  updateAt: string;
 }

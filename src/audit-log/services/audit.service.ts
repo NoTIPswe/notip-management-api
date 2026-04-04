@@ -9,6 +9,7 @@ export class AuditLogService {
   constructor(private readonly alps: AuditLogPersistenceService) {}
   async getAuditLogs(input: GetAuditLogsInput): Promise<AuditLogModel[]> {
     const entities = await this.alps.getAuditLogs({
+      tenantId: input.tenantId,
       from: input.from,
       to: input.to,
       userId: input.userId,

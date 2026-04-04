@@ -35,7 +35,7 @@ export class TenantsMapper {
     dto.id = model.id;
     dto.name = model.name;
     dto.status = model.status;
-    dto.createdAt = model.createdAt;
+    dto.createdAt = model.createdAt.toISOString();
     dto.suspensionIntervalDays = TenantsMapper.toSuspensionIntervalDays(model);
     return dto;
   }
@@ -45,7 +45,7 @@ export class TenantsMapper {
     dto.id = model.id;
     dto.name = model.name;
     dto.status = model.status;
-    dto.updatedAt = model.updatedAt;
+    dto.updatedAt = model.updatedAt.toISOString();
     return dto;
   }
 }

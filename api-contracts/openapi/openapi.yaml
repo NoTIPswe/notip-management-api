@@ -754,7 +754,7 @@ paths:
 info:
   title: NoTIP Management API
   description: NoTIP Management API OpenAPI specification
-  version: 1.4.5
+  version: 1.4.6
   contact: {}
 tags: []
 servers: []
@@ -794,8 +794,8 @@ components:
             - active
             - suspended
         created_at:
-          format: date-time
           type: string
+          format: date-time
         suspension_interval_days:
           type: object
       required:

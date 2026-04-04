@@ -24,7 +24,7 @@ export class UsersMapper {
     dto.email = model.email;
     dto.username = model.username;
     dto.role = model.role;
-    dto.updateAt = new Date();
+    dto.updateAt = new Date().toISOString();
     return dto;
   }
 
@@ -34,7 +34,7 @@ export class UsersMapper {
     dto.email = model.email;
     dto.username = model.username;
     dto.role = model.role;
-    dto.lastAccess = model.lastAccess;
+    dto.lastAccess = model.lastAccess ? model.lastAccess.toISOString() : null;
     return dto;
   }
 
@@ -44,7 +44,7 @@ export class UsersMapper {
     dto.email = model.email;
     dto.username = model.username;
     dto.role = model.role;
-    dto.createdAt = new Date();
+    dto.createdAt = model.createdAt.toISOString();
     return dto;
   }
 }
