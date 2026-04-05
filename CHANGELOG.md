@@ -1,3 +1,10 @@
+## [1.4.9](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.8...v1.4.9) (2026-04-05)
+
+
+### Bug Fixes
+
+* dto snake case expose ([3fe53e2](https://github.com/NoTIPswe/notip-management-api/commit/3fe53e2f8b96f1efd0c10434c56a8de8ef0c9aae))
+
 ## [1.4.8](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.7...v1.4.8) (2026-04-05)
 
 
