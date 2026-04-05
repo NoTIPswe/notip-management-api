@@ -1,3 +1,10 @@
+## [1.4.10](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.9...v1.4.10) (2026-04-05)
+
+
+### Bug Fixes
+
+* command ack and update value after receiving ack by gateway ([fb8d931](https://github.com/NoTIPswe/notip-management-api/commit/fb8d931b6953450ee0794a0ae4df40b015c8a1fb))
+
 ## [1.4.9](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.8...v1.4.9) (2026-04-05)
 
 
