@@ -13,6 +13,10 @@ import { AuthenticatedUser } from '../../auth/interfaces/authenticated-user.inte
 
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SENSITIVE_AUDIT_OUTPUT_FIELDS = new Set([
+  'clientSecret',
+  'client_secret',
+]);
 
 interface AuditRequest {
   user?: AuthenticatedUser;
@@ -68,7 +72,7 @@ export class AuditInterceptor implements NestInterceptor {
                 method: request.method,
                 ip: request.ip,
                 input: request.body,
-                output: data,
+                output: this.redactSensitiveAuditOutput(data),
                 isImpersonating: user.isImpersonating,
                 actorUserId: user.isImpersonating
                   ? user.actorUserId
@@ -148,5 +152,31 @@ export class AuditInterceptor implements NestInterceptor {
     }
 
     return UUID_REGEX.test(value) ? value : undefined;
+  }
+
+  private redactSensitiveAuditOutput(value: unknown): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.redactSensitiveAuditOutput(item));
+    }
+
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    if (!value || typeof value !== 'object') {
+      return value;
+    }
+
+    const source = value as Record<string, unknown>;
+    const redacted: Record<string, unknown> = {};
+
+    for (const [key, child] of Object.entries(source)) {
+      if (SENSITIVE_AUDIT_OUTPUT_FIELDS.has(key)) {
+        continue;
+      }
+      redacted[key] = this.redactSensitiveAuditOutput(child);
+    }
+
+    return redacted;
   }
 }

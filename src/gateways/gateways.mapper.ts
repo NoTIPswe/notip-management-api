@@ -26,23 +26,23 @@ export class GatewaysMapper {
   }
 
   static toResponseDto(model: GatewayModel): GatewayResponseDto {
-    return {
-      id: model.id,
-      name: model.name,
-      status: model.status,
-      lastSeenAt: model.lastSeenAt ? model.lastSeenAt.toISOString() : null,
-      provisioned: model.provisioned,
-      firmwareVersion: model.firmwareVersion,
-      sendFrequencyMs: model.sendFrequencyMs,
-    };
+    const dto = new GatewayResponseDto();
+    dto.id = model.id;
+    dto.name = model.name;
+    dto.status = model.status;
+    dto.lastSeenAt = model.lastSeenAt ? model.lastSeenAt.toISOString() : null;
+    dto.provisioned = model.provisioned;
+    dto.firmwareVersion = model.firmwareVersion;
+    dto.sendFrequencyMs = model.sendFrequencyMs;
+    return dto;
   }
 
   static toUpdateResponseDto(model: GatewayModel): UpdateGatewayResponseDto {
-    return {
-      id: model.id,
-      name: model.name,
-      status: model.status,
-      updatedAt: (model.updatedAt ?? new Date()).toISOString(),
-    };
+    const dto = new UpdateGatewayResponseDto();
+    dto.id = model.id;
+    dto.name = model.name;
+    dto.status = model.status;
+    dto.updatedAt = (model.updatedAt ?? new Date()).toISOString();
+    return dto;
   }
 }

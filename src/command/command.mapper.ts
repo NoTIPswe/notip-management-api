@@ -18,20 +18,20 @@ export class CommandMapper {
   }
 
   static toCommandResponseDto(model: CommandModel): CommandResponseDto {
-    return {
-      commandId: model.id,
-      status: model.status,
-      issuedAt: model.issuedAt.toISOString(),
-    };
+    const dto = new CommandResponseDto();
+    dto.commandId = model.id;
+    dto.status = model.status;
+    dto.issuedAt = model.issuedAt.toISOString();
+    return dto;
   }
 
   static toCommandStatusResponseDto(
     model: CommandModel,
   ): CommandStatusResponseDto {
-    return {
-      commandId: model.id,
-      status: model.status,
-      timestamp: (model.ackReceivedAt ?? model.issuedAt).toISOString(),
-    };
+    const dto = new CommandStatusResponseDto();
+    dto.commandId = model.id;
+    dto.status = model.status;
+    dto.timestamp = (model.ackReceivedAt ?? model.issuedAt).toISOString();
+    return dto;
   }
 }

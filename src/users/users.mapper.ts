@@ -24,7 +24,7 @@ export class UsersMapper {
     dto.email = model.email;
     dto.username = model.username;
     dto.role = model.role;
-    dto.updateAt = new Date().toISOString();
+    dto.updatedAt = new Date().toISOString();
     return dto;
   }
 

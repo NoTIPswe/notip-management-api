@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 import { UsersRole } from '../enums/users.enum';
 
 export class UserResponseDto {
@@ -16,5 +17,6 @@ export class UserResponseDto {
     format: 'date-time',
     nullable: true,
   })
+  @Expose({ name: 'last_access' })
   lastAccess: string | null;
 }

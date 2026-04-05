@@ -18,7 +18,9 @@ export class AlertsMapper {
   static toAlertsConfigModel(
     entities: AlertsConfigEntity[],
   ): AlertsConfigModel {
-    const defaultConfig = entities.find((e) => e.gatewayId === null);
+    const defaultConfig = entities
+      .filter((e) => e.gatewayId === null)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
     const overrides = entities.filter((e) => e.gatewayId !== null);
 
     return plainToInstance(AlertsConfigModel, {

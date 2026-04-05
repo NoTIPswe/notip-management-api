@@ -13,5 +13,6 @@ export class TenantsResponseDto {
   @Expose({ name: 'created_at' })
   createdAt: string;
   @ApiProperty({ name: 'suspension_interval_days', required: false })
+  @Expose({ name: 'suspension_interval_days' })
   suspensionIntervalDays: number | null;
 }

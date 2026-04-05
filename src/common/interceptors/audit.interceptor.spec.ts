@@ -151,4 +151,65 @@ describe('AuditInterceptor', () => {
       });
     });
   });
+
+  it('should redact client secrets from audit output details', (done) => {
+    const auditOptions = {
+      action: 'CREATE_API_CLIENT',
+      resource: 'ApiClients',
+    };
+    reflector.getAllAndOverride.mockReturnValue(auditOptions);
+
+    const request = {
+      user: {
+        effectiveUserId: 'user-1',
+        effectiveTenantId: TENANT_UUID,
+        isImpersonating: false,
+      },
+      url: '/api-clients',
+      method: 'POST',
+      ip: '127.0.0.1',
+      body: { name: 'ClientProva-1' },
+    };
+
+    const context = {
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as unknown as ExecutionContext;
+
+    const next = {
+      handle: () =>
+        of({
+          id: 'client-1',
+          clientId: 'clientprova-1',
+          createdAt: '2026-04-05T01:21:37.373Z',
+          clientSecret: 'super-secret',
+          nested: {
+            client_secret: 'super-secret-nested',
+            keep: true,
+          },
+        }),
+    } as CallHandler;
+
+    interceptor.intercept(context, next).subscribe(() => {
+      setImmediate(() => {
+        /* eslint-disable-next-line @typescript-eslint/unbound-method */
+        expect(auditLogService.logAuditEvent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            details: expect.objectContaining({
+              output: {
+                id: 'client-1',
+                clientId: 'clientprova-1',
+                createdAt: '2026-04-05T01:21:37.373Z',
+                nested: {
+                  keep: true,
+                },
+              },
+            }) as unknown,
+          }),
+        );
+        done();
+      });
+    });
+  });
 });

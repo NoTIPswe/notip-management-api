@@ -2,6 +2,7 @@ import { UsersMapper } from './users.mapper';
 import { UserEntity } from './entities/user.entity';
 import { UsersRole } from './enums/users.enum';
 import { UserModel } from './models/user.model';
+import { instanceToPlain } from 'class-transformer';
 
 describe('UsersMapper', () => {
   describe('toModel', () => {
@@ -55,8 +56,13 @@ describe('UsersMapper', () => {
       expect(dto.email).toBe(model.email);
       expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(typeof dto.updateAt).toBe('string');
-      expect(Number.isNaN(Date.parse(dto.updateAt))).toBe(false);
+      expect(typeof dto.updatedAt).toBe('string');
+      expect(Number.isNaN(Date.parse(dto.updatedAt))).toBe(false);
+      expect(instanceToPlain(dto)).toEqual(
+        expect.objectContaining({
+          updated_at: dto.updatedAt,
+        }),
+      );
     });
   });
 
@@ -76,6 +82,11 @@ describe('UsersMapper', () => {
       expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
       expect(dto.lastAccess).toBe(model.lastAccess.toISOString());
+      expect(instanceToPlain(dto)).toEqual(
+        expect.objectContaining({
+          last_access: model.lastAccess.toISOString(),
+        }),
+      );
     });
   });
 
