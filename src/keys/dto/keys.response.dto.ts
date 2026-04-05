@@ -7,7 +7,7 @@ export class KeysResponseDto {
   gatewayId: string;
   @ApiProperty({ name: 'key_material', type: 'string', format: 'byte' })
   @Expose({ name: 'key_material' })
-  keyMaterial: Buffer;
+  keyMaterial: string;
   @ApiProperty({ name: 'key_version' })
   @Expose({ name: 'key_version' })
   keyVersion: number;

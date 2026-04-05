@@ -35,6 +35,11 @@ export class CommandsAckConsumer implements OnModuleInit {
   private async processMessage(message: JetStreamMessage): Promise<void> {
     try {
       const payload = this.parsePayload(message.data);
+      const commandId = this.resolveCommandId(payload);
+      if (!commandId) {
+        this.logger.warn('Skipping command ack with missing command id');
+        return;
+      }
       const status = this.normalizeStatus(payload.status);
       if (!status) {
         this.logger.warn(
@@ -47,11 +52,14 @@ export class CommandsAckConsumer implements OnModuleInit {
         this.logger.warn('Skipping command ack with invalid timestamp');
         return;
       }
-      await this.writingPersistence.updateStatus({
-        commandId: payload.commandId,
+      const updatedCommand = await this.writingPersistence.updateStatus({
+        commandId,
         status,
         timestamp,
       });
+      if (updatedCommand && status === CommandStatus.ACK) {
+        await this.writingPersistence.applyAckedCommandEffects(updatedCommand);
+      }
       await Promise.resolve(message.ack());
     } catch (error) {
       this.logger.error(
@@ -64,6 +72,21 @@ export class CommandsAckConsumer implements OnModuleInit {
   private parsePayload(buffer: Buffer): CommandAckPayload {
     const json = buffer.toString('utf-8');
     return JSON.parse(json) as CommandAckPayload;
+  }
+
+  private resolveCommandId(payload: CommandAckPayload): string | null {
+    if (
+      typeof payload.command_id === 'string' &&
+      payload.command_id.length > 0
+    ) {
+      return payload.command_id;
+    }
+
+    if (typeof payload.commandId === 'string' && payload.commandId.length > 0) {
+      return payload.commandId;
+    }
+
+    return null;
   }
 
   private normalizeStatus(value?: string): CommandStatus | null {

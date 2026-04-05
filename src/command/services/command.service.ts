@@ -44,6 +44,8 @@ export class CommandService {
       type: CommandType.CONFIG,
       status: CommandStatus.QUEUED,
       issuedAt: new Date(),
+      requestedSendFrequencyMs: input.sendFrequencyMs,
+      requestedStatus: input.status,
     });
 
     const model = CommandMapper.toModel(entity);
@@ -63,12 +65,13 @@ export class CommandService {
       type: CommandType.FIRMWARE,
       status: CommandStatus.QUEUED,
       issuedAt: new Date(),
+      requestedFirmwareVersion: input.firmwareVersion,
     });
 
     const model = CommandMapper.toModel(entity);
     await this.publishToNats(model, 'firmware_push', {
-      version: input.firmwareVersion,
-      url: input.downloadUrl,
+      firmware_version: input.firmwareVersion,
+      download_url: input.downloadUrl,
     });
 
     return model;
@@ -93,10 +96,10 @@ export class CommandService {
   ): Promise<void> {
     const subject = `command.gw.${model.tenantId}.${model.gatewayId}`;
     const natsPayload = {
-      commandId: model.id,
+      command_id: model.id,
       type,
       payload,
-      issuedAt: model.issuedAt.toISOString(),
+      issued_at: model.issuedAt.toISOString(),
     };
 
     try {

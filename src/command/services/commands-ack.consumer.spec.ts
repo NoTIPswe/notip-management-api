@@ -5,12 +5,14 @@ import { CommandStatus } from '../enums/command-status.enum';
 
 const createWritingPersistenceMock = () => ({
   updateStatus: jest.fn(),
+  applyAckedCommandEffects: jest.fn(),
 });
 
 describe('CommandsAckConsumer', () => {
   it('subscribes to jetstream and updates command status', async () => {
     const jetStream = new MockJetStreamClient();
     const writingPersistence = createWritingPersistenceMock();
+    writingPersistence.updateStatus.mockResolvedValue({ id: 'cmd-1' });
     const consumer = new CommandsAckConsumer(
       jetStream,
       writingPersistence as unknown as CommandWritingPersistenceService,
@@ -19,7 +21,7 @@ describe('CommandsAckConsumer', () => {
     await consumer.onModuleInit();
 
     await jetStream.emit({
-      commandId: 'cmd-1',
+      command_id: 'cmd-1',
       status: 'ack',
       timestamp: '2024-01-02T00:00:00.000Z',
     });
@@ -29,6 +31,9 @@ describe('CommandsAckConsumer', () => {
       status: CommandStatus.ACK,
       timestamp: new Date('2024-01-02T00:00:00.000Z'),
     });
+    expect(writingPersistence.applyAckedCommandEffects).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cmd-1' }),
+    );
   });
 
   it('ignores malformed payloads', async () => {

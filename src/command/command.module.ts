@@ -10,9 +10,13 @@ import { CommandsAckConsumer } from './services/commands-ack.consumer';
 import { JetStreamClient } from './nats/jetstream.client';
 import { MockJetStreamClient } from './nats/mock-jetstream.client';
 import { NatsJetStreamClient } from './nats/nats-jetstream.client';
+import { GatewayEntity } from '../gateways/entities/gateway.entity';
 
 @Module({
-  imports: [GatewaysModule, TypeOrmModule.forFeature([CommandEntity])],
+  imports: [
+    GatewaysModule,
+    TypeOrmModule.forFeature([CommandEntity, GatewayEntity]),
+  ],
   controllers: [CommandController],
   providers: [
     CommandService,
