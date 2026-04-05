@@ -12,9 +12,7 @@ export class AlertsConfigResponseDto {
     format: 'date-time',
     required: false,
   })
-  @Expose({ name: 'default_updated_at' })
-  defaultUpdatedAt?: string;
-
+  defaultUpdatedAt: string;
   @ApiProperty({
     name: 'gateway_overrides',
     type: () => [AlertsGatewayOverridesResponseDto],

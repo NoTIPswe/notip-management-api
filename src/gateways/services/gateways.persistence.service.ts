@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GatewayEntity } from '../entities/gateway.entity';
 import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
+import { GatewayStatus } from '../enums/gateway.enum';
 import {
   DeleteGatewayPersistenceInput,
   GetGatewayByIdPersistenceInput,
@@ -59,6 +60,32 @@ export class GatewaysPersistenceService {
       ],
       relations: ['metadata'],
     });
+  }
+
+  async updateGatewayRuntimeStatus(input: {
+    gatewayId: string;
+    status: GatewayStatus;
+    lastSeenAt: Date;
+  }): Promise<GatewayEntity | null> {
+    const gateway = await this.findByIdUnscoped(input.gatewayId);
+    if (!gateway) {
+      return null;
+    }
+
+    if (!gateway.metadata) {
+      gateway.metadata = {
+        gatewayId: gateway.id,
+        gateway,
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+        status: input.status,
+        lastSeenAt: input.lastSeenAt,
+      } as GatewayEntity['metadata'];
+    } else {
+      gateway.metadata.status = input.status;
+      gateway.metadata.lastSeenAt = input.lastSeenAt;
+    }
+
+    return this.r.save(gateway);
   }
 
   async updateGateway(

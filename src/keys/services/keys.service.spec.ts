@@ -175,6 +175,7 @@ describe('KeysService', () => {
         expect.objectContaining({
           gatewayId: 'gateway-1',
           sendFrequencyMs: 5000,
+          status: 'gateway_online',
         }),
       );
     });
@@ -219,6 +220,7 @@ describe('KeysService', () => {
         expect.objectContaining({
           gatewayId: 'gateway-1',
           sendFrequencyMs: 3000,
+          status: 'gateway_online',
         }),
       );
     });

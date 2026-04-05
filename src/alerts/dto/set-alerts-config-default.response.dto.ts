@@ -8,7 +8,11 @@ export class SetAlertsConfigDefaultResponseDto {
   @ApiProperty({ name: 'default_timeout_ms' })
   @Expose({ name: 'default_timeout_ms' })
   defaultTimeoutMs: number;
-  @ApiProperty({ name: 'updated_at', type: String, format: 'date-time' })
-  @Expose({ name: 'updated_at' })
-  updatedAt: string;
+  @ApiProperty({
+    name: 'default_updated_at',
+    type: String,
+    format: 'date-time',
+  })
+  @Expose({ name: 'default_updated_at' })
+  defaultUpdatedAt: string;
 }

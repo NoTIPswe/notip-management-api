@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { GatewaysService } from './gateways.service';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { GatewayStatus } from '../enums/gateway.enum';
 
 const createGatewayEntity = (overrides: Record<string, unknown> = {}) => ({
   id: 'gateway-1',
@@ -163,5 +164,39 @@ describe('GatewaysService', () => {
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
     });
+  });
+
+  it('returns true when runtime status update succeeds', async () => {
+    const updateGatewayRuntimeStatus = jest
+      .fn()
+      .mockResolvedValue(createGatewayEntity());
+    const persistence = {
+      updateGatewayRuntimeStatus,
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence);
+
+    await expect(
+      service.updateGatewayRuntimeStatus(
+        'gateway-1',
+        GatewayStatus.GATEWAY_ONLINE,
+        new Date('2026-04-04T17:00:00.000Z'),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('returns false when runtime status update target is missing', async () => {
+    const updateGatewayRuntimeStatus = jest.fn().mockResolvedValue(null);
+    const persistence = {
+      updateGatewayRuntimeStatus,
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence);
+
+    await expect(
+      service.updateGatewayRuntimeStatus(
+        'gateway-1',
+        GatewayStatus.GATEWAY_OFFLINE,
+        new Date('2026-04-04T17:00:00.000Z'),
+      ),
+    ).resolves.toBe(false);
   });
 });

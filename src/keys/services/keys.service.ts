@@ -13,6 +13,7 @@ import { DataSource } from 'typeorm';
 import { KeyEntity } from '../entities/key.entity';
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
 import { GatewayMetadataEntity } from '../../gateways/entities/gateway-metadata.entity';
+import { GatewayStatus } from '../../gateways/enums/gateway.enum';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -100,6 +101,8 @@ export class KeysService {
       const metadata = manager.create(GatewayMetadataEntity, {
         gatewayId: gateway.id,
         sendFrequencyMs,
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: new Date(),
       });
       await manager.save(metadata);
     });

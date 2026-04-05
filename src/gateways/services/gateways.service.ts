@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { GatewayModel } from '../models/gateway.model';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { GatewayStatus } from '../enums/gateway.enum';
 import {
   DeleteGatewayInput,
   GetGatewayByIdInput,
@@ -74,5 +75,19 @@ export class GatewaysService {
     if (!result) {
       throw new NotFoundException('Gateway not found');
     }
+  }
+
+  async updateGatewayRuntimeStatus(
+    gatewayId: string,
+    status: GatewayStatus,
+    lastSeenAt: Date,
+  ): Promise<boolean> {
+    const entity = await this.gps.updateGatewayRuntimeStatus({
+      gatewayId,
+      status,
+      lastSeenAt,
+    });
+
+    return entity !== null;
   }
 }

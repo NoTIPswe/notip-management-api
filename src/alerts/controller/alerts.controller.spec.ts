@@ -86,7 +86,7 @@ describe('AlertsController', () => {
     ).resolves.toEqual({
       tenantId: 'tenant-1',
       defaultTimeoutMs: 60000,
-      updatedAt: updatedAt.toISOString(),
+      defaultUpdatedAt: updatedAt.toISOString(),
     });
   });
 

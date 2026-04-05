@@ -49,7 +49,7 @@ export class AlertsMapper {
     const dto = new SetAlertsConfigDefaultResponseDto();
     dto.tenantId = entity.tenantId;
     dto.defaultTimeoutMs = entity.gatewayTimeoutMs;
-    dto.updatedAt = entity.updatedAt.toISOString();
+    dto.defaultUpdatedAt = entity.updatedAt.toISOString();
     return dto;
   }
   static toSetGatewayAlertsConfigResponseDto(
