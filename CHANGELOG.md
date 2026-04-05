@@ -1,3 +1,10 @@
+## [1.4.8](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.7...v1.4.8) (2026-04-05)
+
+
+### Bug Fixes
+
+* alerts default update and gateway ([60d9e86](https://github.com/NoTIPswe/notip-management-api/commit/60d9e867c94f637cfb8a91a78412b3feeb4d41d4))
+
 ## [1.4.7](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.6...v1.4.7) (2026-04-04)
 
 
