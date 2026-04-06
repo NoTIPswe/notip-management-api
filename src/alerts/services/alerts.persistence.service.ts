@@ -86,6 +86,10 @@ export class AlertsPersistenceService {
     });
   }
 
+  async findAllAlertConfigs(): Promise<AlertsConfigEntity[]> {
+    return this.rac.find();
+  }
+
   async getAlerts(input: GetAlertsPersistenceInput): Promise<AlertsEntity[]> {
     const createdAtFilter =
       input.from && input.to
