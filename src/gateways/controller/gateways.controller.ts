@@ -14,12 +14,12 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Gateways')
 @TenantScoped()
-@BlockImpersonation()
 @Controller('gateways')
 export class GatewaysController {
   constructor(private readonly gs: GatewaysService) {}
 
   @Get()
+  @BlockImpersonation()
   @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
   @ApiOperation({ summary: 'Get all gateways for the tenant' })
   @ApiResponse({ status: 200, type: GatewayResponseDto, isArray: true })
@@ -31,6 +31,7 @@ export class GatewaysController {
   }
 
   @Get(':id')
+  @BlockImpersonation()
   @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
   @ApiOperation({ summary: 'Get gateway by id' })
   @ApiResponse({ status: 200, type: GatewayResponseDto })
@@ -43,6 +44,7 @@ export class GatewaysController {
   }
 
   @Patch(':id')
+  @BlockImpersonation()
   @Audit({ action: 'UPDATE_GATEWAY', resource: 'Gateways' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Update gateway details' })
@@ -61,6 +63,7 @@ export class GatewaysController {
   }
 
   @Delete(':id')
+  @BlockImpersonation()
   @Audit({ action: 'DELETE_GATEWAY', resource: 'Gateways' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Delete a gateway' })

@@ -127,11 +127,10 @@ export class AuthController {
     @NestReq() req: Request,
   ): Promise<{ access_token: string; expires_in: number }> {
     const { user_id } = body;
+    const rawAuthorization = req.get('authorization') ?? '';
+
     return this.impersonationService.impersonateUser({
-      adminAccessToken: (req.headers['authorization'] || '').replace(
-        /^Bearer /,
-        '',
-      ),
+      adminAccessToken: rawAuthorization.replace(/^Bearer\s+/i, '').trim(),
       targetUserId: user_id,
     });
   }

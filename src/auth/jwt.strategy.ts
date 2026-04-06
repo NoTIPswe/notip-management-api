@@ -72,11 +72,12 @@ const extractEffectiveRole = (
   payload: JwtClaims,
   clientId: string,
 ): UsersRole => {
-  const candidateRoles: string[] = [];
-
-  if (payload.role) {
-    candidateRoles.push(payload.role);
+  const explicitRole = normalizeRole(payload.role);
+  if (explicitRole) {
+    return explicitRole;
   }
+
+  const candidateRoles: string[] = [];
 
   const tokenClientId = clientId || payload.azp;
   if (tokenClientId) {

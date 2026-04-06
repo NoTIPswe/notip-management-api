@@ -34,6 +34,8 @@ export class ImpersonationService {
     const params = new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
       subject_token: adminAccessToken,
+      subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
+      requested_token_type: 'urn:ietf:params:oauth:token-type:access_token',
       requested_subject: targetUserId,
       client_id: clientId,
       client_secret: clientSecret,

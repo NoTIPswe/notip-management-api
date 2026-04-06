@@ -38,6 +38,17 @@ describe('JwtStrategy.validate', () => {
     ).toBe(UsersRole.TENANT_ADMIN);
   });
 
+  it('prefers the explicit role claim over other role sources', () => {
+    expect(
+      strategy.validate({
+        sub: 'user-1',
+        role: UsersRole.TENANT_ADMIN,
+        tenant_id: 'tenant-1',
+        realm_access: { roles: [UsersRole.SYSTEM_ADMIN] },
+      }).effectiveRole,
+    ).toBe(UsersRole.TENANT_ADMIN);
+  });
+
   it('extracts role from keycloak resource_access roles', () => {
     Object.assign(strategy as unknown as Record<string, unknown>, {
       managementClientId: 'notip-mgmt',
