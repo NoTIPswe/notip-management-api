@@ -19,7 +19,6 @@ export class GatewaysController {
   constructor(private readonly gs: GatewaysService) {}
 
   @Get()
-  @BlockImpersonation()
   @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
   @ApiOperation({ summary: 'Get all gateways for the tenant' })
   @ApiResponse({ status: 200, type: GatewayResponseDto, isArray: true })

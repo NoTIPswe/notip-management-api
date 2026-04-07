@@ -143,14 +143,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       : payload.actor_user_id || payload.sub;
     const actorEmail = payload.actor_email || payload.email;
     const actorName = payload.actor_name || payload.name;
-    const actorRole = isImpersonating
-      ? normalizeRole(payload.act?.role) ||
-        normalizeRole(payload.actor_role) ||
-        effectiveRole
-      : normalizeRole(payload.actor_role) || effectiveRole;
+    // Usa sempre effectiveRole come ruolo dell'attore, ignora act.role
+    const actorRole = effectiveRole;
     const actorTenantId = payload.actor_tenant_id || payload.tenant_id;
 
-    if (!actorUserId || !actorRole) {
+    if (!actorUserId) {
       throw new UnauthorizedException('Missing impersonation actor claims');
     }
 
