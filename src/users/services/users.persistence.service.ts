@@ -57,6 +57,10 @@ export class UsersPersistenceService {
     return this.r.find({ where: { id: In(ids) } });
   }
 
+  async touchLastAccess(userId: string, timestamp = new Date()): Promise<void> {
+    await this.r.update({ id: userId }, { lastAccess: timestamp });
+  }
+
   async deleteUsersByIds(ids: string[]): Promise<number> {
     const result = await this.r.delete({ id: In(ids) });
     return result.affected ?? 0;

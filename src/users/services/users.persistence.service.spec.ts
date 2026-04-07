@@ -78,4 +78,20 @@ describe('UsersPersistenceService', () => {
     await expect(service.deleteUsersByIds(['1', '2'])).resolves.toBe(2);
     expect(repo.delete).toHaveBeenCalledWith({ id: In(['1', '2']) });
   });
+
+  it('updates last access timestamp for an existing user id', async () => {
+    const repo = {
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const service = new UsersPersistenceService(repo as never);
+    const timestamp = new Date('2026-04-06T12:34:56.000Z');
+
+    await expect(
+      service.touchLastAccess('user-1', timestamp),
+    ).resolves.toBeUndefined();
+    expect(repo.update).toHaveBeenCalledWith(
+      { id: 'user-1' },
+      { lastAccess: timestamp },
+    );
+  });
 });

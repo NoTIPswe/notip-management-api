@@ -18,6 +18,7 @@ import { UsersModule } from './users/users.module';
 import { CommandModule } from './command/command.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { LastAccessInterceptor } from './common/interceptors/last-access.interceptor';
 import { MetricsModule } from './metrics/metrics.module';
 import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { validate } from './common/env.validation';
@@ -86,6 +87,10 @@ const databaseImports =
     {
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LastAccessInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

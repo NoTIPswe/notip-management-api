@@ -27,15 +27,10 @@ export class CostsPersistenceService {
       dataSizeAtRest = parsed.dataSizeAtRest ?? 0;
     } catch (e) {
       console.error('Failed to parse NATS response for cost data:', e);
-      // Fallback to 0 if parsing fails
     }
 
     const alertsCount = await this.alerts.countAlerts(tenantId);
     const commandsCount = await this.commands.countCommands(tenantId);
-
-    // Calculation logic:
-    // storageGb = dataSizeAtRest / (1024 * 1024 * 1024)
-    // bandwidthGb = (alerts + commands) * 1KB / (1024 * 1024 * 1024) -> dummy formula for bandwidth
     const GB = 1024 * 1024 * 1024;
     const KB = 1024;
 
