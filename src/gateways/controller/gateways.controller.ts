@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { TenantScoped } from '../../common/decorators/access-policy.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { BlockImpersonation } from '../../common/decorators/block-impersonation.decorator';
@@ -24,22 +33,36 @@ export class GatewaysController {
   @ApiResponse({ status: 200, type: GatewayResponseDto, isArray: true })
   async getGateways(
     @TenantId() tenantId: string,
+    @Req() req?: Request,
   ): Promise<GatewayResponseDto[]> {
     const models = await this.gs.getGateways({ tenantId });
-    return models.map((model) => GatewaysMapper.toResponseDto(model));
+    const user = req?.user as { isImpersonating?: boolean } | undefined;
+    const isImpersonating = user?.isImpersonating;
+    return models.map((model) => {
+      const dto = GatewaysMapper.toResponseDto(model);
+      if (isImpersonating) {
+        dto.name = '*** OBFUSCATED ***';
+      }
+      return dto;
+    });
   }
 
   @Get(':id')
-  @BlockImpersonation()
   @Roles(UsersRole.TENANT_ADMIN, UsersRole.TENANT_USER)
   @ApiOperation({ summary: 'Get gateway by id' })
   @ApiResponse({ status: 200, type: GatewayResponseDto })
   async getGatewayById(
     @TenantId() tenantId: string,
     @Param('id') gatewayId: string,
+    @Req() req?: Request,
   ): Promise<GatewayResponseDto> {
     const model = await this.gs.findById({ tenantId, gatewayId });
-    return GatewaysMapper.toResponseDto(model);
+    const dto = GatewaysMapper.toResponseDto(model);
+    const user = req?.user as { isImpersonating?: boolean } | undefined;
+    if (user?.isImpersonating) {
+      dto.name = '*** OBFUSCATED ***';
+    }
+    return dto;
   }
 
   @Patch(':id')

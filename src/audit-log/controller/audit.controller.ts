@@ -1,4 +1,11 @@
-import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { TenantScoped } from '../../common/decorators/access-policy.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UsersRole } from '../../users/enums/users.enum';
@@ -26,6 +33,7 @@ export class AuditLogController {
     @Query('to') to: Date,
     @Query('userId') userId?: string,
     @Query('action') action?: string,
+    @Req() req?: Request,
   ): Promise<AuditLogResponseDto[]> {
     if (!tenantId || !from || !to) {
       throw new BadRequestException(
@@ -39,6 +47,30 @@ export class AuditLogController {
       userId,
       action,
     });
-    return logs.map((log) => AuditLogMapper.toDto(log));
+    const user = req?.user as { isImpersonating?: boolean } | undefined;
+    const isImpersonating = user?.isImpersonating;
+    return logs.map((log) => {
+      const dto = AuditLogMapper.toDto(log);
+      if (isImpersonating && dto.action === 'UPDATE_GATEWAY' && dto.details) {
+        if (
+          dto.details.input &&
+          typeof dto.details.input === 'object' &&
+          'name' in dto.details.input
+        ) {
+          dto.details.input.name = '*** OBFUSCATED ***';
+        }
+        if (
+          dto.details.output &&
+          typeof dto.details.output === 'object' &&
+          'name' in dto.details.output
+        ) {
+          dto.details.output.name = '*** OBFUSCATED ***';
+        }
+        if ('name' in dto.details) {
+          dto.details.name = '*** OBFUSCATED ***';
+        }
+      }
+      return dto;
+    });
   }
 }
