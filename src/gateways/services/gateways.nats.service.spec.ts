@@ -9,7 +9,9 @@ jest.mock('bcrypt');
 describe('GatewaysNatsService', () => {
   it('updates gateway status and responds with success', async () => {
     const handlers = new Map<string, NatsHandler>();
-    const updateStatus = jest.fn().mockResolvedValue(true);
+    const updateGatewayRuntimeStatus = jest.fn().mockResolvedValue({
+      id: 'gateway-1',
+    });
     const nats = {
       subscribeCore: jest.fn((subject: string, handler: NatsHandler) => {
         handlers.set(subject, handler);
@@ -17,7 +19,7 @@ describe('GatewaysNatsService', () => {
     } as unknown as JetStreamClient;
     const persistence = {
       findById: jest.fn(),
-      updateStatus,
+      updateGatewayRuntimeStatus,
       findByFactoryId: jest.fn(),
     } as unknown as GatewaysPersistenceService;
 
@@ -40,11 +42,11 @@ describe('GatewaysNatsService', () => {
       respond,
     });
 
-    expect(updateStatus).toHaveBeenCalledWith(
-      'gateway-1',
-      GatewayStatus.GATEWAY_ONLINE,
-      new Date('2026-01-01T00:00:00.000Z'),
-    );
+    expect(updateGatewayRuntimeStatus).toHaveBeenCalledWith({
+      gatewayId: 'gateway-1',
+      status: GatewayStatus.GATEWAY_ONLINE,
+      lastSeenAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
     expect(respond).toHaveBeenCalledWith(
       Buffer.from(JSON.stringify({ success: true })),
     );
@@ -59,7 +61,9 @@ describe('GatewaysNatsService', () => {
     } as unknown as JetStreamClient;
     const persistence = {
       findById: jest.fn(),
-      updateStatus: jest.fn().mockRejectedValue(new Error('update failed')),
+      updateGatewayRuntimeStatus: jest
+        .fn()
+        .mockRejectedValue(new Error('update failed')),
       findByFactoryId: jest.fn(),
     } as unknown as GatewaysPersistenceService;
 
@@ -108,7 +112,7 @@ describe('GatewaysNatsService', () => {
     } as unknown as JetStreamClient;
     const persistence = {
       findById: jest.fn(),
-      updateStatus: jest.fn(),
+      updateGatewayRuntimeStatus: jest.fn(),
       findByFactoryId,
     } as unknown as GatewaysPersistenceService;
 
@@ -158,7 +162,7 @@ describe('GatewaysNatsService', () => {
     } as unknown as JetStreamClient;
     const persistence = {
       findById: jest.fn(),
-      updateStatus: jest.fn(),
+      updateGatewayRuntimeStatus: jest.fn(),
       findByFactoryId,
     } as unknown as GatewaysPersistenceService;
 
@@ -194,7 +198,7 @@ describe('GatewaysNatsService', () => {
     } as unknown as JetStreamClient;
     const persistence = {
       findById: jest.fn(),
-      updateStatus: jest.fn(),
+      updateGatewayRuntimeStatus: jest.fn(),
       findByFactoryId: jest.fn().mockResolvedValue(null),
     } as unknown as GatewaysPersistenceService;
 

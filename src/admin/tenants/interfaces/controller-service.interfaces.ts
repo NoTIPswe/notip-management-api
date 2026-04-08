@@ -7,7 +7,7 @@ export interface DeleteTenantInput {
 export interface CreateTenantInput {
   name: string;
   adminEmail: string;
-  adminName: string;
+  adminUsername: string;
   adminPassword: string;
 }
 

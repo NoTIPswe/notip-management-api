@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { GatewayModel } from '../models/gateway.model';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { GatewayStatus } from '../enums/gateway.enum';
 import {
   DeleteGatewayInput,
   GetGatewayByIdInput,
@@ -26,9 +27,6 @@ export class GatewaysService {
 
   async getGateways(input: GetGatewaysInput): Promise<GatewayModel[]> {
     const entities = await this.gps.getGateways({ tenantId: input.tenantId });
-    if (entities.length === 0) {
-      throw new NotFoundException('No gateways found for this tenant');
-    }
     return entities.map((entity) => GatewaysMapper.toModel(entity));
   }
 
@@ -89,5 +87,19 @@ export class GatewaysService {
     this.logger.log(
       `Emitted decommissioning event for gateway ${input.gatewayId}`,
     );
+  }
+
+  async updateGatewayRuntimeStatus(
+    gatewayId: string,
+    status: GatewayStatus,
+    lastSeenAt: Date,
+  ): Promise<boolean> {
+    const entity = await this.gps.updateGatewayRuntimeStatus({
+      gatewayId,
+      status,
+      lastSeenAt,
+    });
+
+    return entity !== null;
   }
 }

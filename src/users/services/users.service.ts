@@ -39,10 +39,17 @@ export class UsersService {
   }
 
   async createUser(input: CreateUserInput): Promise<UserModel> {
+    if (input.role === UsersRole.SYSTEM_ADMIN) {
+      throw new ForbiddenException(
+        'SYSTEM_ADMIN role cannot be assigned in tenant-scoped user APIs',
+      );
+    }
+
+    const normalizedUsername = this.normalizeUsername(input.username);
     this.logger.log(`Creating user: ${input.email}`);
     const keycloakId = await this.keycloakAdminService.createTenantUser({
       email: input.email,
-      name: input.name,
+      username: normalizedUsername,
       password: input.password,
       tenantId: input.tenantId,
       role: input.role,
@@ -50,7 +57,7 @@ export class UsersService {
 
     const persistenceInput: CreateUserPersistenceInput = {
       email: input.email,
-      name: input.name,
+      username: normalizedUsername,
       role: input.role,
       tenantId: input.tenantId,
       id: keycloakId,
@@ -82,12 +89,22 @@ export class UsersService {
   }
 
   async updateUser(input: UpdateUserInput): Promise<UserModel> {
+    if (input.role === UsersRole.SYSTEM_ADMIN) {
+      throw new ForbiddenException(
+        'SYSTEM_ADMIN role cannot be assigned in tenant-scoped user APIs',
+      );
+    }
+
+    const normalizedUsername =
+      input.username !== undefined
+        ? this.normalizeUsername(input.username)
+        : undefined;
     this.logger.log(`Updating user: ${input.id}`);
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
       tenantId: input.tenantId,
       email: input.email,
-      name: input.name,
+      username: normalizedUsername,
       role: input.role,
       permissions: input.permissions,
     };
@@ -103,10 +120,10 @@ export class UsersService {
       );
     }
 
-    if (entity.id && (input.email || input.name)) {
+    if (entity.id && (input.email || normalizedUsername)) {
       await this.keycloakAdminService.updateUser(entity.id, {
         email: input.email,
-        name: input.name,
+        username: normalizedUsername,
       });
     }
 
@@ -176,5 +193,14 @@ export class UsersService {
     if (idsToDelete.length === 0) return 0;
 
     return this.ps.deleteUsersByIds(idsToDelete, input.tenantId);
+  }
+
+  private normalizeUsername(username: string): string {
+    const lowered = username.trim().toLowerCase();
+    if (!lowered) {
+      return '';
+    }
+
+    return `${lowered[0].toUpperCase()}${lowered.slice(1)}`;
   }
 }

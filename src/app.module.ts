@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { join } from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AdminModule } from './admin/admin.module';
@@ -17,6 +19,9 @@ import { UsersModule } from './users/users.module';
 import { CommandModule } from './command/command.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { LastAccessInterceptor } from './common/interceptors/last-access.interceptor';
+import { MetricsModule } from './metrics/metrics.module';
+import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { validate } from './common/env.validation';
 
 const databaseImports =
@@ -26,6 +31,18 @@ const databaseImports =
         TypeOrmModule.forRootAsync({
           inject: [ConfigService],
           useFactory: (configService: ConfigService) => {
+            const migrationsDir = join(__dirname, 'migrations');
+            const hasMigrationFiles =
+              existsSync(migrationsDir) &&
+              readdirSync(migrationsDir).some(
+                (file) => file.endsWith('.js') || file.endsWith('.ts'),
+              );
+            const autoSyncIfNoMigrations =
+              String(
+                configService.get<string>('DB_AUTO_SYNC_IF_NO_MIGRATIONS') ??
+                  'false',
+              ).toLowerCase() === 'true';
+
             return {
               type: 'postgres',
               host: configService.get<string>('MGMT_DB_HOST'),
@@ -33,8 +50,13 @@ const databaseImports =
               username: configService.get<string>('MGMT_DB_USER'),
               password: configService.get<string>('MGMT_DB_PASSWORD'),
               database: configService.get<string>('MGMT_DB_NAME'),
+              migrations: [
+                join(__dirname, 'migrations', '*.js'),
+                join(__dirname, 'migrations', '*.ts'),
+              ],
+              migrationsRun: hasMigrationFiles,
               autoLoadEntities: true,
-              synchronize: false,
+              synchronize: !hasMigrationFiles && autoSyncIfNoMigrations,
             };
           },
         }),
@@ -48,6 +70,7 @@ const databaseImports =
       expandVariables: true,
     }),
     EventEmitterModule.forRoot(),
+    MetricsModule,
     ...databaseImports,
     AuthModule,
     AdminModule,
@@ -64,6 +87,14 @@ const databaseImports =
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LastAccessInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

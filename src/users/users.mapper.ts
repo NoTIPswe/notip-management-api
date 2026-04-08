@@ -10,7 +10,7 @@ export class UsersMapper {
     model.id = entity.id;
     model.tenantId = entity.tenantId;
     model.email = entity.email;
-    model.name = entity.name;
+    model.username = entity.username;
     model.role = entity.role;
     model.permissions = entity.permissions ?? null;
     model.lastAccess = entity.lastAccess ?? null;
@@ -22,9 +22,9 @@ export class UsersMapper {
     const dto = new UpdateUserResponseDto();
     dto.id = model.id;
     dto.email = model.email;
-    dto.name = model.name;
+    dto.username = model.username;
     dto.role = model.role;
-    dto.updateAt = new Date();
+    dto.updatedAt = new Date().toISOString();
     return dto;
   }
 
@@ -32,9 +32,9 @@ export class UsersMapper {
     const dto = new UserResponseDto();
     dto.id = model.id;
     dto.email = model.email;
-    dto.name = model.name;
+    dto.username = model.username;
     dto.role = model.role;
-    dto.lastAccess = model.lastAccess;
+    dto.lastAccess = model.lastAccess ? model.lastAccess.toISOString() : null;
     return dto;
   }
 
@@ -42,9 +42,9 @@ export class UsersMapper {
     const dto = new CreateUserResponseDto();
     dto.id = model.id;
     dto.email = model.email;
-    dto.name = model.name;
+    dto.username = model.username;
     dto.role = model.role;
-    dto.createdAt = new Date();
+    dto.createdAt = model.createdAt.toISOString();
     return dto;
   }
 }

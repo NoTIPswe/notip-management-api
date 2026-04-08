@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GatewayEntity } from '../entities/gateway.entity';
 import { GatewayMetadataEntity } from '../entities/gateway-metadata.entity';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
 import { GatewayStatus } from '../enums/gateway.enum';
 import {
   DeleteGatewayPersistenceInput,
@@ -64,27 +65,30 @@ export class GatewaysPersistenceService {
     });
   }
 
-  async updateStatus(
-    gatewayId: string,
-    status: GatewayStatus,
-    lastSeenAt: Date,
-  ): Promise<boolean> {
-    const gateway = await this.findByIdUnscoped(gatewayId);
-    if (!gateway) return false;
-
-    if (!gateway.metadata) {
-      gateway.metadata = this.metadataRepo.create({
-        gatewayId: gateway.id,
-        status,
-        lastSeenAt,
-      });
-    } else {
-      gateway.metadata.status = status;
-      gateway.metadata.lastSeenAt = lastSeenAt;
+  async updateGatewayRuntimeStatus(input: {
+    gatewayId: string;
+    status: GatewayStatus;
+    lastSeenAt: Date;
+  }): Promise<GatewayEntity | null> {
+    const gateway = await this.findByIdUnscoped(input.gatewayId);
+    if (!gateway) {
+      return null;
     }
 
-    await this.metadataRepo.save(gateway.metadata);
-    return true;
+    if (!gateway.metadata) {
+      gateway.metadata = {
+        gatewayId: gateway.id,
+        gateway,
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+        status: input.status,
+        lastSeenAt: input.lastSeenAt,
+      } as GatewayEntity['metadata'];
+    } else {
+      gateway.metadata.status = input.status;
+      gateway.metadata.lastSeenAt = input.lastSeenAt;
+    }
+
+    return this.r.save(gateway);
   }
 
   async updateGateway(
@@ -100,8 +104,8 @@ export class GatewaysPersistenceService {
         gateway.metadata = this.metadataRepo.create({
           gatewayId: gateway.id,
           name: input.name,
-          sendFrequencyMs: 0,
-        });
+          sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+        } as GatewayEntity['metadata']);
       } else {
         gateway.metadata.name = input.name;
       }

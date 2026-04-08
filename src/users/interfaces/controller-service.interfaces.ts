@@ -6,7 +6,7 @@ export interface GetUsersInput {
 
 export interface CreateUserInput {
   email: string;
-  name: string;
+  username: string;
   role: UsersRole;
   tenantId: string;
   password: string;
@@ -16,7 +16,7 @@ export interface UpdateUserInput {
   id: string;
   tenantId: string;
   email?: string;
-  name?: string;
+  username?: string;
   role?: UsersRole;
   password?: string;
   permissions?: string[];

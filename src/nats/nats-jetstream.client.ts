@@ -4,7 +4,6 @@ import {
   OnApplicationShutdown,
   OnModuleDestroy,
 } from '@nestjs/common';
-import * as fs from 'node:fs';
 import {
   connect,
   ConnectionOptions,
@@ -205,23 +204,7 @@ export class NatsJetStreamClient
       name: process.env.NATS_CLIENT_NAME ?? 'management-api',
     };
 
-    const caFile = process.env.NATS_TLS_CA;
-    const certFile = process.env.NATS_TLS_CERT;
-    const keyFile = process.env.NATS_TLS_KEY;
-
-    if (caFile && certFile && keyFile) {
-      this.logger.log('Configuring mTLS for NATS connection');
-      try {
-        (options as { tls: any }).tls = {
-          ca: [fs.readFileSync(caFile)],
-          cert: fs.readFileSync(certFile),
-          key: fs.readFileSync(keyFile),
-        };
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Failed to load TLS certificates: ${msg}`);
-      }
-    }
+    const tlsEnabled = this.applyTlsOptions(options);
 
     const token = process.env.NATS_TOKEN?.trim();
     const user = process.env.NATS_USER?.trim();
@@ -240,8 +223,30 @@ export class NatsJetStreamClient
       return options;
     }
 
+    if (tlsEnabled) {
+      return options;
+    }
+
     this.logger.log('Using unauthenticated NATS connection');
     return options;
+  }
+
+  private applyTlsOptions(options: ConnectionOptions): boolean {
+    const caFile = process.env.NATS_TLS_CA;
+    const certFile = process.env.NATS_TLS_CERT;
+    const keyFile = process.env.NATS_TLS_KEY;
+
+    if (!(caFile && certFile && keyFile)) {
+      return false;
+    }
+
+    options.tls = {
+      caFile,
+      certFile,
+      keyFile,
+    };
+    this.logger.log('Using mTLS for NATS connection');
+    return true;
   }
 
   private resolveServers(): string[] {

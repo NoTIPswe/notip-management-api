@@ -77,6 +77,7 @@ export class KeysService {
     keyMaterial: string,
     keyVersion: number,
     sendFrequencyMs: number,
+    firmwareVersion?: string,
   ): Promise<void> {
     const gateway = await this.gs.findByIdUnscoped(gatewayId);
     if (!gateway) {
@@ -110,7 +111,18 @@ export class KeysService {
       await manager.update(GatewayEntity, gateway.id, {
         provisioned: true,
         factoryKeyHash: null,
+        ...(firmwareVersion && firmwareVersion.trim().length > 0
+          ? { firmwareVersion }
+          : {}),
       });
+
+      const metadata = manager.create(GatewayMetadataEntity, {
+        gatewayId: gateway.id,
+        sendFrequencyMs,
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: new Date(),
+      });
+      await manager.save(metadata);
     });
   }
 

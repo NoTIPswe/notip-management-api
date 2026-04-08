@@ -12,7 +12,7 @@ export class CreateApiClientResponseDto {
   @ApiProperty({ name: 'client_secret', required: false })
   @Expose({ name: 'client_secret' })
   clientSecret?: string;
-  @ApiProperty({ name: 'created_at' })
+  @ApiProperty({ name: 'created_at', type: String, format: 'date-time' })
   @Expose({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: string;
 }

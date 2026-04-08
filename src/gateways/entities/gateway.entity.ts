@@ -40,7 +40,7 @@ export class GatewayEntity {
   @Column()
   model: string;
 
-  @Column({ name: 'firmware_version' })
+  @Column({ name: 'firmware_version', nullable: true })
   firmwareVersion: string;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -11,8 +11,9 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UpdateUserRequestDto {
   @IsOptional()
   @IsString()
-  @ApiProperty({ name: 'name' })
-  name?: string;
+  @ApiProperty({ name: 'username' })
+  username?: string;
+
   @IsOptional()
   @IsString()
   @IsEmail()

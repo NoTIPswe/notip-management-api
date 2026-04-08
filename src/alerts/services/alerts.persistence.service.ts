@@ -51,17 +51,29 @@ export class AlertsPersistenceService {
   async setDefaultAlertsConfig(
     input: SetAlertsConfigDefaultPersistenceInput,
   ): Promise<AlertsConfigEntity> {
-    await this.rac.upsert(
-      {
+    const defaults = await this.rac.find({
+      where: { tenantId: input.tenantId, gatewayId: IsNull() },
+      order: { updatedAt: 'DESC' },
+    });
+
+    if (defaults.length === 0) {
+      const created = this.rac.create({
         tenantId: input.tenantId,
         gatewayId: null,
         gatewayTimeoutMs: input.defaultTimeoutMs,
-      },
-      ['tenantId', 'gatewayId'],
-    );
-    return (await this.rac.findOne({
-      where: { tenantId: input.tenantId, gatewayId: IsNull() },
-    })) as AlertsConfigEntity;
+      });
+      return this.rac.save(created);
+    }
+
+    const [latest, ...duplicates] = defaults;
+    latest.gatewayTimeoutMs = input.defaultTimeoutMs;
+    const saved = await this.rac.save(latest);
+
+    if (duplicates.length > 0) {
+      await this.rac.delete(duplicates.map((row) => row.id));
+    }
+
+    return saved;
   }
 
   async getAlertsConfig(tenantId: string): Promise<AlertsConfigEntity[]> {
@@ -70,7 +82,12 @@ export class AlertsPersistenceService {
         tenant: { id: tenantId },
       },
       relations: ['gateway'],
+      order: { updatedAt: 'DESC' },
     });
+  }
+
+  async findAllAlertConfigs(): Promise<AlertsConfigEntity[]> {
+    return this.rac.find();
   }
 
   async getAlerts(input: GetAlertsPersistenceInput): Promise<AlertsEntity[]> {

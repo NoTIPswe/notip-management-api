@@ -7,6 +7,20 @@ import { CommandStatus } from '../enums/command-status.enum';
 import { CommandEntity } from '../entities/command.entity';
 import { JetStreamClient } from '../../nats/jetstream.client';
 
+interface PublishedCommandPayload {
+  send_frequency_ms?: number;
+  status?: string;
+  firmware_version?: string;
+  download_url?: string;
+}
+
+interface PublishedCommandEnvelope {
+  command_id: string;
+  type: string;
+  issued_at: string;
+  payload: PublishedCommandPayload;
+}
+
 const createCommandEntity = (
   overrides: Partial<CommandEntity> = {},
 ): CommandEntity => ({
@@ -17,6 +31,9 @@ const createCommandEntity = (
   status: CommandStatus.QUEUED,
   issuedAt: new Date('2024-01-01T00:00:00.000Z'),
   ackReceivedAt: null,
+  requestedSendFrequencyMs: null,
+  requestedStatus: null,
+  requestedFirmwareVersion: null,
   createdAt: new Date('2024-01-01T00:00:00.000Z'),
   tenant: undefined as never,
   gateway: undefined as never,
@@ -34,8 +51,22 @@ const createGatewayServiceMock = () => ({
 
 const createJetStreamMock = () => ({
   subscribe: jest.fn(),
-  publish: jest.fn().mockResolvedValue(undefined),
+  publish: jest
+    .fn<Promise<void>, [string, Buffer]>()
+    .mockResolvedValue(undefined),
 });
+
+function readFirstPublishedEnvelope(
+  jetStream: ReturnType<typeof createJetStreamMock>,
+): PublishedCommandEnvelope {
+  const rawBuffer = jetStream.publish.mock.calls.at(0)?.[1];
+  if (!(rawBuffer instanceof Buffer)) {
+    throw new Error('Expected first publish payload to be a Buffer');
+  }
+
+  const parsed: unknown = JSON.parse(rawBuffer.toString('utf-8'));
+  return parsed as PublishedCommandEnvelope;
+}
 
 describe('CommandService', () => {
   it('queues and publishes config commands', async () => {
@@ -54,6 +85,7 @@ describe('CommandService', () => {
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
       sendFrequencyMs: 1000,
+      status: 'active',
     });
 
     expect(gateways.findById).toHaveBeenCalledWith({
@@ -66,12 +98,27 @@ describe('CommandService', () => {
         gatewayId: 'gateway-1',
         type: CommandType.CONFIG,
         status: CommandStatus.QUEUED,
+        requestedSendFrequencyMs: 1000,
+        requestedStatus: 'active',
       }),
     );
     expect(jetStream.publish).toHaveBeenCalledWith(
       'command.gw.tenant-1.gateway-1',
       expect.any(Buffer),
     );
+    const publishedPayload = readFirstPublishedEnvelope(jetStream);
+    expect(publishedPayload).toEqual(
+      expect.objectContaining({
+        command_id: 'cmd-1',
+        type: 'config_update',
+        payload: {
+          send_frequency_ms: 1000,
+          status: 'active',
+        },
+      }),
+    );
+    expect(publishedPayload).toHaveProperty('issued_at');
+    expect(publishedPayload.payload).not.toHaveProperty('sendFrequencyMs');
     expect(result).toEqual(
       expect.objectContaining({ id: 'cmd-1', status: CommandStatus.QUEUED }),
     );
@@ -114,12 +161,29 @@ describe('CommandService', () => {
     });
 
     expect(persistence.queueCommand).toHaveBeenCalledWith(
-      expect.objectContaining({ type: CommandType.FIRMWARE }),
+      expect.objectContaining({
+        type: CommandType.FIRMWARE,
+        requestedFirmwareVersion: '1.2.3',
+      }),
     );
     expect(jetStream.publish).toHaveBeenCalledWith(
       'command.gw.tenant-1.gateway-1',
       expect.any(Buffer),
     );
+    const publishedPayload = readFirstPublishedEnvelope(jetStream);
+    expect(publishedPayload).toEqual(
+      expect.objectContaining({
+        command_id: 'cmd-1',
+        type: 'firmware_push',
+        payload: {
+          firmware_version: '1.2.3',
+          download_url: 'https://example.com/fw.bin',
+        },
+      }),
+    );
+    expect(publishedPayload).toHaveProperty('issued_at');
+    expect(publishedPayload.payload).not.toHaveProperty('firmwareVersion');
+    expect(publishedPayload.payload).not.toHaveProperty('downloadUrl');
     expect(gateways.findById).toHaveBeenCalledWith({
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',

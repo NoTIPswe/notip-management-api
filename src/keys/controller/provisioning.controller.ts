@@ -2,6 +2,8 @@ import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { KeysService } from '../services/keys.service';
 import {
+  ProvisioningCompleteRequestDto,
+  ProvisioningCompleteResponseDto,
   ValidateFactoryKeyRequestDto,
   ValidateFactoryKeyResponseDto,
 } from '../dto/provisioning.dto';
@@ -30,5 +32,23 @@ export class ProvisioningController {
       gateway_id: result.gatewayId,
       tenant_id: result.tenantId,
     };
+  }
+
+  @Post('complete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Complete provisioning' })
+  @ApiResponse({ status: 200, type: ProvisioningCompleteResponseDto })
+  @ApiResponse({ status: 404, description: 'Gateway not found' })
+  async complete(
+    @Body() dto: ProvisioningCompleteRequestDto,
+  ): Promise<ProvisioningCompleteResponseDto> {
+    await this.ks.completeProvisioning(
+      dto.gateway_id,
+      dto.key_material,
+      dto.key_version,
+      dto.send_frequency_ms,
+      dto.firmware_version,
+    );
+    return { success: true };
   }
 }

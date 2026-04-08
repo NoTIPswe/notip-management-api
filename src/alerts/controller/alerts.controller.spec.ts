@@ -4,13 +4,17 @@ import { AlertType } from '../enums/alerts.enum';
 
 describe('AlertsController', () => {
   it('returns mapped alerts', async () => {
+    const lastSeen = new Date('2024-01-01T00:00:00.000Z');
     const service = {
       getAlerts: jest.fn().mockResolvedValue([
         {
           id: 'alert-1',
           gatewayId: 'gateway-1',
           type: AlertType.GATEWAY_OFFLINE,
-          details: { message: 'offline' },
+          details: {
+            lastSeen,
+            timeoutConfigured: 60000,
+          },
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
         },
       ]),
@@ -33,17 +37,34 @@ describe('AlertsController', () => {
   });
 
   it('returns mapped alerts config', async () => {
+    const defaultUpdatedAt = new Date('2024-01-01T00:00:00.000Z');
+    const overrideUpdatedAt = new Date('2024-01-01T01:00:00.000Z');
+
     const service = {
       getAlertsConfig: jest.fn().mockResolvedValue({
         defaultTimeoutMs: 60000,
-        gatewayOverrides: [{ gatewayId: 'gateway-1', gatewayTimeoutMs: 30000 }],
+        defaultUpdatedAt,
+        gatewayOverrides: [
+          {
+            gatewayId: 'gateway-1',
+            gatewayTimeoutMs: 30000,
+            updatedAt: overrideUpdatedAt,
+          },
+        ],
       }),
     } as unknown as AlertsService;
     const controller = new AlertsController(service);
 
     await expect(controller.getAlertsConfig('tenant-1')).resolves.toEqual({
       defaultTimeoutMs: 60000,
-      gatewayOverrides: [{ gatewayId: 'gateway-1', timeoutMs: 30000 }],
+      defaultUpdatedAt: defaultUpdatedAt.toISOString(),
+      gatewayOverrides: [
+        {
+          gatewayId: 'gateway-1',
+          timeoutMs: 30000,
+          updatedAt: overrideUpdatedAt.toISOString(),
+        },
+      ],
     });
   });
 
@@ -65,7 +86,7 @@ describe('AlertsController', () => {
     ).resolves.toEqual({
       tenantId: 'tenant-1',
       defaultTimeoutMs: 60000,
-      updatedAt,
+      defaultUpdatedAt: updatedAt.toISOString(),
     });
   });
 
@@ -87,7 +108,7 @@ describe('AlertsController', () => {
     ).resolves.toEqual({
       gatewayId: 'gateway-1',
       timeoutMs: 30000,
-      updatedAt,
+      updatedAt: updatedAt.toISOString(),
     });
   });
 

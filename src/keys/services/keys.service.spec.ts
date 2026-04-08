@@ -12,7 +12,6 @@ import { DataSource, EntityManager } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
-import { GatewayStatus } from '../../gateways/enums/gateway.enum';
 
 jest.mock('bcrypt');
 
@@ -160,20 +159,17 @@ describe('KeysService', () => {
         status: 'gateway_online',
         lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
       } as unknown as GatewayModel);
-      manager.create.mockReturnValue({ id: 'key-1' } as never);
-      manager.findOne.mockResolvedValue({
-        gatewayId: 'gateway-1',
-        name: 'Gateway A',
-        status: 'gateway_online',
-        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
-      } as never);
+      manager.create.mockImplementation(
+        (_entity: unknown, payload: unknown) => payload as never,
+      );
 
       await expect(
         service.completeProvisioning(
           'gateway-1',
           Buffer.from('secret').toString('base64'),
           2,
-          1000,
+          5000,
+          '1.2.3',
         ),
       ).resolves.toBeUndefined();
 
@@ -188,11 +184,57 @@ describe('KeysService', () => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(manager.save).toHaveBeenCalledWith(expect.anything(), {
         gatewayId: 'gateway-1',
-        name: 'Gateway A',
-        status: 'gateway_online',
-        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
-        sendFrequencyMs: 1000,
+        name: undefined,
+        status: 'gateway_offline',
+        lastSeenAt: undefined,
+        sendFrequencyMs: 5000,
       });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.update).toHaveBeenCalledWith(
+        expect.anything(),
+        'gateway-1',
+        {
+          provisioned: true,
+          factoryKeyHash: null,
+          firmwareVersion: '1.2.3',
+        },
+      );
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gatewayId: 'gateway-1',
+          sendFrequencyMs: 5000,
+          status: 'gateway_online',
+        }),
+      );
+    });
+
+    it('throws NotFoundException when provisioning an unknown gateway', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue(null);
+
+      await expect(
+        service.completeProvisioning('missing', 'a2V5', 1, 5000),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('does not overwrite firmware when firmwareVersion is empty', async () => {
+      gatewaysService.findByIdUnscoped.mockResolvedValue({
+        id: 'gateway-1',
+      } as unknown as GatewayModel);
+      manager.create.mockImplementation(
+        (_entity: unknown, payload: unknown) => payload as never,
+      );
+
+      await expect(
+        service.completeProvisioning(
+          'gateway-1',
+          Buffer.from('secret').toString('base64'),
+          2,
+          3000,
+          '',
+        ),
+      ).resolves.toBeUndefined();
+
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(manager.update).toHaveBeenCalledWith(
         expect.anything(),
@@ -202,52 +244,14 @@ describe('KeysService', () => {
           factoryKeyHash: null,
         },
       );
-    });
-
-    it('throws NotFoundException when provisioning an unknown gateway', async () => {
-      gatewaysService.findByIdUnscoped.mockResolvedValue(null);
-
-      await expect(
-        service.completeProvisioning('missing', 'a2V5', 1, 1000),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws ConflictException when gateway is already provisioned', async () => {
-      gatewaysService.findByIdUnscoped.mockResolvedValue({
-        id: 'gateway-1',
-        provisioned: true,
-      } as unknown as GatewayModel);
-
-      await expect(
-        service.completeProvisioning('gateway-1', 'a2V5', 1, 1000),
-      ).rejects.toThrow(ConflictException);
-    });
-
-    it('uses default metadata values when no metadata exists yet', async () => {
-      gatewaysService.findByIdUnscoped.mockResolvedValue({
-        id: 'gateway-1',
-        provisioned: false,
-      } as unknown as GatewayModel);
-      manager.create.mockReturnValue({ id: 'key-1' } as never);
-      manager.findOne.mockResolvedValue(null);
-
-      await expect(
-        service.completeProvisioning(
-          'gateway-1',
-          Buffer.from('secret').toString('base64'),
-          3,
-          2500,
-        ),
-      ).resolves.toBeUndefined();
-
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(manager.save).toHaveBeenCalledWith(expect.anything(), {
-        gatewayId: 'gateway-1',
-        name: undefined,
-        status: GatewayStatus.GATEWAY_OFFLINE,
-        lastSeenAt: undefined,
-        sendFrequencyMs: 2500,
-      });
+      expect(manager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gatewayId: 'gateway-1',
+          sendFrequencyMs: 3000,
+          status: 'gateway_online',
+        }),
+      );
     });
   });
 

@@ -7,20 +7,22 @@ const createAuditEntity = (overrides: Record<string, unknown> = {}) => ({
   userId: 'user-1',
   action: 'gateway.updated',
   resource: 'gateway',
-  details: '{"name":"Gateway A"}',
+  details: { name: 'Gateway A' },
   timestamp: new Date('2024-01-01T00:00:00.000Z'),
   ...overrides,
 });
 
 describe('AuditLogService', () => {
   it('returns mapped audit logs', async () => {
+    const getAuditLogs = jest.fn().mockResolvedValue([createAuditEntity()]);
     const persistence = {
-      getAuditLogs: jest.fn().mockResolvedValue([createAuditEntity()]),
+      getAuditLogs,
     } as unknown as AuditLogPersistenceService;
     const service = new AuditLogService(persistence);
 
     await expect(
       service.getAuditLogs({
+        tenantId: 'tenant-1',
         from: new Date('2024-01-01T00:00:00.000Z'),
         to: new Date('2024-01-02T00:00:00.000Z'),
       }),
@@ -31,6 +33,10 @@ describe('AuditLogService', () => {
         userId: 'user-1',
       }),
     ]);
+
+    expect(getAuditLogs).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-1' }),
+    );
   });
 
   it('logs audit event', async () => {

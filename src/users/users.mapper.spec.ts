@@ -2,6 +2,7 @@ import { UsersMapper } from './users.mapper';
 import { UserEntity } from './entities/user.entity';
 import { UsersRole } from './enums/users.enum';
 import { UserModel } from './models/user.model';
+import { instanceToPlain } from 'class-transformer';
 
 describe('UsersMapper', () => {
   describe('toModel', () => {
@@ -10,7 +11,7 @@ describe('UsersMapper', () => {
       entity.id = 'id';
       entity.tenantId = 'tenant';
       entity.email = 'email@test.com';
-      entity.name = 'Name';
+      entity.username = 'Name';
       entity.role = UsersRole.TENANT_ADMIN;
       entity.permissions = ['p1'];
       entity.lastAccess = new Date('2026-01-01');
@@ -21,7 +22,7 @@ describe('UsersMapper', () => {
       expect(model.id).toBe(entity.id);
       expect(model.tenantId).toBe(entity.tenantId);
       expect(model.email).toBe(entity.email);
-      expect(model.name).toBe(entity.name);
+      expect(model.username).toBe(entity.username);
       expect(model.role).toBe(entity.role);
       expect(model.permissions).toEqual(entity.permissions);
       expect(model.lastAccess).toEqual(entity.lastAccess);
@@ -46,16 +47,22 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
 
       const dto = UsersMapper.toUpdateUserResponseDto(model);
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.updateAt).toBeInstanceOf(Date);
+      expect(typeof dto.updatedAt).toBe('string');
+      expect(Number.isNaN(Date.parse(dto.updatedAt))).toBe(false);
+      expect(instanceToPlain(dto)).toEqual(
+        expect.objectContaining({
+          updated_at: dto.updatedAt,
+        }),
+      );
     });
   });
 
@@ -64,17 +71,22 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
-      model.lastAccess = new Date();
+      model.lastAccess = new Date('2026-01-01T00:00:00.000Z');
 
       const dto = UsersMapper.toUserResponseDto(model);
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.lastAccess).toEqual(model.lastAccess);
+      expect(dto.lastAccess).toBe(model.lastAccess.toISOString());
+      expect(instanceToPlain(dto)).toEqual(
+        expect.objectContaining({
+          last_access: model.lastAccess.toISOString(),
+        }),
+      );
     });
   });
 
@@ -83,16 +95,17 @@ describe('UsersMapper', () => {
       const model = new UserModel();
       model.id = 'id';
       model.email = 'e';
-      model.name = 'n';
+      model.username = 'n';
       model.role = UsersRole.TENANT_USER;
+      model.createdAt = new Date('2026-01-01T00:00:00.000Z');
 
       const dto = UsersMapper.toCreateUserResponseDto(model);
 
       expect(dto.id).toBe(model.id);
       expect(dto.email).toBe(model.email);
-      expect(dto.name).toBe(model.name);
+      expect(dto.username).toBe(model.username);
       expect(dto.role).toBe(model.role);
-      expect(dto.createdAt).toBeInstanceOf(Date);
+      expect(dto.createdAt).toBe(model.createdAt.toISOString());
     });
   });
 });

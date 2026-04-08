@@ -3,10 +3,13 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
 import { GatewayEntity } from '../../../gateways/entities/gateway.entity';
+import { GatewayMetadataEntity } from '../../../gateways/entities/gateway-metadata.entity';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../../../gateways/gateway.constants';
 
 describe('GatewaysPersistenceService', () => {
   let service: GatewaysPersistenceService;
   let repository: Repository<GatewayEntity>;
+  let metadataRepository: Repository<GatewayMetadataEntity>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -14,6 +17,10 @@ describe('GatewaysPersistenceService', () => {
         GatewaysPersistenceService,
         {
           provide: getRepositoryToken(GatewayEntity),
+          useClass: Repository,
+        },
+        {
+          provide: getRepositoryToken(GatewayMetadataEntity),
           useClass: Repository,
         },
       ],
@@ -24,6 +31,9 @@ describe('GatewaysPersistenceService', () => {
     );
     repository = module.get<Repository<GatewayEntity>>(
       getRepositoryToken(GatewayEntity),
+    );
+    metadataRepository = module.get<Repository<GatewayMetadataEntity>>(
+      getRepositoryToken(GatewayMetadataEntity),
     );
   });
 
@@ -46,14 +56,34 @@ describe('GatewaysPersistenceService', () => {
         factoryId: 'f1',
         tenantId: 't1',
         factoryKeyHash: 'h1',
-        firmwareVersion: '1.0.0',
-        model: 'Model X',
+        model: 'm1',
       };
-      const entity = new GatewayEntity();
-      jest.spyOn(repository, 'create').mockReturnValue(entity);
-      jest.spyOn(repository, 'save').mockResolvedValue(entity);
+      const gatewayEntity = {
+        id: 'gateway-1',
+      } as GatewayEntity;
+      const metadataEntity = {
+        gatewayId: 'gateway-1',
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+      } as GatewayMetadataEntity;
 
-      expect(await service.addGateway(input)).toEqual(entity);
+      jest.spyOn(repository, 'create').mockReturnValue(gatewayEntity);
+      jest.spyOn(repository, 'save').mockResolvedValue(gatewayEntity);
+      const metadataCreateSpy = jest
+        .spyOn(metadataRepository, 'create')
+        .mockReturnValue(metadataEntity);
+      jest.spyOn(metadataRepository, 'save').mockResolvedValue(metadataEntity);
+
+      await expect(service.addGateway(input)).resolves.toEqual({
+        ...gatewayEntity,
+        metadata: metadataEntity,
+      });
+
+      expect(metadataCreateSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gatewayId: 'gateway-1',
+          sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+        }),
+      );
     });
   });
 });

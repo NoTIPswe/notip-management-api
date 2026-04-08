@@ -1,3 +1,124 @@
+## [1.4.10](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.9...v1.4.10) (2026-04-05)
+
+
+### Bug Fixes
+
+* command ack and update value after receiving ack by gateway ([fb8d931](https://github.com/NoTIPswe/notip-management-api/commit/fb8d931b6953450ee0794a0ae4df40b015c8a1fb))
+
+## [1.4.9](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.8...v1.4.9) (2026-04-05)
+
+
+### Bug Fixes
+
+* dto snake case expose ([3fe53e2](https://github.com/NoTIPswe/notip-management-api/commit/3fe53e2f8b96f1efd0c10434c56a8de8ef0c9aae))
+
+## [1.4.8](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.7...v1.4.8) (2026-04-05)
+
+
+### Bug Fixes
+
+* alerts default update and gateway ([60d9e86](https://github.com/NoTIPswe/notip-management-api/commit/60d9e867c94f637cfb8a91a78412b3feeb4d41d4))
+
+## [1.4.7](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.6...v1.4.7) (2026-04-04)
+
+
+### Bug Fixes
+
+* bugs ([0e461c8](https://github.com/NoTIPswe/notip-management-api/commit/0e461c86df3fa8943f118a0aab42d569dc072fcf))
+* bugs ([d597e60](https://github.com/NoTIPswe/notip-management-api/commit/d597e608292c3e9196a7b2ffb62ceb149d0f1c5c))
+
+## [1.4.6](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.5...v1.4.6) (2026-04-03)
+
+
+### Bug Fixes
+
+* username convertion ([3a3c7c4](https://github.com/NoTIPswe/notip-management-api/commit/3a3c7c4fec35e8b639bceb8c70cadd380746be07))
+
+## [1.4.5](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.4...v1.4.5) (2026-04-03)
+
+
+### Bug Fixes
+
+* username convertion ([e5a577b](https://github.com/NoTIPswe/notip-management-api/commit/e5a577b41803f122dd3250d6ee9049c83a3b0b80))
+
+## [1.4.4](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.3...v1.4.4) (2026-04-03)
+
+
+### Bug Fixes
+
+* audit ([a55fe61](https://github.com/NoTIPswe/notip-management-api/commit/a55fe6149e0aa6d13367c9d6fb4391ac56fb3fa0))
+
+## [1.4.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.2...v1.4.3) (2026-04-03)
+
+
+### Bug Fixes
+
+* model and firmware ([5d90594](https://github.com/NoTIPswe/notip-management-api/commit/5d9059499f4ff5eabcbafe9a6029d06a9e6df1aa))
+* model and firmware ([865aea7](https://github.com/NoTIPswe/notip-management-api/commit/865aea7f9be16849512c1da073ba7f7bd7437e95))
+
+## [1.4.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.1...v1.4.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* gateway response ([58c37b8](https://github.com/NoTIPswe/notip-management-api/commit/58c37b8476de7aa5feb7e33e43bb793c1a7c6ff9))
+
+## [1.4.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.0...v1.4.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* factorykey naming ([c7f6335](https://github.com/NoTIPswe/notip-management-api/commit/c7f63354719b644f3023c399e7b2ee2c40ace278))
+
+# [1.4.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.3...v1.4.0) (2026-04-02)
+
+
+### Features
+
+* status tenant and suspensions days ([01b195d](https://github.com/NoTIPswe/notip-management-api/commit/01b195d565f21ff4b22727b8d7e78b732f75a352))
+
+## [1.3.3](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.2...v1.3.3) (2026-04-02)
+
+
+### Bug Fixes
+
+* migration ([0c2ec59](https://github.com/NoTIPswe/notip-management-api/commit/0c2ec59859b824be00c331c85768835bca5697dc))
+
+## [1.3.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.1...v1.3.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* typeorm migration ([f9bd96b](https://github.com/NoTIPswe/notip-management-api/commit/f9bd96bbd2a2d2c69fef2645d2a8ea7348b79859))
+
+## [1.3.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.3.0...v1.3.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* issuer ([f13ae75](https://github.com/NoTIPswe/notip-management-api/commit/f13ae754969469c0c5c40792637fd7b17d391eb7))
+
+# [1.3.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.2.0...v1.3.0) (2026-03-31)
+
+
+### Bug Fixes
+
+* automation scripts ([0f55efb](https://github.com/NoTIPswe/notip-management-api/commit/0f55efbaf4c0a4c700b98cccab786f06a7ffbec5))
+* automation scripts ([6ba16e5](https://github.com/NoTIPswe/notip-management-api/commit/6ba16e5fa427d58f1a6bfae02c80446a14d9f7e1))
+* delete migration file ([72489f6](https://github.com/NoTIPswe/notip-management-api/commit/72489f631501eca951639728f6378b5eaef0cf7c))
+* excluding the generated/ folder from sonarqube analysis ([e888e8a](https://github.com/NoTIPswe/notip-management-api/commit/e888e8a67b81ebdbdace6beacdb2537d0a7c4af5))
+* naming ([8422804](https://github.com/NoTIPswe/notip-management-api/commit/842280422dad154ef7e17eba83fe57cf7ac80bc3))
+* tests ([266233b](https://github.com/NoTIPswe/notip-management-api/commit/266233b1c20115a09e08b30f94f02ba058358dec))
+* tests ([a8df4ae](https://github.com/NoTIPswe/notip-management-api/commit/a8df4ae5347b7c1048a70c22085de92a056c86d4))
+* tests ([b6281b6](https://github.com/NoTIPswe/notip-management-api/commit/b6281b6f6456dd2c925b3dea2d1322a160183789))
+* updated scripts for openapi and asyncapi ([6bf1bdb](https://github.com/NoTIPswe/notip-management-api/commit/6bf1bdb154fdbaaa19fc648056b4f005ab42ee34))
+
+
+### Features
+
+* add command counting and cost calculation ([e0e06bc](https://github.com/NoTIPswe/notip-management-api/commit/e0e06bcf9345e4fe23bd22be49655703cc4169ee))
+* encryption keys ([f038577](https://github.com/NoTIPswe/notip-management-api/commit/f0385778a103ddab095e8a177aa5738fd1dddf6f))
+
 # [1.2.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.1.0...v1.2.0) (2026-03-25)
 
 

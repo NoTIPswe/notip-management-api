@@ -15,17 +15,15 @@ export class AddGatewayRequestDto {
   @IsNotEmpty()
   tenantId: string;
 
-  @ApiProperty({ name: 'factory_key_hash' })
-  @Expose({ name: 'factory_key_hash' })
+  @ApiProperty({ name: 'factory_key' })
+  @Expose({ name: 'factory_key' })
   @IsString()
   @IsNotEmpty()
-  factoryKeyHash: string;
+  factoryKey: string;
 
-  @ApiProperty({ name: 'firmware_version', example: '1.0.0' })
+  @ApiProperty({ name: 'model' })
+  @Expose({ name: 'model' })
   @IsString()
-  firmwareVersion: string;
-
-  @ApiProperty({ name: 'model', example: 'Model X' })
-  @IsString()
+  @IsNotEmpty()
   model: string;
 }

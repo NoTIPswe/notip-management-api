@@ -363,6 +363,22 @@ paths:
       summary: Return authenticated user claims mapped by JwtStrategy
       tags:
         - auth
+  /auth/tenant-status:
+    get:
+      operationId: AuthController_getTenantStatus
+      parameters: []
+      responses:
+        '200':
+          description: Tenant status information
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Tenant not found
+      summary: Resolve tenant status for the authenticated user context
+      tags:
+        - auth
   /auth/impersonate:
     post:
       operationId: AuthController_impersonate
@@ -749,7 +765,7 @@ paths:
 info:
   title: NoTIP Management API
   description: NoTIP Management API OpenAPI specification
-  version: 1.2.0
+  version: 1.4.10
   contact: {}
 tags: []
 servers: []
@@ -767,19 +783,14 @@ components:
           type: string
         tenant_id:
           type: string
-        factory_key_hash:
+        factory_key:
           type: string
-        firmware_version:
-          type: string
-          example: 1.0.0
         model:
           type: string
-          example: Model X
       required:
         - factory_id
         - tenant_id
-        - factory_key_hash
-        - firmware_version
+        - factory_key
         - model
     TenantsResponseDto:
       type: object
@@ -794,8 +805,10 @@ components:
             - active
             - suspended
         created_at:
-          format: date-time
           type: string
+          format: date-time
+        suspension_interval_days:
+          type: object
       required:
         - id
         - name
@@ -808,7 +821,7 @@ components:
           type: string
         admin_email:
           type: string
-        admin_name:
+        admin_username:
           type: string
         admin_password:
           type: string
@@ -816,7 +829,7 @@ components:
       required:
         - name
         - admin_email
-        - admin_name
+        - admin_username
         - admin_password
     UpdateTenantRequestDto:
       type: object
@@ -1044,7 +1057,7 @@ components:
       properties:
         id:
           type: string
-        name:
+        username:
           type: string
         email:
           type: string
@@ -1060,14 +1073,14 @@ components:
           nullable: true
       required:
         - id
-        - name
+        - username
         - email
         - role
         - last_access
     CreateUserRequestDto:
       type: object
       properties:
-        name:
+        username:
           type: string
         email:
           type: string
@@ -1080,7 +1093,7 @@ components:
         password:
           type: string
       required:
-        - name
+        - username
         - email
         - role
         - password
@@ -1089,7 +1102,7 @@ components:
       properties:
         id:
           type: string
-        name:
+        username:
           type: string
         email:
           type: string
@@ -1104,14 +1117,14 @@ components:
           format: date-time
       required:
         - id
-        - name
+        - username
         - email
         - role
         - created_at
     UpdateUserRequestDto:
       type: object
       properties:
-        name:
+        username:
           type: string
         email:
           type: string
@@ -1126,7 +1139,7 @@ components:
           items:
             type: string
       required:
-        - name
+        - username
         - email
         - role
         - permissions
@@ -1135,7 +1148,7 @@ components:
       properties:
         id:
           type: string
-        name:
+        username:
           type: string
         email:
           type: string
@@ -1150,7 +1163,7 @@ components:
           format: date-time
       required:
         - id
-        - name
+        - username
         - email
         - role
         - updated_at

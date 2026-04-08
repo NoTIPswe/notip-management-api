@@ -25,34 +25,40 @@ describe('GatewaysMapper', () => {
   it('toModel handles missing tenant gracefully', () => {
     const entity = {
       id: 'gw-1',
+      tenantId: 'tenant-1',
       tenant: null,
     } as unknown as GatewayEntity;
 
     const model = GatewaysMapper.toModel(entity);
-    expect(model.tenantId).toBe('');
+    expect(model.tenantId).toBe('tenant-1');
   });
 
   it('toResponseDto maps model to dto', () => {
+    const createdAt = new Date('2026-04-03T00:00:00.000Z');
     const model = new GatewayModel();
     model.id = 'gw-1';
     model.tenantId = 'tenant-1';
+    model.factoryId = 'factory-1';
+    model.model = 'M1';
+    model.provisioned = true;
+    model.firmwareVersion = '1.0.0';
+    model.createdAt = createdAt;
 
     const dto = GatewaysMapper.toResponseDto(model);
     expect(dto.id).toBe(model.id);
     expect(dto.tenantId).toBe(model.tenantId);
+    expect(dto.createdAt).toBe(createdAt.toISOString());
   });
 
   it('toAddGatewayInput maps dto to input', () => {
     const dto: AddGatewayRequestDto = {
       factoryId: 'f1',
       tenantId: 't1',
-      factoryKeyHash: 'h1',
-      firmwareVersion: '1.0.0',
-      model: 'Model X',
+      factoryKey: 'k1',
+      model: 'M1',
     };
     const input = GatewaysMapper.toAddGatewayInput(dto);
     expect(input.factoryId).toBe(dto.factoryId);
-    expect(input.firmwareVersion).toBe(dto.firmwareVersion);
     expect(input.model).toBe(dto.model);
   });
 

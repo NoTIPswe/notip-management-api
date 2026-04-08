@@ -4,21 +4,27 @@ import {
   JetStreamHandler,
   JetStreamMessage,
   NatsHandler,
+  NatsMessage,
 } from './jetstream.client';
 import { CommandAckPayload } from '../command/interfaces/command-ack.interface';
 
+type SubscriptionHandler = {
+  subject: string;
+  handler: JetStreamHandler;
+};
+
 @Injectable()
 export class MockJetStreamClient extends JetStreamClient {
-  private handler: JetStreamHandler | null = null;
+  private readonly handlers: SubscriptionHandler[] = [];
+  private readonly coreHandlers = new Map<string, NatsHandler>();
 
-  async subscribe(_subject: string, handler: JetStreamHandler): Promise<void> {
-    this.handler = handler;
+  async subscribe(subject: string, handler: JetStreamHandler): Promise<void> {
+    this.handlers.push({ subject, handler });
     return Promise.resolve();
   }
 
-  async subscribeCore(_subject: string, _handler: NatsHandler): Promise<void> {
-    void _subject;
-    void _handler;
+  async subscribeCore(subject: string, handler: NatsHandler): Promise<void> {
+    this.coreHandlers.set(subject, handler);
     return Promise.resolve();
   }
 
@@ -39,14 +45,53 @@ export class MockJetStreamClient extends JetStreamClient {
 
   async emit(
     payload: CommandAckPayload | Record<string, unknown>,
-    subject = 'test.subject',
+    subject?: string,
   ): Promise<void> {
-    if (!this.handler) return;
-    const message: JetStreamMessage = {
+    if (this.handlers.length === 0) return;
+
+    const matchingHandlers = subject
+      ? this.handlers.filter(({ subject: pattern }) =>
+          this.matchesSubject(pattern, subject),
+        )
+      : this.handlers;
+
+    for (const subscription of matchingHandlers) {
+      const message: JetStreamMessage = {
+        data: Buffer.from(JSON.stringify(payload)),
+        subject: subject ?? subscription.subject,
+        ack: () => undefined,
+      };
+      await subscription.handler(message);
+    }
+  }
+
+  async emitCore(
+    payload: Record<string, unknown>,
+    subject: string,
+  ): Promise<void> {
+    const handler = this.coreHandlers.get(subject);
+    if (!handler) {
+      return;
+    }
+
+    const message: NatsMessage = {
       data: Buffer.from(JSON.stringify(payload)),
       subject,
-      ack: () => undefined,
+      respond: () => true,
     };
-    await this.handler(message);
+    await handler(message);
+  }
+
+  private matchesSubject(pattern: string, subject: string): boolean {
+    if (pattern === '>') {
+      return true;
+    }
+
+    if (pattern.endsWith('>')) {
+      const prefix = pattern.slice(0, -1);
+      return subject.startsWith(prefix);
+    }
+
+    return pattern === subject;
   }
 }

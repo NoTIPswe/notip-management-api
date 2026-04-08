@@ -30,7 +30,7 @@ export class UsersPersistenceService {
       id: input.id,
       tenantId: input.tenantId,
       email: input.email,
-      name: input.name,
+      username: input.username,
       role: input.role,
       permissions: input.permissions ?? null,
     });
@@ -47,7 +47,7 @@ export class UsersPersistenceService {
       return null;
     }
     if (input.email !== undefined) user.email = input.email;
-    if (input.name !== undefined) user.name = input.name;
+    if (input.username !== undefined) user.username = input.username;
     if (input.role !== undefined) user.role = input.role;
     if (input.permissions !== undefined) {
       user.permissions = input.permissions;
@@ -57,6 +57,10 @@ export class UsersPersistenceService {
 
   async getUsersByIds(ids: string[], tenantId: string): Promise<UserEntity[]> {
     return this.r.find({ where: { id: In(ids), tenantId } });
+  }
+
+  async touchLastAccess(userId: string, timestamp = new Date()): Promise<void> {
+    await this.r.update({ id: userId }, { lastAccess: timestamp });
   }
 
   async deleteUsersByIds(ids: string[], tenantId: string): Promise<number> {

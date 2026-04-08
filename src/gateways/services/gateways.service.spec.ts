@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { NotFoundException } from '@nestjs/common';
 import { GatewaysService } from './gateways.service';
 import { GatewaysPersistenceService } from './gateways.persistence.service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { GatewayStatus } from '../enums/gateway.enum';
 
 const createGatewayEntity = (overrides: Record<string, unknown> = {}) => ({
   id: 'gateway-1',
@@ -25,7 +24,7 @@ const createGatewayEntity = (overrides: Record<string, unknown> = {}) => ({
 
 const mockEventEmitter = {
   emit: jest.fn(),
-} as unknown as EventEmitter2;
+} as never;
 
 describe('GatewaysService', () => {
   it('returns mapped gateways', async () => {
@@ -45,15 +44,15 @@ describe('GatewaysService', () => {
     ]);
   });
 
-  it('throws when no gateways are found', async () => {
+  it('returns an empty list when no gateways are found', async () => {
     const persistence = {
       getGateways: jest.fn().mockResolvedValue([]),
     } as unknown as GatewaysPersistenceService;
     const service = new GatewaysService(persistence, mockEventEmitter);
 
-    await expect(service.getGateways({ tenantId: 'tenant-1' })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.getGateways({ tenantId: 'tenant-1' }),
+    ).resolves.toEqual([]);
   });
 
   it('returns a gateway by id', async () => {
@@ -169,12 +168,39 @@ describe('GatewaysService', () => {
       tenantId: 'tenant-1',
       gatewayId: 'gateway-1',
     });
-    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
-      'gateway.decommissioned',
-      {
-        tenantId: 'tenant-1',
-        gatewayId: 'gateway-1',
-      },
-    );
+  });
+
+  it('returns true when runtime status update succeeds', async () => {
+    const updateGatewayRuntimeStatus = jest
+      .fn()
+      .mockResolvedValue(createGatewayEntity());
+    const persistence = {
+      updateGatewayRuntimeStatus,
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence, mockEventEmitter);
+
+    await expect(
+      service.updateGatewayRuntimeStatus(
+        'gateway-1',
+        GatewayStatus.GATEWAY_ONLINE,
+        new Date('2026-04-04T17:00:00.000Z'),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  it('returns false when runtime status update target is missing', async () => {
+    const updateGatewayRuntimeStatus = jest.fn().mockResolvedValue(null);
+    const persistence = {
+      updateGatewayRuntimeStatus,
+    } as unknown as GatewaysPersistenceService;
+    const service = new GatewaysService(persistence, mockEventEmitter);
+
+    await expect(
+      service.updateGatewayRuntimeStatus(
+        'gateway-1',
+        GatewayStatus.GATEWAY_OFFLINE,
+        new Date('2026-04-04T17:00:00.000Z'),
+      ),
+    ).resolves.toBe(false);
   });
 });

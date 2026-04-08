@@ -27,11 +27,12 @@ export class GatewaysNatsService implements OnModuleInit {
             last_seen_at: string;
           };
 
-          const success = await this.persistence.updateStatus(
-            payload.gateway_id,
-            payload.status as GatewayStatus,
-            new Date(payload.last_seen_at),
-          );
+          const success =
+            (await this.persistence.updateGatewayRuntimeStatus({
+              gatewayId: payload.gateway_id,
+              status: payload.status as GatewayStatus,
+              lastSeenAt: new Date(payload.last_seen_at),
+            })) !== null;
 
           msg.respond(Buffer.from(JSON.stringify({ success })));
         } catch (error) {

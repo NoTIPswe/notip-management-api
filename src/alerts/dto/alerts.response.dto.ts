@@ -5,7 +5,7 @@ import { Expose } from 'class-transformer';
 export class AlertsDetailsDto {
   @ApiProperty({ name: 'last_seen', type: String, format: 'date-time' })
   @Expose({ name: 'last_seen' })
-  lastSeen: Date;
+  lastSeen: string;
 
   @ApiProperty({ name: 'timeout_configured', type: Number })
   @Expose({ name: 'timeout_configured' })
@@ -24,5 +24,5 @@ export class AlertsResponseDto {
   details: AlertsDetailsDto;
   @ApiProperty({ name: 'created_at', type: String, format: 'date-time' })
   @Expose({ name: 'created_at' })
-  createdAt: Date;
+  createdAt: string;
 }

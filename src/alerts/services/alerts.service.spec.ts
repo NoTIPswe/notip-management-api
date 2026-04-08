@@ -166,6 +166,7 @@ describe('AlertsService', () => {
       service.getAlertsConfig({ tenantId: 'tenant-1' }),
     ).resolves.toEqual({
       defaultTimeoutMs: 60000,
+      defaultUpdatedAt: new Date('2024-01-01T00:00:00.000Z'),
       gatewayOverrides: [
         expect.objectContaining({
           gatewayId: 'gateway-1',

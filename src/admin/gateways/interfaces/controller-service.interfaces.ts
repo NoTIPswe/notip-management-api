@@ -5,7 +5,7 @@ export interface GetGatewaysInput {
 export interface AddGatewayInput {
   factoryId: string;
   tenantId: string;
-  factoryKeyHash: string;
-  firmwareVersion: string;
+  factoryKey: string;
   model: string;
+  firmwareVersion?: string;
 }

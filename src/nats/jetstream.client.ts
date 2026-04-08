@@ -1,6 +1,6 @@
 export interface JetStreamMessage {
   data: Buffer;
-  subject: string;
+  subject?: string;
   ack(): void | Promise<void>;
 }
 

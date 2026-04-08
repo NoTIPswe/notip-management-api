@@ -19,7 +19,7 @@ describe('UsersPersistenceService', () => {
       tenantId: 'tenant-1',
       id: 'kc-user-1',
       email: 'user@example.com',
-      name: 'User',
+      username: 'User',
       role: 'tenant_user',
       permissions: null,
     };
@@ -35,15 +35,15 @@ describe('UsersPersistenceService', () => {
         tenantId: 'tenant-1',
         id: 'kc-user-1',
         email: 'user@example.com',
-        name: 'User',
+        username: 'User',
         role: 'tenant_user',
       } as never),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
   });
 
   it('updates an existing user', async () => {
-    const existing = { id: 'user-1', name: 'Old' };
-    const savedUser = { id: 'user-1', name: 'New' };
+    const existing = { id: 'user-1', username: 'Old' };
+    const savedUser = { id: 'user-1', username: 'New' };
     const repo = {
       findOne: jest.fn().mockResolvedValue(existing),
       save: jest.fn().mockResolvedValue(savedUser),
@@ -51,17 +51,10 @@ describe('UsersPersistenceService', () => {
     const service = new UsersPersistenceService(repo as never);
 
     await expect(
-      service.updateUser({
-        id: 'user-1',
-        tenantId: 'tenant-1',
-        name: 'New',
-      } as never),
-    ).resolves.toEqual(expect.objectContaining({ name: 'New' }));
-    expect(repo.findOne).toHaveBeenCalledWith({
-      where: { id: 'user-1', tenantId: 'tenant-1' },
-    });
+      service.updateUser({ id: 'user-1', username: 'New' } as never),
+    ).resolves.toEqual(expect.objectContaining({ username: 'New' }));
     expect(repo.save).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'user-1', name: 'New' }),
+      expect.objectContaining({ id: 'user-1', username: 'New' }),
     );
   });
 
@@ -89,5 +82,21 @@ describe('UsersPersistenceService', () => {
       id: In(['1', '2']),
       tenantId: 'tenant-1',
     });
+  });
+
+  it('updates last access timestamp for an existing user id', async () => {
+    const repo = {
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const service = new UsersPersistenceService(repo as never);
+    const timestamp = new Date('2026-04-06T12:34:56.000Z');
+
+    await expect(
+      service.touchLastAccess('user-1', timestamp),
+    ).resolves.toBeUndefined();
+    expect(repo.update).toHaveBeenCalledWith(
+      { id: 'user-1' },
+      { lastAccess: timestamp },
+    );
   });
 });

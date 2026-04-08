@@ -56,7 +56,7 @@ export class AlertsNatsService implements OnModuleInit {
           msg.data.toString(),
         ) as GatewayOfflinePayload;
         // subject is alert.<tenantId>.gw_offline
-        const subjectParts = msg.subject.split('.');
+        const subjectParts = msg.subject?.split('.') ?? [];
         const tenantId = payload.tenantId || subjectParts[1];
 
         if (!tenantId) {

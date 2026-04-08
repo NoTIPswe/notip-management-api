@@ -24,6 +24,9 @@ export class CommandPersistenceService {
       status: input.status,
       issuedAt: input.issuedAt,
       ackReceivedAt: null,
+      requestedSendFrequencyMs: input.requestedSendFrequencyMs ?? null,
+      requestedStatus: input.requestedStatus ?? null,
+      requestedFirmwareVersion: input.requestedFirmwareVersion ?? null,
     });
     return this.r.save(entity);
   }

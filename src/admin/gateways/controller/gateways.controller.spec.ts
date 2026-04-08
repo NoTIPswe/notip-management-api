@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GatewaysController } from './gateways.controller';
 import { GatewaysService } from '../services/gateways.service';
-import { GatewayResponseDto } from '../dto/gateway.response.dto';
 import { AddGatewayResponseDto } from '../dto/add-gateway.response.dto';
 import { AddGatewayRequestDto } from '../dto/add-gateway.request.dto';
 import { GatewayModel } from '../models/gateway.model';
@@ -34,12 +33,30 @@ describe('GatewaysController', () => {
 
   describe('getAdminGateways', () => {
     it('should return an array of gateways', async () => {
-      const result: GatewayResponseDto[] = [{ id: '1', tenantId: 'tenant1' }];
-      jest
-        .spyOn(service, 'getGateways')
-        .mockResolvedValue(result as GatewayModel[]);
+      const gatewayModel: GatewayModel = {
+        id: '1',
+        tenantId: 'tenant1',
+        factoryId: 'factory-1',
+        factoryKeyHash: null,
+        model: 'model-1',
+        firmwareVersion: '1.0.0',
+        provisioned: false,
+        createdAt: new Date('2026-04-03T00:00:00.000Z'),
+      };
 
-      expect(await controller.getAdminGateways('tenant1')).toBe(result);
+      jest.spyOn(service, 'getGateways').mockResolvedValue([gatewayModel]);
+
+      await expect(controller.getAdminGateways('tenant1')).resolves.toEqual([
+        {
+          id: '1',
+          tenantId: 'tenant1',
+          factoryId: 'factory-1',
+          model: 'model-1',
+          firmwareVersion: '1.0.0',
+          provisioned: false,
+          createdAt: '2026-04-03T00:00:00.000Z',
+        },
+      ]);
     });
   });
 
@@ -48,14 +65,23 @@ describe('GatewaysController', () => {
       const dto: AddGatewayRequestDto = {
         factoryId: 'f1',
         tenantId: 't1',
-        factoryKeyHash: 'h1',
-        firmwareVersion: '1.0.0',
-        model: 'Model X',
+        factoryKey: 'k1',
+        model: 'M1',
       };
+
+      const gatewayModel: GatewayModel = {
+        id: '1',
+        tenantId: 't1',
+        factoryId: 'f1',
+        factoryKeyHash: 'hash',
+        model: 'M1',
+        firmwareVersion: '1.0.0',
+        provisioned: false,
+        createdAt: new Date('2026-04-03T00:00:00.000Z'),
+      };
+
       const result: AddGatewayResponseDto = { id: '1' };
-      jest
-        .spyOn(service, 'addGateway')
-        .mockResolvedValue(result as GatewayModel);
+      jest.spyOn(service, 'addGateway').mockResolvedValue(gatewayModel);
 
       expect(await controller.addGateway(dto)).toEqual(result);
     });

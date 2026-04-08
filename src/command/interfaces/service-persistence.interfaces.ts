@@ -7,6 +7,9 @@ export interface QueueCommandPersistenceInput {
   type: CommandType;
   status: CommandStatus;
   issuedAt: Date;
+  requestedSendFrequencyMs?: number;
+  requestedStatus?: string;
+  requestedFirmwareVersion?: string;
 }
 
 export interface GetCommandPersistenceInput {

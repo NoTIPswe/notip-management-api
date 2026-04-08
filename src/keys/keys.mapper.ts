@@ -14,10 +14,10 @@ export class KeyMapper {
     }));
   }
   static toDto(model: KeyModel): KeysResponseDto {
-    return {
-      gatewayId: model.gatewayId,
-      keyMaterial: model.keyMaterial,
-      keyVersion: model.keyVersion,
-    };
+    const dto = new KeysResponseDto();
+    dto.gatewayId = model.gatewayId;
+    dto.keyMaterial = model.keyMaterial.toString('base64');
+    dto.keyVersion = model.keyVersion;
+    return dto;
   }
 }

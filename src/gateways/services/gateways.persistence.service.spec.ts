@@ -1,4 +1,6 @@
 import { GatewaysPersistenceService } from './gateways.persistence.service';
+import { DEFAULT_GATEWAY_SEND_FREQUENCY_MS } from '../gateway.constants';
+import { GatewayStatus } from '../enums/gateway.enum';
 
 describe('GatewaysPersistenceService', () => {
   it('returns tenant gateways with relations and ordering', async () => {
@@ -135,6 +137,7 @@ describe('GatewaysPersistenceService', () => {
         gatewayId: 'gateway-1',
         gateway,
         name: 'New Name',
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
       },
     };
     const repo = {
@@ -159,8 +162,106 @@ describe('GatewaysPersistenceService', () => {
     expect(metadataRepo.create).toHaveBeenCalledWith({
       gatewayId: 'gateway-1',
       name: 'New Name',
-      sendFrequencyMs: 0,
+      sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
     });
+  });
+
+  it('updates runtime status and last seen timestamp on existing metadata', async () => {
+    const now = new Date('2026-04-04T17:00:00.000Z');
+    const gateway = {
+      id: 'gateway-1',
+      metadata: {
+        status: GatewayStatus.GATEWAY_OFFLINE,
+        lastSeenAt: null,
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+      },
+    };
+    const savedGateway = {
+      ...gateway,
+      metadata: {
+        ...gateway.metadata,
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: now,
+      },
+    };
+    const repo = {
+      save: jest.fn().mockResolvedValue(savedGateway),
+    };
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
+    jest.spyOn(service, 'findByIdUnscoped').mockResolvedValue(gateway as never);
+
+    await expect(
+      service.updateGatewayRuntimeStatus({
+        gatewayId: 'gateway-1',
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: now,
+      }),
+    ).resolves.toEqual(savedGateway);
+    expect(repo.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('creates metadata when runtime status update finds none', async () => {
+    const now = new Date('2026-04-04T17:00:00.000Z');
+    const gateway = { id: 'gateway-1', metadata: null };
+    const savedGateway = {
+      id: 'gateway-1',
+      metadata: {
+        gatewayId: 'gateway-1',
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: now,
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+      },
+    };
+    const repo = {
+      save: jest.fn().mockResolvedValue(savedGateway),
+    };
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
+    jest.spyOn(service, 'findByIdUnscoped').mockResolvedValue(gateway as never);
+
+    await expect(
+      service.updateGatewayRuntimeStatus({
+        gatewayId: 'gateway-1',
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: now,
+      }),
+    ).resolves.toEqual(savedGateway);
+    expect(savedGateway.metadata).toEqual(
+      expect.objectContaining({
+        gatewayId: 'gateway-1',
+        status: GatewayStatus.GATEWAY_ONLINE,
+        lastSeenAt: now,
+        sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+      }),
+    );
+  });
+
+  it('returns null when runtime status update target gateway is missing', async () => {
+    const repo = {
+      save: jest.fn(),
+    };
+    const metadataRepo = {};
+    const service = new GatewaysPersistenceService(
+      repo as never,
+      metadataRepo as never,
+    );
+    jest.spyOn(service, 'findByIdUnscoped').mockResolvedValue(null);
+
+    await expect(
+      service.updateGatewayRuntimeStatus({
+        gatewayId: 'gateway-1',
+        status: GatewayStatus.GATEWAY_OFFLINE,
+        lastSeenAt: new Date('2026-04-04T17:00:00.000Z'),
+      }),
+    ).resolves.toBeNull();
+    expect(repo.save).not.toHaveBeenCalled();
   });
 
   it('returns null when deleting a missing gateway', async () => {

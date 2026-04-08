@@ -5,7 +5,7 @@ export class GatewayModel {
   name: string;
   status: GatewayStatus;
   lastSeenAt: Date | null;
-  sendFrequencyMs: number | null;
+  sendFrequencyMs: number;
   factoryKey: string;
   factoryId: string;
   createdAt: Date;

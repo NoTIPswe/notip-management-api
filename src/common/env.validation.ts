@@ -42,6 +42,10 @@ class EnvironmentVariables {
   @IsUrl({ require_tld: false })
   KEYCLOAK_URL: string;
 
+  @IsUrl({ require_tld: false })
+  @IsOptional()
+  KEYCLOAK_ISSUER_URL?: string;
+
   @IsString()
   KEYCLOAK_REALM: string;
 

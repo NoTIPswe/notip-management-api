@@ -72,11 +72,12 @@ const extractEffectiveRole = (
   payload: JwtClaims,
   clientId: string,
 ): UsersRole => {
-  const candidateRoles: string[] = [];
-
-  if (payload.role) {
-    candidateRoles.push(payload.role);
+  const explicitRole = normalizeRole(payload.role);
+  if (explicitRole) {
+    return explicitRole;
   }
+
+  const candidateRoles: string[] = [];
 
   const tokenClientId = clientId || payload.azp;
   if (tokenClientId) {
@@ -95,10 +96,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly managementClientId: string;
 
   constructor(configService: ConfigService) {
-    const keycloakUrl = configService.get<string>('KEYCLOAK_URL');
-    const keycloakRealm = configService.get<string>('KEYCLOAK_REALM');
+    const keycloakUrl = configService.get<string>('KEYCLOAK_URL') ?? '';
+    const keycloakRealm = configService.get<string>('KEYCLOAK_REALM') ?? '';
+    const keycloakIssuerUrl =
+      configService.get<string>('KEYCLOAK_ISSUER_URL') ??
+      `${keycloakUrl}/realms/${keycloakRealm}`;
     const managementClientId =
       configService.get<string>('KEYCLOAK_MGMT_CLIENT_ID') ?? '';
+    const normalizedKeycloakUrl = keycloakUrl.replace(/\/$/, '');
+    const normalizedIssuerUrl = keycloakIssuerUrl.replace(/\/$/, '');
 
     super({
       secretOrKeyProvider: passportJwtSecret({
@@ -106,10 +112,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cacheMaxAge: 24 * 60 * 60 * 1000,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `${keycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
+        jwksUri: `${normalizedKeycloakUrl}/realms/${keycloakRealm}/protocol/openid-connect/certs`,
       }),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      issuer: `${keycloakUrl}/realms/${keycloakRealm}`,
+      audience: managementClientId,
+      issuer: normalizedIssuerUrl,
       algorithms: ['RS256'],
     });
 
@@ -136,14 +143,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       : payload.actor_user_id || payload.sub;
     const actorEmail = payload.actor_email || payload.email;
     const actorName = payload.actor_name || payload.name;
-    const actorRole = isImpersonating
-      ? normalizeRole(payload.act?.role) ||
-        normalizeRole(payload.actor_role) ||
-        effectiveRole
-      : normalizeRole(payload.actor_role) || effectiveRole;
+    // Usa sempre effectiveRole come ruolo dell'attore, ignora act.role
+    const actorRole = effectiveRole;
     const actorTenantId = payload.actor_tenant_id || payload.tenant_id;
 
-    if (!actorUserId || !actorRole) {
+    if (!actorUserId) {
       throw new UnauthorizedException('Missing impersonation actor claims');
     }
 

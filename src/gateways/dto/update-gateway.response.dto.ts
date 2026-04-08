@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GatewayStatus } from '../enums/gateway.enum';
+import { Expose } from 'class-transformer';
 
 export class UpdateGatewayResponseDto {
   @ApiProperty({ name: 'id' })
@@ -9,5 +10,6 @@ export class UpdateGatewayResponseDto {
   @ApiProperty({ name: 'status', type: String, enum: GatewayStatus })
   status: GatewayStatus;
   @ApiProperty({ name: 'updated_at', type: String, format: 'date-time' })
-  updatedAt: Date;
+  @Expose({ name: 'updated_at' })
+  updatedAt: string;
 }

@@ -11,5 +11,5 @@ export class CommandStatusResponseDto {
   status: CommandStatus;
 
   @ApiProperty({ type: 'string', format: 'date-time' })
-  timestamp: Date;
+  timestamp: string;
 }

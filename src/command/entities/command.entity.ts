@@ -42,6 +42,19 @@ export class CommandEntity {
   @Column({ name: 'ack_received_at', type: 'timestamptz', nullable: true })
   ackReceivedAt: Date | null;
 
+  @Column({
+    name: 'requested_send_frequency_ms',
+    type: 'integer',
+    nullable: true,
+  })
+  requestedSendFrequencyMs: number | null;
+
+  @Column({ name: 'requested_status', type: 'text', nullable: true })
+  requestedStatus: string | null;
+
+  @Column({ name: 'requested_firmware_version', type: 'text', nullable: true })
+  requestedFirmwareVersion: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

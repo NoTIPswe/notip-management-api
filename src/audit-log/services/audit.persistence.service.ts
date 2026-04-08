@@ -14,7 +14,8 @@ export class AuditLogPersistenceService {
     input: GetAuditLogsPersistenceInput,
   ): Promise<AuditLogEntity[]> {
     const query = this.r.createQueryBuilder('audit_log');
-    query.where('audit_log.timestamp >= :from', { from: input.from });
+    query.where('audit_log.tenantId = :tenantId', { tenantId: input.tenantId });
+    query.andWhere('audit_log.timestamp >= :from', { from: input.from });
     query.andWhere('audit_log.timestamp <= :to', { to: input.to });
 
     if (input.userId) {
@@ -24,6 +25,11 @@ export class AuditLogPersistenceService {
     if (input.action) {
       query.andWhere('audit_log.action = :action', { action: input.action });
     }
+
+    // Enforce deterministic ordering for API consumers.
+    query
+      .orderBy('audit_log.timestamp', 'DESC')
+      .addOrderBy('audit_log.id', 'DESC');
 
     return await query.getMany();
   }

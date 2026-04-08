@@ -33,7 +33,7 @@ export class GatewayResponseDto {
     format: 'date-time',
   })
   @Expose({ name: 'last_seen_at' })
-  lastSeenAt: Date | null;
+  lastSeenAt: string | null;
 
   @ApiProperty({
     description: 'Whether the gateway has been provisioned/activated',
@@ -58,5 +58,5 @@ export class GatewayResponseDto {
     type: 'number',
   })
   @Expose({ name: 'send_frequency_ms' })
-  sendFrequencyMs?: number | null;
+  sendFrequencyMs: number;
 }

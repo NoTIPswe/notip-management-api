@@ -49,7 +49,7 @@ describe('ThresholdsController', () => {
       sensorType: 'temperature',
       minValue: -10,
       maxValue: 40,
-      updatedAt: model.updatedAt,
+      updatedAt: model.updatedAt.toISOString(),
     });
   });
 
@@ -70,7 +70,7 @@ describe('ThresholdsController', () => {
       sensorType: 'temperature',
       minValue: -10,
       maxValue: 40,
-      updatedAt: model.updatedAt,
+      updatedAt: model.updatedAt.toISOString(),
     });
   });
 

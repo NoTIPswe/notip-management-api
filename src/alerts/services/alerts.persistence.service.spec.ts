@@ -1,6 +1,14 @@
 import { Between, IsNull, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { AlertsPersistenceService } from './alerts.persistence.service';
 
+type DefaultAlertConfigRow = {
+  id: string;
+  tenantId: string;
+  gatewayId: null;
+  gatewayTimeoutMs: number;
+  updatedAt: Date;
+};
+
 describe('AlertsPersistenceService', () => {
   it('upserts and returns gateway-specific config', async () => {
     const alertsRepo = {};
@@ -30,11 +38,17 @@ describe('AlertsPersistenceService', () => {
     );
   });
 
-  it('upserts and returns default config', async () => {
+  it('creates and returns default config when none exists', async () => {
     const alertsRepo = {};
     const configRepo = {
-      upsert: jest.fn().mockResolvedValue(undefined),
-      findOne: jest.fn().mockResolvedValue({ id: 'config-1' }),
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockReturnValue({
+        tenantId: 'tenant-1',
+        gatewayId: null,
+        gatewayTimeoutMs: 60000,
+      }),
+      save: jest.fn().mockResolvedValue({ id: 'config-1' }),
+      delete: jest.fn(),
     };
     const service = new AlertsPersistenceService(
       alertsRepo as never,
@@ -47,17 +61,62 @@ describe('AlertsPersistenceService', () => {
         defaultTimeoutMs: 60000,
       }),
     ).resolves.toEqual({ id: 'config-1' });
-    expect(configRepo.upsert).toHaveBeenCalledWith(
-      {
-        tenantId: 'tenant-1',
-        gatewayId: null,
-        gatewayTimeoutMs: 60000,
-      },
-      ['tenantId', 'gatewayId'],
-    );
-    expect(configRepo.findOne).toHaveBeenCalledWith({
+    expect(configRepo.find).toHaveBeenCalledWith({
       where: { tenantId: 'tenant-1', gatewayId: IsNull() },
+      order: { updatedAt: 'DESC' },
     });
+    expect(configRepo.create).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      gatewayId: null,
+      gatewayTimeoutMs: 60000,
+    });
+    expect(configRepo.delete).not.toHaveBeenCalled();
+  });
+
+  it('updates latest default config and removes stale duplicates', async () => {
+    const alertsRepo = {};
+    const latest: DefaultAlertConfigRow = {
+      id: 'config-new',
+      tenantId: 'tenant-1',
+      gatewayId: null,
+      gatewayTimeoutMs: 2000,
+      updatedAt: new Date('2026-04-05T01:13:27.600Z'),
+    };
+    const stale: DefaultAlertConfigRow = {
+      id: 'config-old',
+      tenantId: 'tenant-1',
+      gatewayId: null,
+      gatewayTimeoutMs: 5000,
+      updatedAt: new Date('2026-04-04T08:55:48.637Z'),
+    };
+    const configRepo = {
+      find: jest.fn().mockResolvedValue([latest, stale]),
+      create: jest.fn(),
+      save: jest
+        .fn()
+        .mockImplementation((entity: DefaultAlertConfigRow) => entity),
+      delete: jest.fn().mockResolvedValue({ affected: 1 }),
+    };
+    const service = new AlertsPersistenceService(
+      alertsRepo as never,
+      configRepo as never,
+    );
+
+    await expect(
+      service.setDefaultAlertsConfig({
+        tenantId: 'tenant-1',
+        defaultTimeoutMs: 2500,
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        id: 'config-new',
+        gatewayTimeoutMs: 2500,
+      }),
+    );
+    expect(configRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'config-new', gatewayTimeoutMs: 2500 }),
+    );
+    expect(configRepo.delete).toHaveBeenCalledWith(['config-old']);
   });
 
   it('returns alert config with gateway relations', async () => {
@@ -76,6 +135,7 @@ describe('AlertsPersistenceService', () => {
     expect(configRepo.find).toHaveBeenCalledWith({
       where: { tenant: { id: 'tenant-1' } },
       relations: ['gateway'],
+      order: { updatedAt: 'DESC' },
     });
   });
 

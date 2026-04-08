@@ -1,8 +1,10 @@
-asyncapi: "2.6.0"
+# TODO: put tags on all channels to indicate the services involved (see Norme di Progetto)
+
+asyncapi: '2.6.0'
 
 info:
   title: NoTIP NATS Contracts
-  version: "1.0.0"
+  version: '1.0.0'
   description: |
     Authoritative subject and stream definitions for the NoTIP NATS JetStream cluster.
 
@@ -52,17 +54,8 @@ channels:
     publish:
       operationId: publishTelemetry
       summary: Gateway publishes an encrypted sensor reading.
-      tags:
-        - name: simulator-backend
       message:
-        $ref: "#/components/messages/TelemetryMessage"
-    subscribe:
-      operationId: receiveTelemetry
-      summary: Data Consumer receives encrypted telemetry.
-      tags:
-        - name: data-consumer
-      message:
-        $ref: "#/components/messages/TelemetryMessage"
+        $ref: '#/components/messages/TelemetryMessage'
 
   # ── Commands ─────────────────────────────────────────────────────────────
 
@@ -84,20 +77,16 @@ channels:
         schema:
           type: string
           format: uuid
-    publish:
-      operationId: dispatchCommand
-      summary: Management API dispatches a command to a gateway.
-      tags:
-        - name: management-api
-      message:
-        $ref: "#/components/messages/GatewayCommand"
     subscribe:
       operationId: receiveCommand
       summary: Gateway receives a command.
-      tags:
-        - name: simulator-backend
       message:
-        $ref: "#/components/messages/GatewayCommand"
+        $ref: '#/components/messages/GatewayCommand'
+    publish:
+      operationId: dispatchCommand
+      summary: Management API dispatches a command to a gateway.
+      message:
+        $ref: '#/components/messages/GatewayCommand'
 
   # ── Command ACKs ──────────────────────────────────────────────────────────
 
@@ -121,17 +110,8 @@ channels:
     publish:
       operationId: publishCommandAck
       summary: Gateway acknowledges command execution.
-      tags:
-        - name: simulator-backend
       message:
-        $ref: "#/components/messages/CommandAck"
-    subscribe:
-      operationId: receiveCommandAck
-      summary: Management API receives a command acknowledgement.
-      tags:
-        - name: management-api
-      message:
-        $ref: "#/components/messages/CommandAck"
+        $ref: '#/components/messages/CommandAck'
 
   # ── Alerts ───────────────────────────────────────────────────────────────
 
@@ -151,17 +131,8 @@ channels:
     publish:
       operationId: publishGatewayOfflineAlert
       summary: Data Consumer publishes a gateway-offline alert.
-      tags:
-        - name: data-consumer
       message:
-        $ref: "#/components/messages/GatewayOfflineAlert"
-    subscribe:
-      operationId: receiveGatewayOfflineAlert
-      summary: Management API receives a gateway-offline alert.
-      tags:
-        - name: management-api
-      message:
-        $ref: "#/components/messages/GatewayOfflineAlert"
+        $ref: '#/components/messages/GatewayOfflineAlert'
 
   # ── Decommissioning ──────────────────────────────────────────────────────
 
@@ -185,18 +156,8 @@ channels:
     publish:
       operationId: publishDecommission
       summary: Management API signals gateway decommissioning.
-      tags:
-        - name: management-api
       message:
-        $ref: "#/components/messages/GatewayDecommissioned"
-    subscribe:
-      operationId: receiveDecommission
-      summary: Data Consumer and Simulator react to gateway decommissioning.
-      tags:
-        - name: data-consumer
-        - name: simulator-backend
-      message:
-        $ref: "#/components/messages/GatewayDecommissioned"
+        $ref: '#/components/messages/GatewayDecommissioned'
 
   # ── Audit Log ────────────────────────────────────────────────────────────
 
@@ -215,19 +176,8 @@ channels:
     publish:
       operationId: publishAuditLog
       summary: Backend service publishes an audit log entry.
-      tags:
-        - name: management-api
-        - name: provisioning-service
       message:
-        $ref: "#/components/messages/AuditLogEntry"
-    subscribe:
-      operationId: consumeAuditLog
-      summary: Audit log archiver consumes entries for long-term storage.
-      description: Consumer not yet implemented — placeholder for future audit-log-archiver service.
-      tags:
-        - name: audit-log-archiver
-      message:
-        $ref: "#/components/messages/AuditLogEntry"
+        $ref: '#/components/messages/AuditLogEntry'
 
   # ────────────────────────────────────────────────────────────────────────────
   # §2 — Request-Reply Channels (internal service-to-service, no JetStream)
@@ -248,14 +198,14 @@ channels:
       tags:
         - name: provisioning-service
       message:
-        $ref: "#/components/messages/FactoryValidateRequest"
+        $ref: '#/components/messages/FactoryValidateRequest'
     subscribe:
       operationId: respondFactoryValidate
       summary: Management API responds with gateway identity or error.
       tags:
         - name: management-api
       message:
-        $ref: "#/components/messages/FactoryValidateResponse"
+        $ref: '#/components/messages/FactoryValidateResponse'
 
   internal.mgmt.provisioning.complete:
     description: |
@@ -269,14 +219,14 @@ channels:
       tags:
         - name: provisioning-service
       message:
-        $ref: "#/components/messages/ProvisioningCompleteRequest"
+        $ref: '#/components/messages/ProvisioningCompleteRequest'
     subscribe:
       operationId: respondProvisioningComplete
       summary: Management API confirms persistence.
       tags:
         - name: management-api
       message:
-        $ref: "#/components/messages/ProvisioningCompleteResponse"
+        $ref: '#/components/messages/ProvisioningCompleteResponse'
 
   internal.mgmt.alert-configs.list:
     description: |
@@ -300,7 +250,7 @@ channels:
       tags:
         - name: management-api
       message:
-        $ref: "#/components/messages/AlertConfigsListResponse"
+        $ref: '#/components/messages/AlertConfigsListResponse'
 
   internal.mgmt.gateway.update-status:
     description: |
@@ -313,7 +263,7 @@ channels:
       tags:
         - name: data-consumer
       message:
-        $ref: "#/components/messages/GatewayStatusUpdateRequest"
+        $ref: '#/components/messages/GatewayStatusUpdateRequest'
     subscribe:
       operationId: respondGatewayStatusUpdate
       summary: Management API confirms status update.
@@ -344,14 +294,14 @@ channels:
       tags:
         - name: data-consumer
       message:
-        $ref: "#/components/messages/GatewayLifecycleRequest"
+        $ref: '#/components/messages/GatewayLifecycleRequest'
     subscribe:
       operationId: respondGatewayLifecycle
       summary: Management API returns the current lifecycle state.
       tags:
         - name: management-api
       message:
-        $ref: "#/components/messages/GatewayLifecycleResponse"
+        $ref: '#/components/messages/GatewayLifecycleResponse'
 
   internal.cost:
     description: |
@@ -364,14 +314,14 @@ channels:
       tags:
         - name: management-api
       message:
-        $ref: "#/components/messages/CostRequest"
+        $ref: '#/components/messages/CostRequest'
     subscribe:
       operationId: respondCost
       summary: Data API returns storage size from TimescaleDB.
       tags:
         - name: data-api
       message:
-        $ref: "#/components/messages/CostResponse"
+        $ref: '#/components/messages/CostResponse'
 
 # ────────────────────────────────────────────────────────────────────────────
 # COMPONENTS
@@ -602,6 +552,9 @@ components:
           send_frequency_ms:
             type: integer
             description: Desired telemetry send frequency for the gateway (in milliseconds).
+          firmware_version:
+            type: string
+            description: Optional firmware version to persist when onboarding succeeds.
 
     ProvisioningCompleteResponse:
       name: ProvisioningCompleteResponse

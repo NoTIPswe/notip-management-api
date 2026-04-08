@@ -10,7 +10,7 @@ const createUserEntity = (overrides: Record<string, unknown> = {}) =>
     id: 'kc-user-1',
     tenantId: 'tenant-1',
     email: 'user@example.com',
-    name: 'User One',
+    username: 'User One',
     role: UsersRole.TENANT_ADMIN,
     createdAt: new Date('2024-01-01T00:00:00.000Z'),
     ...overrides,
@@ -92,15 +92,17 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 'tenant-1',
         email: 'user@example.com',
-        name: 'User One',
+        username: '  User.One  ',
         role: UsersRole.TENANT_ADMIN,
         password: 'password',
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
 
-    expect(createTenantUserMock).toHaveBeenCalled();
+    expect(createTenantUserMock).toHaveBeenCalledWith(
+      expect.objectContaining({ username: 'User.one' }),
+    );
     expect(createUserPersistenceMock).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'kc-user-1' }),
+      expect.objectContaining({ id: 'kc-user-1', username: 'User.one' }),
     );
   });
 
@@ -112,7 +114,7 @@ describe('UsersService', () => {
         id: 'kc-user-1',
         tenantId: 'tenant-1',
         email: 'new@example.com',
-        name: 'New Name',
+        username: ' New-Username ',
         role: UsersRole.TENANT_USER,
       }),
     ).resolves.toEqual(expect.objectContaining({ id: 'kc-user-1' }));
@@ -123,8 +125,35 @@ describe('UsersService', () => {
     );
     expect(updateUserKeycloakMock).toHaveBeenCalledWith('kc-user-1', {
       email: 'new@example.com',
-      name: 'New Name',
+      username: 'New-username',
     });
+  });
+
+  it('rejects SYSTEM_ADMIN role assignment on create', async () => {
+    await expect(
+      service.createUser({
+        tenantId: 'tenant-1',
+        email: 'user@example.com',
+        username: 'admin-user',
+        role: UsersRole.SYSTEM_ADMIN,
+        password: 'password',
+      }),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(createTenantUserMock).not.toHaveBeenCalled();
+    expect(createUserPersistenceMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects SYSTEM_ADMIN role assignment on update', async () => {
+    await expect(
+      service.updateUser({
+        id: 'kc-user-1',
+        tenantId: 'tenant-1',
+        role: UsersRole.SYSTEM_ADMIN,
+      }),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(updateUserPersistenceMock).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when updating missing user', async () => {
@@ -223,7 +252,7 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 't1',
         email: 'e',
-        name: 'n',
+        username: 'n',
         role: UsersRole.TENANT_USER,
         password: 'p',
       }),
@@ -241,7 +270,7 @@ describe('UsersService', () => {
       service.createUser({
         tenantId: 't1',
         email: 'e',
-        name: 'n',
+        username: 'n',
         role: UsersRole.TENANT_USER,
         password: 'p',
       }),
@@ -275,7 +304,7 @@ describe('UsersService', () => {
     expect(syncUserApplicationRoleMock).not.toHaveBeenCalled();
     expect(updateUserKeycloakMock).toHaveBeenCalledWith('kc-user-1', {
       email: 'new@e.com',
-      name: undefined,
+      username: undefined,
     });
   });
 

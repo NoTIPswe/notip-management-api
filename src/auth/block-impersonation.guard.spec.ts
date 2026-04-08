@@ -15,6 +15,8 @@ const createContext = (user?: Partial<AuthenticatedUser>): ExecutionContext =>
   }) as unknown as ExecutionContext;
 
 describe('BlockImpersonationGuard', () => {
+  const TENANT_UUID = '11111111-1111-4111-8111-111111111111';
+
   let reflector: Reflector;
   let logAuditEventMock: jest.Mock;
   let auditLogService: AuditLogService;
@@ -53,7 +55,7 @@ describe('BlockImpersonationGuard', () => {
     const user = {
       isImpersonating: true,
       effectiveUserId: 'eff-1',
-      effectiveTenantId: 'ten-1',
+      effectiveTenantId: TENANT_UUID,
       actorUserId: 'act-1',
       actorRole: UsersRole.SYSTEM_ADMIN,
       effectiveRole: UsersRole.TENANT_ADMIN,
@@ -66,8 +68,24 @@ describe('BlockImpersonationGuard', () => {
       expect.objectContaining({
         action: 'IMPERSONATION_BLOCKED',
         userId: 'eff-1',
-        tenantId: 'ten-1',
+        tenantId: TENANT_UUID,
       }),
     );
+  });
+
+  it('throws ForbiddenException even when tenant id is missing', async () => {
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue(true);
+    const user = {
+      isImpersonating: true,
+      effectiveUserId: 'eff-1',
+      actorUserId: 'act-1',
+      actorRole: UsersRole.SYSTEM_ADMIN,
+      effectiveRole: UsersRole.TENANT_ADMIN,
+    };
+
+    await expect(guard.canActivate(createContext(user))).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(logAuditEventMock).not.toHaveBeenCalled();
   });
 });

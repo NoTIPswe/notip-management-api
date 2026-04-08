@@ -14,7 +14,7 @@ export class GatewaysMapper {
     model.createdAt = entity.createdAt;
     model.firmwareVersion = entity.firmwareVersion;
     model.model = entity.model;
-    model.tenantId = entity.tenant?.id ?? '';
+    model.tenantId = entity.tenantId ?? entity.tenant?.id ?? '';
     model.provisioned = entity.provisioned;
     return model;
   }
@@ -23,6 +23,11 @@ export class GatewaysMapper {
     const dto = new GatewayResponseDto();
     dto.id = model.id;
     dto.tenantId = model.tenantId;
+    dto.createdAt = model.createdAt.toISOString();
+    dto.factoryId = model.factoryId;
+    dto.model = model.model;
+    dto.provisioned = model.provisioned;
+    dto.firmwareVersion = model.firmwareVersion;
     return dto;
   }
 
@@ -30,8 +35,7 @@ export class GatewaysMapper {
     return {
       factoryId: dto.factoryId,
       tenantId: dto.tenantId,
-      factoryKeyHash: dto.factoryKeyHash,
-      firmwareVersion: dto.firmwareVersion,
+      factoryKey: dto.factoryKey,
       model: dto.model,
     };
   }
