@@ -133,8 +133,7 @@ describe('AlertsPersistenceService', () => {
       { id: 'config-1' },
     ]);
     expect(configRepo.find).toHaveBeenCalledWith({
-      where: { tenant: { id: 'tenant-1' } },
-      relations: ['gateway'],
+      where: { tenantId: 'tenant-1' },
       order: { updatedAt: 'DESC' },
     });
   });

@@ -6,9 +6,10 @@ import {
   NatsConnection,
   Subscription,
 } from 'nats';
+import { NotFoundException } from '@nestjs/common';
 import { GatewayStatus } from '../enums/gateway.enum';
 import { GatewayStatusNatsResponderService } from './gateway-status-nats-responder.service';
-import { GatewaysService } from './gateways.service';
+import type { GatewaysService } from './gateways.service';
 
 jest.mock('nats', () => {
   const actual = jest.requireActual<typeof import('nats')>('nats');
@@ -17,6 +18,12 @@ jest.mock('nats', () => {
     connect: jest.fn(),
   };
 });
+
+jest.mock('./gateways.service', () => ({
+  GatewaysService: class GatewaysService {
+    readonly __mock = true;
+  },
+}));
 
 type TestConnection = Pick<
   NatsConnection,
@@ -28,10 +35,14 @@ type UpdateResponse =
   | { success: false; error: 'INVALID_PAYLOAD' | 'NOT_FOUND' | 'INTERNAL' };
 type ServiceInternals = {
   connection: TestConnection | null;
-  subscription: Subscription | null;
+  subscriptions: Subscription[];
   logger: TestLogger;
-  consumeRequests(subscription: Subscription): Promise<void>;
+  consumeRequests(
+    subscription: Subscription,
+    handler: (msg: Msg) => Promise<unknown>,
+  ): Promise<void>;
   handleUpdate(msg: Msg): Promise<UpdateResponse>;
+  handleGetStatus(msg: Msg): Promise<{ gateway_id: string; state: string }>;
   resolveServers(): string[];
   buildConnectionOptions(servers: string[]): ConnectionOptions;
 };
@@ -125,6 +136,9 @@ describe('GatewayStatusNatsResponderService', () => {
     expect(connection.subscribe).toHaveBeenCalledWith(
       'internal.mgmt.gateway.update-status',
     );
+    expect(connection.subscribe).toHaveBeenCalledWith(
+      'internal.mgmt.gateway.get-status',
+    );
   });
 
   it('returns success when gateway runtime status is updated', async () => {
@@ -207,6 +221,7 @@ describe('GatewayStatusNatsResponderService', () => {
     await getInternals(service).consumeRequests(
       createSubscription([
         {
+          subject: 'internal.mgmt.gateway.update-status',
           reply: 'reply.subject',
           data: codec.encode({
             gateway_id: 'gateway-1',
@@ -215,6 +230,7 @@ describe('GatewayStatusNatsResponderService', () => {
           }),
         } as unknown as Msg,
       ]),
+      async (msg) => getInternals(service).handleUpdate(msg),
     );
 
     expect(publish).toHaveBeenCalledWith(
@@ -272,7 +288,13 @@ describe('GatewayStatusNatsResponderService', () => {
     };
 
     await getInternals(service).consumeRequests(
-      createSubscription([{ reply: '' } as Msg]),
+      createSubscription([
+        {
+          subject: 'internal.mgmt.gateway.update-status',
+          reply: '',
+        } as Msg,
+      ]),
+      async (msg) => getInternals(service).handleUpdate(msg),
     );
 
     expect(logger.warn).toHaveBeenCalled();
@@ -291,7 +313,7 @@ describe('GatewayStatusNatsResponderService', () => {
       {} as GatewaysService,
     );
 
-    getInternals(service).subscription = subscription;
+    getInternals(service).subscriptions = [subscription];
     getInternals(service).connection = connection;
 
     await service.onModuleDestroy();
@@ -302,6 +324,98 @@ describe('GatewayStatusNatsResponderService', () => {
     expect(unsubscribe).toHaveBeenCalled();
     expect(drain).toHaveBeenCalled();
     expect(close).toHaveBeenCalled();
+  });
+
+  it('returns lifecycle state for get-status requests', async () => {
+    const findById = jest.fn().mockResolvedValue({
+      status: GatewayStatus.GATEWAY_ONLINE,
+    });
+    const gatewaysService = {
+      findById,
+    } as unknown as GatewaysService;
+    const service = new GatewayStatusNatsResponderService(gatewaysService);
+
+    await expect(
+      getInternals(service).handleGetStatus({
+        data: codec.encode({
+          gateway_id: 'gateway-1',
+          tenant_id: 'tenant-1',
+        }),
+      } as Msg),
+    ).resolves.toEqual({ gateway_id: 'gateway-1', state: 'online' });
+
+    expect(findById).toHaveBeenCalledWith({
+      gatewayId: 'gateway-1',
+      tenantId: 'tenant-1',
+    });
+  });
+
+  it('returns offline for malformed get-status payloads', async () => {
+    const service = new GatewayStatusNatsResponderService(
+      {} as GatewaysService,
+    );
+
+    await expect(
+      getInternals(service).handleGetStatus({
+        data: codec.encode({
+          gateway_id: '',
+          tenant_id: 'tenant-1',
+        }),
+      } as Msg),
+    ).resolves.toEqual({ gateway_id: '', state: 'offline' });
+  });
+
+  it('returns offline when gateway is not found in get-status', async () => {
+    const gatewaysService = {
+      findById: jest
+        .fn()
+        .mockRejectedValue(new NotFoundException('Gateway not found')),
+    } as unknown as GatewaysService;
+    const service = new GatewayStatusNatsResponderService(gatewaysService);
+
+    await expect(
+      getInternals(service).handleGetStatus({
+        data: codec.encode({
+          gateway_id: 'gateway-404',
+          tenant_id: 'tenant-1',
+        }),
+      } as Msg),
+    ).resolves.toEqual({ gateway_id: 'gateway-404', state: 'offline' });
+  });
+
+  it('publishes get-status lifecycle responses via consumeRequests', async () => {
+    const publish = jest.fn();
+    const gatewaysService = {
+      findById: jest.fn().mockResolvedValue({
+        status: GatewayStatus.GATEWAY_ONLINE,
+      }),
+    } as unknown as GatewaysService;
+    const service = new GatewayStatusNatsResponderService(gatewaysService);
+    getInternals(service).connection = {
+      publish,
+      subscribe: jest.fn(),
+      drain: jest.fn().mockResolvedValue(undefined),
+      close: jest.fn().mockResolvedValue(undefined),
+    };
+
+    await getInternals(service).consumeRequests(
+      createSubscription([
+        {
+          subject: 'internal.mgmt.gateway.get-status',
+          reply: 'reply.lifecycle',
+          data: codec.encode({
+            gateway_id: 'gateway-1',
+            tenant_id: 'tenant-1',
+          }),
+        } as unknown as Msg,
+      ]),
+      async (msg) => getInternals(service).handleGetStatus(msg),
+    );
+
+    expect(publish).toHaveBeenCalledWith(
+      'reply.lifecycle',
+      codec.encode({ gateway_id: 'gateway-1', state: 'online' }),
+    );
   });
 
   it('resolves servers and auth options from env', () => {

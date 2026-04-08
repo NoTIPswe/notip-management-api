@@ -26,7 +26,7 @@ export class AlertsNatsService implements OnModuleInit {
       'internal.mgmt.alert-configs.list',
       async (msg) => {
         try {
-          const configs = await this.persistence.findAllAlertsConfigs();
+          const configs = await this.persistence.findAllAlertConfigs();
           const response = configs.map((c) => ({
             tenant_id: c.tenantId,
             gateway_id: c.gatewayId,

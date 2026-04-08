@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { GatewayStatus } from '../enums/gateway.enum';
 import { GatewaysService } from './gateways.service';
 
 const GATEWAY_STATUS_UPDATE_SUBJECT = 'internal.mgmt.gateway.update-status';
+const GATEWAY_GET_STATUS_SUBJECT = 'internal.mgmt.gateway.get-status';
 
 type GatewayStatusUpdateResponse =
   | { success: true }
@@ -24,6 +26,11 @@ type GatewayStatusUpdateResponse =
       error: 'INVALID_PAYLOAD' | 'NOT_FOUND' | 'INTERNAL';
     };
 
+type GatewayGetStatusResponse = {
+  gateway_id: string;
+  state: 'online' | 'offline' | 'paused' | 'provisioning';
+};
+
 @Injectable()
 export class GatewayStatusNatsResponderService
   implements OnModuleInit, OnModuleDestroy
@@ -31,7 +38,7 @@ export class GatewayStatusNatsResponderService
   private readonly logger = new Logger(GatewayStatusNatsResponderService.name);
   private readonly codec = JSONCodec<unknown>();
   private connection: NatsConnection | null = null;
-  private subscription: Subscription | null = null;
+  private subscriptions: Subscription[] = [];
 
   constructor(private readonly gatewaysService: GatewaysService) {}
 
@@ -49,21 +56,34 @@ export class GatewayStatusNatsResponderService
       `Gateway status responder connected to NATS servers: ${servers.join(', ')}`,
     );
 
-    this.subscription = this.connection.subscribe(
+    const updateSubscription = this.connection.subscribe(
       GATEWAY_STATUS_UPDATE_SUBJECT,
     );
+    this.subscriptions.push(updateSubscription);
     this.logger.log(
       `Subscribed to NATS request-reply subject: ${GATEWAY_STATUS_UPDATE_SUBJECT}`,
     );
+    void this.consumeRequests(updateSubscription, async (msg) =>
+      this.handleUpdate(msg),
+    );
 
-    void this.consumeRequests(this.subscription);
+    const getStatusSubscription = this.connection.subscribe(
+      GATEWAY_GET_STATUS_SUBJECT,
+    );
+    this.subscriptions.push(getStatusSubscription);
+    this.logger.log(
+      `Subscribed to NATS request-reply subject: ${GATEWAY_GET_STATUS_SUBJECT}`,
+    );
+    void this.consumeRequests(getStatusSubscription, async (msg) =>
+      this.handleGetStatus(msg),
+    );
   }
 
   async onModuleDestroy(): Promise<void> {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
+    for (const subscription of this.subscriptions) {
+      subscription.unsubscribe();
     }
+    this.subscriptions = [];
 
     if (this.connection) {
       await this.connection.drain();
@@ -72,21 +92,24 @@ export class GatewayStatusNatsResponderService
     }
   }
 
-  private async consumeRequests(subscription: Subscription): Promise<void> {
+  private async consumeRequests<TResponse>(
+    subscription: Subscription,
+    handler: (msg: Msg) => Promise<TResponse>,
+  ): Promise<void> {
     for await (const msg of subscription) {
       if (!msg.reply) {
         this.logger.warn(
-          `Received request on ${GATEWAY_STATUS_UPDATE_SUBJECT} without a reply subject`,
+          `Received request on ${msg.subject} without a reply subject`,
         );
         continue;
       }
 
-      let response: GatewayStatusUpdateResponse;
+      let response: TResponse | { success: false; error: 'INTERNAL' };
       try {
-        response = await this.handleUpdate(msg);
+        response = await handler(msg);
       } catch (error) {
         this.logger.error(
-          `Unhandled NATS request handler error on ${GATEWAY_STATUS_UPDATE_SUBJECT}`,
+          `Unhandled NATS request handler error on ${msg.subject}`,
           error as Error,
         );
         response = { success: false, error: 'INTERNAL' };
@@ -123,6 +146,44 @@ export class GatewayStatusNatsResponderService
     return { success: true };
   }
 
+  private async handleGetStatus(msg: Msg): Promise<GatewayGetStatusResponse> {
+    const payload = this.decodeRecord(msg);
+    const gatewayId = this.readNonEmptyString(payload, 'gateway_id');
+    const tenantId = this.readNonEmptyString(payload, 'tenant_id');
+
+    if (!gatewayId || !tenantId) {
+      this.logger.warn('Invalid gateway get-status payload received');
+      return {
+        gateway_id: gatewayId ?? '',
+        state: 'offline',
+      };
+    }
+
+    try {
+      const gateway = await this.gatewaysService.findById({
+        gatewayId,
+        tenantId,
+      });
+
+      return {
+        gateway_id: gatewayId,
+        state: this.toLifecycleState(gateway.status),
+      };
+    } catch (error) {
+      if (!(error instanceof NotFoundException)) {
+        this.logger.error(
+          `Failed to resolve lifecycle state for gateway ${gatewayId}`,
+          error as Error,
+        );
+      }
+
+      return {
+        gateway_id: gatewayId,
+        state: 'offline',
+      };
+    }
+  }
+
   private decodeRecord(msg: Msg): Record<string, unknown> | null {
     try {
       const decoded = this.codec.decode(msg.data);
@@ -136,12 +197,20 @@ export class GatewayStatusNatsResponderService
     }
   }
 
+  private readNonEmptyString(
+    value: Record<string, unknown> | null,
+    key: string,
+  ): string | null {
+    const raw = value?.[key];
+    return typeof raw === 'string' && raw.trim().length > 0 ? raw : null;
+  }
+
   private normalizeStatus(value: unknown): GatewayStatus | null {
     if (typeof value !== 'string') {
       return null;
     }
 
-    const normalized = value.trim().toLowerCase().replace(/[\s-]/g, '_');
+    const normalized = value.trim().toLowerCase().replaceAll(/[\s-]/g, '_');
     switch (normalized) {
       case 'online':
       case 'gateway_online':
@@ -155,6 +224,22 @@ export class GatewayStatusNatsResponderService
         return GatewayStatus.GATEWAY_SUSPENDED;
       default:
         return null;
+    }
+  }
+
+  private toLifecycleState(
+    status?: GatewayStatus,
+  ): 'online' | 'offline' | 'paused' | 'provisioning' {
+    switch (status) {
+      case GatewayStatus.GATEWAY_ONLINE:
+        return 'online';
+      case GatewayStatus.GATEWAY_SUSPENDED:
+        return 'paused';
+      case GatewayStatus.GATEWAYS_PROVISIONING:
+        return 'provisioning';
+      case GatewayStatus.GATEWAY_OFFLINE:
+      default:
+        return 'offline';
     }
   }
 
