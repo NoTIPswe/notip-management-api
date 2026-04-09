@@ -1,3 +1,26 @@
+# [1.5.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.10...v1.5.0) (2026-04-09)
+
+
+### Bug Fixes
+
+* added ignoring generating code ([dc98a4e](https://github.com/NoTIPswe/notip-management-api/commit/dc98a4ee0ee919627d4049d56710b45aa3ddd3ef))
+* enabling impersonation and use of apis ([e28ce22](https://github.com/NoTIPswe/notip-management-api/commit/e28ce227805891741f0cdf422a30b71f01945378))
+* last access and costs endpoint ([cb865c3](https://github.com/NoTIPswe/notip-management-api/commit/cb865c3fb47a9cd59cc9afdf4a35380781b3fa87))
+* last access and costs endpoint ([8b7f932](https://github.com/NoTIPswe/notip-management-api/commit/8b7f932feebe45afbb2a83ceec4feda4e198767a))
+* nats contracts allignment ([4c77da8](https://github.com/NoTIPswe/notip-management-api/commit/4c77da803438c3309c1fcedcafa139577c3fd447))
+* removed MOCK_NATS env ([2e18a0b](https://github.com/NoTIPswe/notip-management-api/commit/2e18a0bee4bed437018b2cb17fff76e200e1b630))
+* test failed ([417c83e](https://github.com/NoTIPswe/notip-management-api/commit/417c83ed62537eca95ed4c41250e07f08e700062))
+
+
+### Features
+
+* add metrics module with interceptor and controller for monitoring API performance ([bc7e154](https://github.com/NoTIPswe/notip-management-api/commit/bc7e1542c6207056e1f96244ddcb459c0ac60397))
+* added NATS R-R communication ([2f48ac1](https://github.com/NoTIPswe/notip-management-api/commit/2f48ac10a18dffc76749e21b8ab5575843b2444a))
+* added request data consume ([901fcb2](https://github.com/NoTIPswe/notip-management-api/commit/901fcb21321b6217b115a18e64d09733e23e316d))
+* **gateway-status:** implement get-status handling and improve subscription management ([bc03950](https://github.com/NoTIPswe/notip-management-api/commit/bc03950aa0d3f88741031eb96d2f5104f4fbca83))
+* name offuscated audit and command permission ([af383c8](https://github.com/NoTIPswe/notip-management-api/commit/af383c8c51a5e3e7b7052c506c95ec13ca7b10d7))
+* **users:** rename 'name' to 'username' across user-related DTOs, entities, and services ([4af4541](https://github.com/NoTIPswe/notip-management-api/commit/4af45415bc7e2f6bbfdae3deaa227da4ccdae1d3))
+
 ## [1.4.10](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.9...v1.4.10) (2026-04-05)
 
 
