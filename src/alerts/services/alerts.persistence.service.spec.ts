@@ -14,7 +14,7 @@ describe('AlertsPersistenceService', () => {
     const alertsRepo = {};
     const configRepo = {
       upsert: jest.fn().mockResolvedValue(undefined),
-      findOne: jest.fn().mockResolvedValue({ id: 'config-1' }),
+      findOneOrFail: jest.fn().mockResolvedValue({ id: 'config-1' }),
     };
     const service = new AlertsPersistenceService(
       alertsRepo as never,

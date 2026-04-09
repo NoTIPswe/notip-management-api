@@ -20,7 +20,7 @@ describe('AlertsNatsService', () => {
       }),
     } as unknown as JetStreamClient;
     const persistence = {
-      findAllAlertsConfigs: jest.fn().mockResolvedValue([
+      findAllAlertConfigs: jest.fn().mockResolvedValue([
         {
           tenantId: 'tenant-1',
           gatewayId: 'gateway-1',
@@ -66,7 +66,7 @@ describe('AlertsNatsService', () => {
       subscribe: jest.fn(),
     } as unknown as JetStreamClient;
     const persistence = {
-      findAllAlertsConfigs: jest
+      findAllAlertConfigs: jest
         .fn()
         .mockRejectedValue(new Error('db unavailable')),
       saveAlert: jest.fn(),
@@ -106,7 +106,7 @@ describe('AlertsNatsService', () => {
       }),
     } as unknown as JetStreamClient;
     const persistence = {
-      findAllAlertsConfigs: jest.fn(),
+      findAllAlertConfigs: jest.fn(),
       saveAlert,
     } as unknown as AlertsPersistenceService;
 
@@ -153,7 +153,7 @@ describe('AlertsNatsService', () => {
       }),
     } as unknown as JetStreamClient;
     const persistence = {
-      findAllAlertsConfigs: jest.fn(),
+      findAllAlertConfigs: jest.fn(),
       saveAlert,
     } as unknown as AlertsPersistenceService;
 
@@ -192,7 +192,7 @@ describe('AlertsNatsService', () => {
       }),
     } as unknown as JetStreamClient;
     const persistence = {
-      findAllAlertsConfigs: jest.fn(),
+      findAllAlertConfigs: jest.fn(),
       saveAlert,
     } as unknown as AlertsPersistenceService;
 
