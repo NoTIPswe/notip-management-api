@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Req,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { TenantScoped } from '../../common/decorators/access-policy.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { BlockImpersonation } from '../../common/decorators/block-impersonation.decorator';
@@ -14,7 +23,6 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Gateways')
 @TenantScoped()
-@BlockImpersonation()
 @Controller('gateways')
 export class GatewaysController {
   constructor(private readonly gs: GatewaysService) {}
@@ -25,9 +33,18 @@ export class GatewaysController {
   @ApiResponse({ status: 200, type: GatewayResponseDto, isArray: true })
   async getGateways(
     @TenantId() tenantId: string,
+    @Req() req?: Request,
   ): Promise<GatewayResponseDto[]> {
     const models = await this.gs.getGateways({ tenantId });
-    return models.map((model) => GatewaysMapper.toResponseDto(model));
+    const user = req?.user as { isImpersonating?: boolean } | undefined;
+    const isImpersonating = user?.isImpersonating;
+    return models.map((model) => {
+      const dto = GatewaysMapper.toResponseDto(model);
+      if (isImpersonating) {
+        dto.name = '*** OBFUSCATED ***';
+      }
+      return dto;
+    });
   }
 
   @Get(':id')
@@ -37,12 +54,19 @@ export class GatewaysController {
   async getGatewayById(
     @TenantId() tenantId: string,
     @Param('id') gatewayId: string,
+    @Req() req?: Request,
   ): Promise<GatewayResponseDto> {
     const model = await this.gs.findById({ tenantId, gatewayId });
-    return GatewaysMapper.toResponseDto(model);
+    const dto = GatewaysMapper.toResponseDto(model);
+    const user = req?.user as { isImpersonating?: boolean } | undefined;
+    if (user?.isImpersonating) {
+      dto.name = '*** OBFUSCATED ***';
+    }
+    return dto;
   }
 
   @Patch(':id')
+  @BlockImpersonation()
   @Audit({ action: 'UPDATE_GATEWAY', resource: 'Gateways' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Update gateway details' })
@@ -61,6 +85,7 @@ export class GatewaysController {
   }
 
   @Delete(':id')
+  @BlockImpersonation()
   @Audit({ action: 'DELETE_GATEWAY', resource: 'Gateways' })
   @Roles(UsersRole.TENANT_ADMIN)
   @ApiOperation({ summary: 'Delete a gateway' })
@@ -68,8 +93,7 @@ export class GatewaysController {
   async deleteGateway(
     @TenantId() tenantId: string,
     @Param('id') gatewayId: string,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     await this.gs.deleteGateway({ tenantId, gatewayId });
-    return { message: 'deleted' };
   }
 }

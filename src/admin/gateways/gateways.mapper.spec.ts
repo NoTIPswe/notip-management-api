@@ -59,6 +59,7 @@ describe('GatewaysMapper', () => {
     };
     const input = GatewaysMapper.toAddGatewayInput(dto);
     expect(input.factoryId).toBe(dto.factoryId);
+    expect(input.model).toBe(dto.model);
   });
 
   it('toAddGatewayResponseDto maps model to add response dto', () => {

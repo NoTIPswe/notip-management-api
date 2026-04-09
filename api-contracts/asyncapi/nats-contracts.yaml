@@ -115,7 +115,7 @@ channels:
 
   # ── Alerts ───────────────────────────────────────────────────────────────
 
-  alert.{tenantId}.gw_offline:
+  alert.gw_offline.{tenantId}:
     description: |
       Alert emitted when a gateway goes offline (heartbeat timeout exceeded).
       Stream: ALERTS (max_age: unlimited, storage: file).
@@ -195,11 +195,15 @@ channels:
     publish:
       operationId: validateFactoryKey
       summary: Provisioning asks Management API to validate factory credentials.
+      tags:
+        - name: provisioning-service
       message:
         $ref: '#/components/messages/FactoryValidateRequest'
     subscribe:
       operationId: respondFactoryValidate
       summary: Management API responds with gateway identity or error.
+      tags:
+        - name: management-api
       message:
         $ref: '#/components/messages/FactoryValidateResponse'
 
@@ -212,11 +216,15 @@ channels:
     publish:
       operationId: completeProvisioning
       summary: Provisioning Service reports successful provisioning.
+      tags:
+        - name: provisioning-service
       message:
         $ref: '#/components/messages/ProvisioningCompleteRequest'
     subscribe:
       operationId: respondProvisioningComplete
       summary: Management API confirms persistence.
+      tags:
+        - name: management-api
       message:
         $ref: '#/components/messages/ProvisioningCompleteResponse'
 
@@ -228,14 +236,19 @@ channels:
     publish:
       operationId: listAlertConfigs
       summary: Data Consumer requests all tenant alert configurations.
+      tags:
+        - name: data-consumer
       message:
         name: AlertConfigsListRequest
         payload:
+          title: AlertConfigsListRequest
           type: object
           description: Empty request body.
     subscribe:
       operationId: respondAlertConfigs
       summary: Management API returns all alert configurations.
+      tags:
+        - name: management-api
       message:
         $ref: '#/components/messages/AlertConfigsListResponse'
 
@@ -247,19 +260,48 @@ channels:
     publish:
       operationId: updateGatewayStatus
       summary: Data Consumer reports a gateway status change.
+      tags:
+        - name: data-consumer
       message:
         $ref: '#/components/messages/GatewayStatusUpdateRequest'
     subscribe:
       operationId: respondGatewayStatusUpdate
       summary: Management API confirms status update.
+      tags:
+        - name: management-api
       message:
         name: GatewayStatusUpdateResponse
         payload:
+          title: GatewayStatusUpdateResponse
           type: object
           required: [success]
           properties:
             success:
               type: boolean
+            error:
+              type: string
+              description: Error detail, present only on failure.
+
+  internal.mgmt.gateway.get-status:
+    description: |
+      Data Consumer queries Management API for the current lifecycle state of a gateway.
+      Called only when a heartbeat timeout is detected, before publishing an offline alert.
+      If state is paused, the alert and offline status update are suppressed.
+      Requester: data-consumer. Responder: management-api.
+    publish:
+      operationId: getGatewayLifecycle
+      summary: Data Consumer requests the current lifecycle state of a gateway.
+      tags:
+        - name: data-consumer
+      message:
+        $ref: '#/components/messages/GatewayLifecycleRequest'
+    subscribe:
+      operationId: respondGatewayLifecycle
+      summary: Management API returns the current lifecycle state.
+      tags:
+        - name: management-api
+      message:
+        $ref: '#/components/messages/GatewayLifecycleResponse'
 
   internal.cost:
     description: |
@@ -269,11 +311,15 @@ channels:
     publish:
       operationId: requestCost
       summary: Management API requests storage size for a tenant.
+      tags:
+        - name: management-api
       message:
         $ref: '#/components/messages/CostRequest'
     subscribe:
       operationId: respondCost
       summary: Data API returns storage size from TimescaleDB.
+      tags:
+        - name: data-api
       message:
         $ref: '#/components/messages/CostResponse'
 
@@ -291,6 +337,7 @@ components:
         Cloud components treat encryptedData/iv/authTag as opaque blobs — never decrypt.
       contentType: application/json
       payload:
+        title: TelemetryMessage
         type: object
         required:
           [
@@ -312,6 +359,7 @@ components:
             format: uuid
             description: Self-declared by firmware. Not registered in DB. May move between gateways.
           sensorType:
+            title: SensorType
             type: string
             enum: [temperature, humidity, movement, pressure, biometric]
           timestamp:
@@ -336,6 +384,7 @@ components:
       title: Command for a gateway
       contentType: application/json
       payload:
+        title: GatewayCommand
         type: object
         required: [commandId, type, issuedAt]
         properties:
@@ -363,6 +412,7 @@ components:
       title: Command acknowledgement from gateway
       contentType: application/json
       payload:
+        title: CommandAck
         type: object
         required: [commandId, status, timestamp]
         properties:
@@ -388,6 +438,7 @@ components:
       title: Gateway offline alert
       contentType: application/json
       payload:
+        title: GatewayOfflineAlert
         type: object
         required: [gatewayId, lastSeen, timeoutMs, timestamp]
         properties:
@@ -411,6 +462,7 @@ components:
       title: Gateway decommissioned event
       contentType: application/json
       payload:
+        title: GatewayDecommissioned
         type: object
         required: [gatewayId, timestamp]
         properties:
@@ -426,6 +478,7 @@ components:
       title: Audit log entry
       contentType: application/json
       payload:
+        title: AuditLogEntry
         type: object
         required: [userId, action, resource, timestamp]
         properties:
@@ -449,6 +502,7 @@ components:
       name: FactoryValidateRequest
       contentType: application/json
       payload:
+        title: FactoryValidateRequest
         type: object
         required: [factory_id, factory_key]
         properties:
@@ -461,6 +515,7 @@ components:
       name: FactoryValidateResponse
       contentType: application/json
       payload:
+        title: FactoryValidateResponse
         oneOf:
           - type: object
             required: [gateway_id, tenant_id]
@@ -482,6 +537,7 @@ components:
       name: ProvisioningCompleteRequest
       contentType: application/json
       payload:
+        title: ProvisioningCompleteRequest
         type: object
         required: [gateway_id, key_material, key_version, send_frequency_ms]
         properties:
@@ -504,6 +560,7 @@ components:
       name: ProvisioningCompleteResponse
       contentType: application/json
       payload:
+        title: ProvisioningCompleteResponse
         type: object
         required: [success]
         properties:
@@ -516,8 +573,10 @@ components:
       name: AlertConfigsListResponse
       contentType: application/json
       payload:
+        title: AlertConfigsListResponse
         type: array
         items:
+          title: AlertConfig
           type: object
           required: [tenant_id, timeout_ms]
           properties:
@@ -535,6 +594,7 @@ components:
       name: GatewayStatusUpdateRequest
       contentType: application/json
       payload:
+        title: GatewayStatusUpdateRequest
         type: object
         required: [gateway_id, status, last_seen_at]
         properties:
@@ -542,16 +602,54 @@ components:
             type: string
             format: uuid
           status:
+            title: GatewayStatus
             type: string
             enum: [online, offline]
           last_seen_at:
             type: string
             format: date-time
 
+    GatewayLifecycleRequest:
+      name: GatewayLifecycleRequest
+      contentType: application/json
+      payload:
+        title: GatewayLifecycleRequest
+        type: object
+        required: [gateway_id, tenant_id]
+        properties:
+          gateway_id:
+            type: string
+            format: uuid
+          tenant_id:
+            type: string
+            format: uuid
+
+    GatewayLifecycleResponse:
+      name: GatewayLifecycleResponse
+      contentType: application/json
+      payload:
+        title: GatewayLifecycleResponse
+        type: object
+        required: [gateway_id, state]
+        properties:
+          gateway_id:
+            type: string
+            format: uuid
+          state:
+            title: GatewayLifecycleState
+            type: string
+            enum: [online, offline, paused, provisioning]
+            description: |
+              Current configured lifecycle state of the gateway.
+              online/offline: gateway is actively managed.
+              paused: gateway has been intentionally suspended — suppress offline alerts.
+              provisioning: gateway is being provisioned — not yet active.
+
     CostRequest:
       name: CostRequest
       contentType: application/json
       payload:
+        title: CostRequest
         type: object
         required: [tenant_id]
         properties:
@@ -563,6 +661,7 @@ components:
       name: CostResponse
       contentType: application/json
       payload:
+        title: CostResponse
         type: object
         required: [dataSizeAtRest]
         properties:

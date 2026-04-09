@@ -10,5 +10,6 @@ import { KeycloakAdminService } from '../admin/tenants/services/keycloak-admin.s
   imports: [TypeOrmModule.forFeature([UserEntity])],
   controllers: [UsersController],
   providers: [UsersService, UsersPersistenceService, KeycloakAdminService],
+  exports: [UsersPersistenceService],
 })
 export class UsersModule {}

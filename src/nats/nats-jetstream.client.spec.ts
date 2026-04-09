@@ -31,6 +31,7 @@ describe('NatsJetStreamClient', () => {
       ackExplicit: jest.fn().mockReturnThis(),
       deliverTo: jest.fn().mockReturnThis(),
       deliverNew: jest.fn().mockReturnThis(),
+      maxDeliver: jest.fn().mockReturnThis(),
       durable: jest.fn().mockReturnThis(),
     };
     consumerOptsMock.mockReturnValue(mockOpts);
@@ -98,6 +99,7 @@ describe('NatsJetStreamClient', () => {
       ackExplicit: jest.fn().mockReturnThis(),
       deliverTo: jest.fn().mockReturnThis(),
       deliverNew: jest.fn().mockReturnThis(),
+      maxDeliver: jest.fn().mockReturnThis(),
       durable: durableMock,
     });
 

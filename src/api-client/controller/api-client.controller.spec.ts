@@ -53,9 +53,9 @@ describe('ApiClientController', () => {
     const controller = new ApiClientController(service);
 
     await expect(
-      controller.deleteApiClient('client-1'),
+      controller.deleteApiClient('tenant-1', 'client-1'),
     ).resolves.toBeUndefined();
 
-    expect(deleteApiClientMock).toHaveBeenCalledWith('client-1');
+    expect(deleteApiClientMock).toHaveBeenCalledWith('tenant-1', 'client-1');
   });
 });

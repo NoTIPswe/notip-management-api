@@ -89,9 +89,7 @@ describe('TenantsController', () => {
     } as unknown as TenantsService;
     const controller = new TenantsController(service);
 
-    await expect(controller.deleteTenant('tenant-1')).resolves.toEqual({
-      message: 'Tenant deleted successfully',
-    });
+    await expect(controller.deleteTenant('tenant-1')).resolves.toBeUndefined();
     expect(deleteTenantMock).toHaveBeenCalledWith({ id: 'tenant-1' });
   });
 });

@@ -102,6 +102,7 @@ export class UsersService {
     this.logger.log(`Updating user: ${input.id}`);
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
+      tenantId: input.tenantId,
       email: input.email,
       username: normalizedUsername,
       role: input.role,
@@ -131,7 +132,7 @@ export class UsersService {
 
   async deleteUsers(input: DeleteUsersInput): Promise<number> {
     this.logger.log(`Deleting users: ${input.ids.join(', ')}`);
-    const users = await this.ps.getUsersByIds(input.ids);
+    const users = await this.ps.getUsersByIds(input.ids, input.tenantId);
 
     const usersToDelete = users.filter((u) => {
       // Cannot delete self
@@ -146,6 +147,8 @@ export class UsersService {
       return 0;
     }
 
+    const keycloakUserIdsToDelete = new Set<string>();
+
     for (const user of usersToDelete) {
       if (user.id) {
         if (
@@ -156,6 +159,8 @@ export class UsersService {
             'Only SYSTEM_ADMIN can delete TENANT_ADMIN users',
           );
         }
+
+        keycloakUserIdsToDelete.add(user.id);
 
         // If we delete a TENANT_ADMIN, check if it's the last one
         if (user.role === UsersRole.TENANT_ADMIN) {
@@ -168,27 +173,26 @@ export class UsersService {
             // Last admin(s) being deleted: cascade to all Keycloak users of this tenant
             const allTenantUsers = await this.ps.getUsers(user.tenantId);
             for (const tenantUser of allTenantUsers) {
-              if (tenantUser.id && !input.ids.includes(tenantUser.id)) {
-                await this.keycloakAdminService.deleteUser(tenantUser.id);
+              if (tenantUser.id) {
+                keycloakUserIdsToDelete.add(tenantUser.id);
               }
             }
-            // Note: The tenant group and the tenant itself should ideally be deleted here too,
-            // but we avoid circular dependency with TenantsService for now.
-            // The DB cascade will handle local users deletion when the tenant is deleted via its own endpoint.
-            // If the user wants deletion of the last admin to destroy the tenant, we should ensure
-            // this is handled, but here we at least fix the "one admin can delete another" requirement.
           }
         }
-        await this.keycloakAdminService.deleteUser(user.id);
       }
     }
+
+    const keycloakIds = Array.from(keycloakUserIdsToDelete);
+    await Promise.all(
+      keycloakIds.map((id) => this.keycloakAdminService.deleteUser(id)),
+    );
 
     const idsToDelete = usersToDelete
       .map((u) => u.id)
       .filter((id): id is string => !!id);
     if (idsToDelete.length === 0) return 0;
 
-    return this.ps.deleteUsersByIds(idsToDelete);
+    return this.ps.deleteUsersByIds(idsToDelete, input.tenantId);
   }
 
   private normalizeUsername(username: string): string {

@@ -35,9 +35,9 @@ export class AlertsPersistenceService {
       },
       ['tenantId', 'gatewayId'],
     );
-    return (await this.rac.findOne({
+    return this.rac.findOneOrFail({
       where: { gatewayId: input.gatewayId, tenantId: input.tenantId },
-    })) as AlertsConfigEntity;
+    });
   }
 
   async deleteGatewayAlertsConfig(
@@ -78,12 +78,13 @@ export class AlertsPersistenceService {
 
   async getAlertsConfig(tenantId: string): Promise<AlertsConfigEntity[]> {
     return this.rac.find({
-      where: {
-        tenant: { id: tenantId },
-      },
-      relations: ['gateway'],
+      where: { tenantId },
       order: { updatedAt: 'DESC' },
     });
+  }
+
+  async findAllAlertConfigs(): Promise<AlertsConfigEntity[]> {
+    return this.rac.find();
   }
 
   async getAlerts(input: GetAlertsPersistenceInput): Promise<AlertsEntity[]> {
@@ -112,5 +113,10 @@ export class AlertsPersistenceService {
     return this.r.count({
       where: { tenantId },
     });
+  }
+
+  async saveAlert(alert: Partial<AlertsEntity>): Promise<AlertsEntity> {
+    const entity = this.r.create(alert);
+    return this.r.save(entity);
   }
 }

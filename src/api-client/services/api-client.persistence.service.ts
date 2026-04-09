@@ -35,8 +35,8 @@ export class ApiClientPersistenceService {
     return await this.r.findBy({ tenantId });
   }
 
-  async deleteApiClient(id: string): Promise<string | null> {
-    const apiClient = await this.r.findOneBy({ id });
+  async deleteApiClient(tenantId: string, id: string): Promise<string | null> {
+    const apiClient = await this.r.findOneBy({ id, tenantId });
     if (!apiClient) {
       return null;
     }

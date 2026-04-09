@@ -60,6 +60,7 @@ describe('AuthController', () => {
       const req = {
         user,
         headers: {},
+        get: jest.fn().mockReturnValue(undefined),
       } as unknown as ImpersonateRequest;
       impersonationService.impersonateUser.mockResolvedValue({
         access_token: 'imp-token',
@@ -82,6 +83,7 @@ describe('AuthController', () => {
       const req = {
         user,
         headers: { authorization: 'Bearer admin-token' },
+        get: jest.fn().mockReturnValue('Bearer admin-token'),
       } as unknown as ImpersonateRequest;
       impersonationService.impersonateUser.mockResolvedValue({
         access_token: 'imp-token',

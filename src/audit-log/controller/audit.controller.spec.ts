@@ -46,4 +46,35 @@ describe('AuditLogController', () => {
       action: 'gateway.updated',
     });
   });
+
+  it('returns "-" as userId for provisioning audit logs', async () => {
+    const timestamp = new Date('2024-01-01T00:00:00.000Z');
+    const getAuditLogs = jest.fn().mockResolvedValue([
+      {
+        id: 'audit-2',
+        action: 'PROVISIONING_ONBOARD_SUCCESS',
+        userId: '00000000-0000-0000-0000-000000000000',
+        timestamp,
+        details: { sourceSubject: 'log.audit.tenant-1' },
+        resource: 'gw-1',
+      },
+    ]);
+    const service = {
+      getAuditLogs,
+    } as unknown as AuditLogService;
+    const controller = new AuditLogController(service);
+
+    await expect(
+      controller.getAuditLogs('tenant-1', timestamp, timestamp),
+    ).resolves.toEqual([
+      {
+        id: 'audit-2',
+        action: 'PROVISIONING_ONBOARD_SUCCESS',
+        userId: '-',
+        timestamp: timestamp.toISOString(),
+        details: { sourceSubject: 'log.audit.tenant-1' },
+        resource: 'gw-1',
+      },
+    ]);
+  });
 });

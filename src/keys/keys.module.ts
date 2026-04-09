@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuditLogModule } from '../audit-log/audit.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { KeysController } from './controller/keys.controller';
@@ -8,12 +8,16 @@ import { GatewaysKeysPersistenceService } from './services/keys.persistence.serv
 import { ProvisioningNatsResponderService } from './services/provisioning-nats-responder.service';
 import { KeyEntity } from './entities/key.entity';
 import { GatewaysModule } from '../gateways/gateways.module';
+import { CommandModule } from '../command/command.module';
+import { NatsModule } from '../nats/nats.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([KeyEntity]),
     AuditLogModule,
-    GatewaysModule,
+    forwardRef(() => GatewaysModule),
+    forwardRef(() => CommandModule),
+    NatsModule,
   ],
   controllers: [KeysController, ProvisioningController],
   providers: [

@@ -172,6 +172,7 @@ describe('UsersService', () => {
 
     await expect(
       service.deleteUsers({
+        tenantId: 'tenant-1',
         ids: ['kc-user-1'],
         requesterId: 'other',
         requesterRole: UsersRole.TENANT_ADMIN,
@@ -189,6 +190,7 @@ describe('UsersService', () => {
 
     await expect(
       service.deleteUsers({
+        tenantId: 'tenant-1',
         ids: ['kc-user-1'],
         requesterId: 'other',
         requesterRole: UsersRole.TENANT_ADMIN,
@@ -215,6 +217,7 @@ describe('UsersService', () => {
 
     await expect(
       service.deleteUsers({
+        tenantId: 't1',
         ids: ['kc-user-1'],
         requesterId: 'other',
         requesterRole: UsersRole.SYSTEM_ADMIN,
@@ -230,6 +233,7 @@ describe('UsersService', () => {
 
     await expect(
       service.deleteUsers({
+        tenantId: 'tenant-1',
         ids: ['self'],
         requesterId: 'self',
         requesterRole: UsersRole.SYSTEM_ADMIN,
@@ -309,6 +313,7 @@ describe('UsersService', () => {
     deleteUsersByIdsMock.mockResolvedValue(1);
 
     await service.deleteUsers({
+      tenantId: 'tenant-1',
       ids: ['id'],
       requesterId: 'other',
       requesterRole: UsersRole.SYSTEM_ADMIN,

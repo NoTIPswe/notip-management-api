@@ -1,8 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import {
-  JetStreamClient,
-  JetStreamMessage,
-} from '../../command/nats/jetstream.client';
+import { JetStreamClient, JetStreamMessage } from '../../nats/jetstream.client';
 import { AuditLogService } from './audit.service';
 
 const PROVISIONING_AUDIT_SUBJECT = 'log.audit.>';
@@ -30,7 +27,7 @@ export class ProvisioningAuditConsumer implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.jetStreamClient.subscribe(
       PROVISIONING_AUDIT_SUBJECT,
-      async (msg) => {
+      async (msg: JetStreamMessage) => {
         await this.processMessage(msg);
       },
     );

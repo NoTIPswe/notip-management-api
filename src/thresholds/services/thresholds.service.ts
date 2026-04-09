@@ -50,7 +50,6 @@ export class ThresholdsService {
       sensorId,
       minValue: input.minValue,
       maxValue: input.maxValue,
-      sensorType: input.sensorType,
     });
     return ThresholdsMapper.toModel(entity);
   }

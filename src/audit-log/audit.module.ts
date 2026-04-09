@@ -5,10 +5,10 @@ import { AuditLogService } from './services/audit.service';
 import { AuditLogPersistenceService } from './services/audit.persistence.service';
 import { AuditLogEntity } from './entities/audit.entity';
 import { ProvisioningAuditConsumer } from './services/provisioning-audit.consumer';
-import { CommandModule } from '../command/command.module';
+import { NatsModule } from '../nats/nats.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AuditLogEntity]), CommandModule],
+  imports: [TypeOrmModule.forFeature([AuditLogEntity]), NatsModule],
   controllers: [AuditLogController],
   providers: [
     AuditLogService,

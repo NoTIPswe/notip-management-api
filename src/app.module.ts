@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { join } from 'node:path';
@@ -18,6 +19,9 @@ import { UsersModule } from './users/users.module';
 import { CommandModule } from './command/command.module';
 import { AuthModule } from './auth/auth.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { LastAccessInterceptor } from './common/interceptors/last-access.interceptor';
+import { MetricsModule } from './metrics/metrics.module';
+import { MetricsInterceptor } from './metrics/metrics.interceptor';
 import { validate } from './common/env.validation';
 
 const databaseImports =
@@ -63,7 +67,10 @@ const databaseImports =
     ConfigModule.forRoot({
       isGlobal: true,
       validate,
+      expandVariables: true,
     }),
+    EventEmitterModule.forRoot(),
+    MetricsModule,
     ...databaseImports,
     AuthModule,
     AdminModule,
@@ -80,6 +87,14 @@ const databaseImports =
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: MetricsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LastAccessInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

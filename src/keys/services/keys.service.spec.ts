@@ -34,6 +34,8 @@ describe('KeysService', () => {
   let service: KeysService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     persistence = {
       getKeys: jest.fn(),
       saveKeys: jest.fn(),
@@ -44,6 +46,7 @@ describe('KeysService', () => {
     } as unknown as jest.Mocked<GatewaysService>;
     manager = {
       find: jest.fn(),
+      findOne: jest.fn(),
       create: jest.fn(),
       save: jest.fn(),
       update: jest.fn(),
@@ -131,12 +134,30 @@ describe('KeysService', () => {
         service.validateFactoryKey('factory-1', 'key-123'),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it('throws UnauthorizedException if factory key hash is missing', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        id: 'gateway-1',
+        tenantId: 'tenant-1',
+        factoryKey: null,
+        provisioned: false,
+      } as unknown as GatewayModel);
+
+      await expect(
+        service.validateFactoryKey('factory-1', 'key-123'),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+    });
   });
 
   describe('completeProvisioning', () => {
     it('stores key material and marks the gateway as provisioned', async () => {
       gatewaysService.findByIdUnscoped.mockResolvedValue({
         id: 'gateway-1',
+        name: 'Gateway A',
+        status: 'gateway_online',
+        lastSeenAt: new Date('2024-01-01T00:00:00.000Z'),
       } as unknown as GatewayModel);
       manager.create.mockImplementation(
         (_entity: unknown, payload: unknown) => payload as never,
@@ -159,6 +180,14 @@ describe('KeysService', () => {
         gatewayId: 'gateway-1',
         keyMaterial: Buffer.from('secret'),
         keyVersion: 2,
+      });
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.save).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        name: undefined,
+        status: 'gateway_offline',
+        lastSeenAt: undefined,
+        sendFrequencyMs: 5000,
       });
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(manager.update).toHaveBeenCalledWith(
@@ -306,6 +335,35 @@ describe('KeysService', () => {
           model,
         ),
       ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('increments key version from existing persisted keys', async () => {
+      gatewaysService.findByFactoryId.mockResolvedValue({
+        id: 'gateway-1',
+        factoryId,
+        factoryKey: 'hashed-key',
+        provisioned: false,
+      } as unknown as GatewayModel);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      manager.find.mockResolvedValue([
+        { keyVersion: 2 } as never,
+        { keyVersion: 7 } as never,
+      ]);
+
+      await service.provisionGateway(
+        factoryId,
+        factoryKey,
+        keyMaterial,
+        firmwareVersion,
+        model,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(manager.create).toHaveBeenCalledWith(expect.anything(), {
+        gatewayId: 'gateway-1',
+        keyMaterial: Buffer.from(keyMaterial, 'base64'),
+        keyVersion: 8,
+      });
     });
   });
 });

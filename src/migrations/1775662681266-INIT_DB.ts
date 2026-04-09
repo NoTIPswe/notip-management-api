@@ -1,19 +1,17 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class UserUnifyId1774705871728 implements MigrationInterface {
-  name = 'UserUnifyId1774705871728';
+export class INITDB1775662681266 implements MigrationInterface {
+  name = 'INITDB1775662681266';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-    await queryRunner.query('CREATE SCHEMA IF NOT EXISTS "admin"');
     await queryRunner.query(
-      `CREATE TABLE "admin"."tenants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "status" character varying NOT NULL DEFAULT 'active', "suspension_interval_days" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_32731f181236a46182a38c992a8" UNIQUE ("name"), CONSTRAINT "PK_53be67a04681c66b87ee27c9321" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "admin"."tenants" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "name" character varying NOT NULL, "status" character varying NOT NULL DEFAULT 'active', "suspension_interval_days" integer, "suspension_until" TIMESTAMP WITH TIME ZONE, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_32731f181236a46182a38c992a8" UNIQUE ("name"), CONSTRAINT "PK_53be67a04681c66b87ee27c9321" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TYPE "public"."users_role_enum" AS ENUM('system_admin', 'tenant_admin', 'tenant_user')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "users" ("id" uuid NOT NULL, "tenant_id" uuid NOT NULL, "name" character varying NOT NULL, "email" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'tenant_user', "permissions" jsonb, "last_access" TIMESTAMP WITH TIME ZONE, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "users" ("id" uuid NOT NULL, "tenant_id" uuid NOT NULL, "username" character varying NOT NULL, "email" character varying NOT NULL, "role" "public"."users_role_enum" NOT NULL DEFAULT 'tenant_user', "permissions" jsonb, "last_access" TIMESTAMP WITH TIME ZONE, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "thresholds" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tenant_id" uuid NOT NULL, "sensor_type" text, "sensor_id" uuid, "min_value" double precision NOT NULL, "max_value" double precision NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_99586c2ba61a0e7056915851d8c" PRIMARY KEY ("id"))`,
@@ -25,10 +23,10 @@ export class UserUnifyId1774705871728 implements MigrationInterface {
       `CREATE UNIQUE INDEX "IDX_THRESHOLD_TENANT_SENSOR_ID_NULL" ON "thresholds" ("tenant_id", "sensor_type") WHERE sensor_id IS NULL`,
     );
     await queryRunner.query(
-      `CREATE TYPE "public"."gateways_metadata_status_enum" AS ENUM('gateway_online', 'gateway_offline', 'gateway_suspended')`,
+      `CREATE TYPE "public"."gateways_metadata_status_enum" AS ENUM('gateway_online', 'gateway_offline', 'gateway_suspended', 'gateway_provisioning')`,
     );
     await queryRunner.query(
-      `CREATE TABLE "gateways_metadata" ("gateway_id" uuid NOT NULL, "name" character varying, "status" "public"."gateways_metadata_status_enum" NOT NULL DEFAULT 'gateway_offline', "last_seen_at" TIMESTAMP, "send_frequency_ms" bigint, CONSTRAINT "UQ_248355bb9e92f0c78d4680bacda" UNIQUE ("name"), CONSTRAINT "PK_729d7d97397c3627c5dfb615156" PRIMARY KEY ("gateway_id"))`,
+      `CREATE TABLE "gateways_metadata" ("gateway_id" uuid NOT NULL, "name" character varying, "status" "public"."gateways_metadata_status_enum" NOT NULL DEFAULT 'gateway_offline', "last_seen_at" TIMESTAMP, "send_frequency_ms" bigint NOT NULL DEFAULT '30000', CONSTRAINT "UQ_248355bb9e92f0c78d4680bacda" UNIQUE ("name"), CONSTRAINT "PK_729d7d97397c3627c5dfb615156" PRIMARY KEY ("gateway_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "gateways" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tenant_id" uuid NOT NULL, "factory_id" character varying NOT NULL, "factory_key_hash" text, "provisioned" boolean NOT NULL DEFAULT false, "model" character varying NOT NULL, "firmware_version" character varying, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "UQ_d67ac9bac23aa38cacb630bd360" UNIQUE ("factory_id"), CONSTRAINT "PK_b53153080a6907017cf44cb7f58" PRIMARY KEY ("id"))`,
@@ -37,7 +35,7 @@ export class UserUnifyId1774705871728 implements MigrationInterface {
       `CREATE TABLE "keys" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "gateway_id" uuid NOT NULL, "key_material" bytea NOT NULL, "key_version" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "revoked_at" TIMESTAMP WITH TIME ZONE, CONSTRAINT "PK_e63d5d51e0192635ab79aa49644" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "commands" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "gateway_id" uuid NOT NULL, "tenant_id" uuid NOT NULL, "type" text NOT NULL, "status" text NOT NULL, "issued_at" TIMESTAMP WITH TIME ZONE NOT NULL, "ack_received_at" TIMESTAMP WITH TIME ZONE, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7ac292c3aa19300482b2b190d1e" PRIMARY KEY ("id"))`,
+      `CREATE TABLE "commands" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "gateway_id" uuid NOT NULL, "tenant_id" uuid NOT NULL, "type" text NOT NULL, "status" text NOT NULL, "issued_at" TIMESTAMP WITH TIME ZONE NOT NULL, "ack_received_at" TIMESTAMP WITH TIME ZONE, "requested_send_frequency_ms" integer, "requested_status" text, "requested_firmware_version" text, "created_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7ac292c3aa19300482b2b190d1e" PRIMARY KEY ("id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "audits" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "tenant_id" uuid NOT NULL, "user_id" uuid NOT NULL, "action" character varying NOT NULL, "resource" character varying NOT NULL, "details" jsonb NOT NULL, "timestamp" TIMESTAMP NOT NULL, CONSTRAINT "PK_b2d7a2089999197dc7024820f28" PRIMARY KEY ("id"))`,

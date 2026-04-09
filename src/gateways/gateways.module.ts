@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GatewaysController } from './controller/gateways.controller';
 import { GatewaysService } from './services/gateways.service';
@@ -6,9 +7,16 @@ import { GatewaysPersistenceService } from './services/gateways.persistence.serv
 import { GatewayStatusNatsResponderService } from './services/gateway-status-nats-responder.service';
 import { GatewayEntity } from './entities/gateway.entity';
 import { GatewayMetadataEntity } from './entities/gateway-metadata.entity';
+import { AlertsModule } from '../alerts/alerts.module';
+import { NatsModule } from '../nats/nats.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GatewayEntity, GatewayMetadataEntity])],
+  imports: [
+    TypeOrmModule.forFeature([GatewayEntity, GatewayMetadataEntity]),
+    forwardRef(() => AlertsModule),
+    EventEmitterModule,
+    NatsModule,
+  ],
   controllers: [GatewaysController],
   providers: [
     GatewaysService,

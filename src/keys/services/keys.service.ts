@@ -60,6 +60,10 @@ export class KeysService {
       throw new ConflictException('ALREADY_PROVISIONED');
     }
 
+    if (!gateway.factoryKey) {
+      throw new UnauthorizedException('INVALID');
+    }
+
     const isKeyValid = await bcrypt.compare(factoryKey, gateway.factoryKey);
     if (!isKeyValid) {
       throw new UnauthorizedException('INVALID');
@@ -80,14 +84,28 @@ export class KeysService {
       throw new NotFoundException('Gateway not found');
     }
 
+    if (gateway.provisioned) {
+      throw new ConflictException('ALREADY_PROVISIONED');
+    }
+
     await this.dataSource.transaction(async (manager) => {
-      // Save new key material
       const key = manager.create(KeyEntity, {
         gatewayId: gateway.id,
         keyMaterial: Buffer.from(keyMaterial, 'base64'),
         keyVersion,
       });
       await manager.save(key);
+
+      const existingMetadata = await manager.findOne(GatewayMetadataEntity, {
+        where: { gatewayId: gateway.id },
+      });
+      await manager.save(GatewayMetadataEntity, {
+        gatewayId: gateway.id,
+        name: existingMetadata?.name ?? undefined,
+        status: existingMetadata?.status ?? GatewayStatus.GATEWAY_OFFLINE,
+        lastSeenAt: existingMetadata?.lastSeenAt ?? undefined,
+        sendFrequencyMs,
+      });
 
       // Update gateway status
       await manager.update(GatewayEntity, gateway.id, {
@@ -118,7 +136,6 @@ export class KeysService {
     const { gatewayId } = await this.validateFactoryKey(factoryId, factoryKey);
 
     await this.dataSource.transaction(async (manager) => {
-      // 1. Get current keys to determine next version
       const keys = await manager.find(KeyEntity, {
         where: { gatewayId: gatewayId },
       });
@@ -133,7 +150,6 @@ export class KeysService {
       });
       await manager.save(key);
 
-      // 3. Update gateway status
       await manager.update(GatewayEntity, gatewayId, {
         provisioned: true,
         factoryKeyHash: null,

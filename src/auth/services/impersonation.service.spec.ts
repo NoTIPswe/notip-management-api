@@ -67,6 +67,19 @@ describe('ImpersonationService', () => {
           body: expect.any(Object) as unknown, // URLSearchParams
         }),
       );
+
+      const fetchArgs = jest.mocked(fetch).mock.calls[0]?.[1] as {
+        body: URLSearchParams;
+      };
+      expect(fetchArgs.body.get('grant_type')).toBe(
+        'urn:ietf:params:oauth:grant-type:token-exchange',
+      );
+      expect(fetchArgs.body.get('subject_token_type')).toBe(
+        'urn:ietf:params:oauth:token-type:access_token',
+      );
+      expect(fetchArgs.body.get('requested_token_type')).toBe(
+        'urn:ietf:params:oauth:token-type:access_token',
+      );
       expect(result).toEqual({ access_token: 'new-token', expires_in: 3600 });
     });
 

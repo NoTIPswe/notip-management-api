@@ -40,7 +40,9 @@ export class UsersPersistenceService {
   async updateUser(
     input: UpdateUserPersistenceInput,
   ): Promise<UserEntity | null> {
-    const user = await this.r.findOne({ where: { id: input.id } });
+    const user = await this.r.findOne({
+      where: { id: input.id, tenantId: input.tenantId },
+    });
     if (!user) {
       return null;
     }
@@ -53,12 +55,16 @@ export class UsersPersistenceService {
     return this.r.save(user);
   }
 
-  async getUsersByIds(ids: string[]): Promise<UserEntity[]> {
-    return this.r.find({ where: { id: In(ids) } });
+  async getUsersByIds(ids: string[], tenantId: string): Promise<UserEntity[]> {
+    return this.r.find({ where: { id: In(ids), tenantId } });
   }
 
-  async deleteUsersByIds(ids: string[]): Promise<number> {
-    const result = await this.r.delete({ id: In(ids) });
+  async touchLastAccess(userId: string, timestamp = new Date()): Promise<void> {
+    await this.r.update({ id: userId }, { lastAccess: timestamp });
+  }
+
+  async deleteUsersByIds(ids: string[], tenantId: string): Promise<number> {
+    const result = await this.r.delete({ id: In(ids), tenantId });
     return result.affected ?? 0;
   }
 }

@@ -7,7 +7,7 @@ export class AuditLogMapper {
     const dto = new AuditLogResponseDto();
     dto.id = auditLogModel.id;
     dto.action = auditLogModel.action;
-    dto.userId = auditLogModel.userId;
+    dto.userId = this.resolveUserId(auditLogModel);
     dto.timestamp = auditLogModel.timestamp.toISOString();
     dto.details = auditLogModel.details;
     dto.resource = auditLogModel.resource;
@@ -24,5 +24,21 @@ export class AuditLogMapper {
       details: auditLogEntity.details,
       resource: auditLogEntity.resource,
     };
+  }
+
+  private static resolveUserId(auditLogModel: AuditLogModel): string {
+    return this.isProvisioningAudit(auditLogModel.details)
+      ? '-'
+      : auditLogModel.userId;
+  }
+
+  private static isProvisioningAudit(
+    details: Record<string, unknown> | undefined,
+  ): boolean {
+    const sourceSubject = details?.sourceSubject;
+    return (
+      typeof sourceSubject === 'string' &&
+      sourceSubject.startsWith('log.audit.')
+    );
   }
 }

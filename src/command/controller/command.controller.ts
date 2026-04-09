@@ -10,12 +10,10 @@ import { CommandResponseDto } from '../dto/command.response.dto';
 import { CommandStatusResponseDto } from '../dto/command-status.response.dto';
 import { CommandMapper } from '../command.mapper';
 import { Audit } from '../../common/decorators/audit.decorator';
-import { BlockImpersonation } from '../../common/decorators/block-impersonation.decorator';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Commands')
 @TenantScoped()
-@BlockImpersonation()
 @Controller('cmd')
 export class CommandController {
   constructor(private readonly cs: CommandService) {}

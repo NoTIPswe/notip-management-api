@@ -14,7 +14,7 @@ describe('AlertsPersistenceService', () => {
     const alertsRepo = {};
     const configRepo = {
       upsert: jest.fn().mockResolvedValue(undefined),
-      findOne: jest.fn().mockResolvedValue({ id: 'config-1' }),
+      findOneOrFail: jest.fn().mockResolvedValue({ id: 'config-1' }),
     };
     const service = new AlertsPersistenceService(
       alertsRepo as never,
@@ -133,8 +133,7 @@ describe('AlertsPersistenceService', () => {
       { id: 'config-1' },
     ]);
     expect(configRepo.find).toHaveBeenCalledWith({
-      where: { tenant: { id: 'tenant-1' } },
-      relations: ['gateway'],
+      where: { tenantId: 'tenant-1' },
       order: { updatedAt: 'DESC' },
     });
   });
