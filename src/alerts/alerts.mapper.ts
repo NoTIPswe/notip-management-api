@@ -38,11 +38,16 @@ export class AlertsMapper {
     dto.id = model.id;
     dto.gatewayId = model.gatewayId;
     dto.type = model.type;
+    const createdAt = this.toIsoDateString(model.createdAt, new Date());
+    const lastSeen = this.toIsoDateString(
+      model.details?.lastSeen,
+      new Date(createdAt),
+    );
     dto.details = {
-      lastSeen: model.details.lastSeen.toISOString(),
-      timeoutConfigured: model.details.timeoutConfigured,
+      lastSeen,
+      timeoutConfigured: Number(model.details?.timeoutConfigured ?? 0),
     };
-    dto.createdAt = model.createdAt.toISOString();
+    dto.createdAt = createdAt;
     return dto;
   }
   static toSetAlertsConfigDefaultResponseDto(
@@ -87,5 +92,23 @@ export class AlertsMapper {
 
     dto.gatewayOverrides = overrides;
     return dto;
+  }
+
+  private static toIsoDateString(
+    value: Date | string | null | undefined,
+    fallback: Date,
+  ): string {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value.toISOString();
+    }
+
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString();
+      }
+    }
+
+    return fallback.toISOString();
   }
 }

@@ -103,6 +103,20 @@ export class KeycloakAdminService {
                 'userinfo.token.claim': 'true',
               },
             },
+            {
+              name: 'role',
+              protocol: 'openid-connect',
+              protocolMapper: 'oidc-usermodel-attribute-mapper',
+              consentRequired: false,
+              config: {
+                'user.attribute': 'tenant_admin',
+                'id.token.claim': 'true',
+                'access.token.claim': 'true',
+                'claim.name': 'tenant_admin',
+                'jsonType.label': 'String',
+                'userinfo.token.claim': 'true',
+              },
+            },
           ],
         }),
       },
@@ -172,6 +186,7 @@ export class KeycloakAdminService {
           attributes: {
             ...saUser.attributes,
             [TENANT_ATTRIBUTE_KEY]: [tenantId],
+            ['role']: ['tenant_admin'],
           },
         }),
       },

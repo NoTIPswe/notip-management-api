@@ -9,6 +9,7 @@ import { AlertsEntity } from './entities/alerts.entity';
 import { AlertsConfigEntity } from './entities/alerts.config.entity';
 import { CommandModule } from '../command/command.module';
 import { NatsModule } from '../nats/nats.module';
+import { AlertsNatsService } from './services/alerts.nats.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { NatsModule } from '../nats/nats.module';
     AlertsService,
     AlertsPersistenceService,
     AlertConfigNatsResponderService,
+    AlertsNatsService,
   ],
 
   exports: [AlertsPersistenceService],
