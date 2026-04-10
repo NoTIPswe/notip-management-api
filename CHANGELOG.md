@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.0...v1.5.1) (2026-04-10)
+
+
+### Bug Fixes
+
+* alerts mapping and keycloak api client authorization ([8c811c0](https://github.com/NoTIPswe/notip-management-api/commit/8c811c0ac51df61dd40fe898ed02baa481102067))
+
 # [1.5.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.4.10...v1.5.0) (2026-04-09)
 
 
