@@ -3,6 +3,8 @@ import { JetStreamClient } from '../../nats/jetstream.client';
 import { AlertsPersistenceService } from './alerts.persistence.service';
 import { AlertType } from '../enums/alerts.enum';
 
+const ALERTS_STREAM = 'ALERTS';
+
 interface GatewayOfflinePayload {
   tenantId?: string;
   gatewayId: string;
@@ -50,41 +52,45 @@ export class AlertsNatsService implements OnModuleInit {
 
     // JetStream for gateway offline alerts
     // Subject: alert.{tenantId}.gw_offline
-    await this.nats.subscribe('alert.*.gw_offline', async (msg) => {
-      try {
-        const payload = JSON.parse(
-          msg.data.toString(),
-        ) as GatewayOfflinePayload;
-        // subject is alert.<tenantId>.gw_offline
-        const subjectParts = msg.subject?.split('.') ?? [];
-        const tenantId = payload.tenantId || subjectParts[1];
+    await this.nats.subscribe(
+      ALERTS_STREAM,
+      'alert.*.gw_offline',
+      async (msg) => {
+        try {
+          const payload = JSON.parse(
+            msg.data.toString(),
+          ) as GatewayOfflinePayload;
+          // subject is alert.<tenantId>.gw_offline
+          const subjectParts = msg.subject?.split('.') ?? [];
+          const tenantId = payload.tenantId || subjectParts[1];
 
-        if (!tenantId) {
-          this.logger.warn(
-            `Could not determine tenantId for alert on subject ${msg.subject}`,
+          if (!tenantId) {
+            this.logger.warn(
+              `Could not determine tenantId for alert on subject ${msg.subject}`,
+            );
+            return;
+          }
+
+          await this.persistence.saveAlert({
+            tenantId: tenantId,
+            gatewayId: payload.gatewayId,
+            type: AlertType.GATEWAY_OFFLINE,
+            details: {
+              lastSeen: new Date(payload.lastSeen),
+              timeoutConfigured: payload.timeoutMs,
+              timestamp: payload.timestamp,
+            },
+          });
+
+          await Promise.resolve(msg.ack());
+        } catch (error) {
+          this.logger.error(
+            'Failed to process gateway offline alert',
+            error as Error,
           );
-          return;
         }
-
-        await this.persistence.saveAlert({
-          tenantId: tenantId,
-          gatewayId: payload.gatewayId,
-          type: AlertType.GATEWAY_OFFLINE,
-          details: {
-            lastSeen: new Date(payload.lastSeen),
-            timeoutConfigured: payload.timeoutMs,
-            timestamp: payload.timestamp,
-          },
-        });
-
-        await Promise.resolve(msg.ack());
-      } catch (error) {
-        this.logger.error(
-          'Failed to process gateway offline alert',
-          error as Error,
-        );
-      }
-    });
+      },
+    );
 
     this.logger.log('Alerts NATS internal listeners initialized');
   }

@@ -20,8 +20,8 @@ export class GatewaysService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  getAlertsForGateway(gatewayId: string) {
-    void gatewayId;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getAlertsForGateway(_gatewayId: string) {
     return [];
   }
 

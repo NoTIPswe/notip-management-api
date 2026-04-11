@@ -80,11 +80,10 @@ export class ApiClientService {
 
     try {
       await this.keycloakAdminService.deleteApiClient(keycloakUuid);
-    } catch (e) {
+    } catch {
       this.logger.warn(
         `Failed to delete client ${keycloakUuid} from Keycloak, ignoring...`,
       );
-      void e;
     }
   }
 
@@ -95,11 +94,10 @@ export class ApiClientService {
       apiClients.map(async (apiClient) => {
         try {
           await this.deleteApiClient(tenantId, apiClient.id);
-        } catch (e) {
+        } catch {
           this.logger.warn(
             `Failed to delete API client ${apiClient.id} for tenant ${tenantId}, continuing...`,
           );
-          void e;
         }
       }),
     );

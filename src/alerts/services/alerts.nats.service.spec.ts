@@ -15,9 +15,11 @@ describe('AlertsNatsService', () => {
       subscribeCore: jest.fn((subject: string, handler: NatsHandler) => {
         coreHandlers.set(subject, handler);
       }),
-      subscribe: jest.fn((subject: string, handler: JetStreamHandler) => {
-        streamHandlers.set(subject, handler);
-      }),
+      subscribe: jest.fn(
+        (_stream: string, subject: string, handler: JetStreamHandler) => {
+          streamHandlers.set(subject, handler);
+        },
+      ),
     } as unknown as JetStreamClient;
     const persistence = {
       findAllAlertConfigs: jest.fn().mockResolvedValue([
@@ -101,9 +103,11 @@ describe('AlertsNatsService', () => {
     const saveAlert = jest.fn().mockResolvedValue(undefined);
     const nats = {
       subscribeCore: jest.fn(),
-      subscribe: jest.fn((subject: string, handler: JetStreamHandler) => {
-        streamHandlers.set(subject, handler);
-      }),
+      subscribe: jest.fn(
+        (_stream: string, subject: string, handler: JetStreamHandler) => {
+          streamHandlers.set(subject, handler);
+        },
+      ),
     } as unknown as JetStreamClient;
     const persistence = {
       findAllAlertConfigs: jest.fn(),
@@ -148,9 +152,11 @@ describe('AlertsNatsService', () => {
     const ack = jest.fn();
     const nats = {
       subscribeCore: jest.fn(),
-      subscribe: jest.fn((subject: string, handler: JetStreamHandler) => {
-        streamHandlers.set(subject, handler);
-      }),
+      subscribe: jest.fn(
+        (_stream: string, subject: string, handler: JetStreamHandler) => {
+          streamHandlers.set(subject, handler);
+        },
+      ),
     } as unknown as JetStreamClient;
     const persistence = {
       findAllAlertConfigs: jest.fn(),
@@ -187,9 +193,11 @@ describe('AlertsNatsService', () => {
     const ack = jest.fn();
     const nats = {
       subscribeCore: jest.fn(),
-      subscribe: jest.fn((subject: string, handler: JetStreamHandler) => {
-        streamHandlers.set(subject, handler);
-      }),
+      subscribe: jest.fn(
+        (_stream: string, subject: string, handler: JetStreamHandler) => {
+          streamHandlers.set(subject, handler);
+        },
+      ),
     } as unknown as JetStreamClient;
     const persistence = {
       findAllAlertConfigs: jest.fn(),

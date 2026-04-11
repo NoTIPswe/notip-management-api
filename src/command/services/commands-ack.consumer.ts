@@ -5,6 +5,7 @@ import { CommandAckPayload } from '../interfaces/command-ack.interface';
 import { CommandStatus } from '../enums/command-status.enum';
 
 const COMMANDS_ACK_SUBJECT = 'command.ack.>';
+const COMMANDS_ACK_STREAM = 'COMMAND_ACKS';
 const STATUS_NORMALIZATION_MAP: Record<string, CommandStatus> = {
   ack: CommandStatus.ACK,
   nack: CommandStatus.NACK,
@@ -23,10 +24,14 @@ export class CommandsAckConsumer implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.jetStreamClient.subscribe(COMMANDS_ACK_SUBJECT, async (msg) => {
-      this.logger.debug('Received command ack message');
-      await this.processMessage(msg);
-    });
+    await this.jetStreamClient.subscribe(
+      COMMANDS_ACK_STREAM,
+      COMMANDS_ACK_SUBJECT,
+      async (msg) => {
+        this.logger.debug('Received command ack message');
+        await this.processMessage(msg);
+      },
+    );
     this.logger.log(
       `Listening for command acknowledgments on ${COMMANDS_ACK_SUBJECT}`,
     );

@@ -17,7 +17,11 @@ export type JetStreamHandler = (
 export type NatsHandler = (message: NatsMessage) => Promise<void> | void;
 
 export abstract class JetStreamClient {
-  abstract subscribe(subject: string, handler: JetStreamHandler): Promise<void>;
+  abstract subscribe(
+    stream: string,
+    subject: string,
+    handler: JetStreamHandler,
+  ): Promise<void>;
 
   abstract subscribeCore(subject: string, handler: NatsHandler): Promise<void>;
 

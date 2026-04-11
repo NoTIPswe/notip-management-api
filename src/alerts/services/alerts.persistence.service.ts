@@ -9,6 +9,7 @@ import {
 import { AlertsEntity } from '../entities/alerts.entity';
 import {
   Between,
+  FindOperator,
   IsNull,
   LessThanOrEqual,
   MoreThanOrEqual,
@@ -88,14 +89,14 @@ export class AlertsPersistenceService {
   }
 
   async getAlerts(input: GetAlertsPersistenceInput): Promise<AlertsEntity[]> {
-    const createdAtFilter =
-      input.from && input.to
-        ? Between(new Date(input.from), new Date(input.to))
-        : input.from
-          ? MoreThanOrEqual(new Date(input.from))
-          : input.to
-            ? LessThanOrEqual(new Date(input.to))
-            : undefined;
+    let createdAtFilter: FindOperator<Date> | undefined;
+    if (input.from && input.to) {
+      createdAtFilter = Between(new Date(input.from), new Date(input.to));
+    } else if (input.from) {
+      createdAtFilter = MoreThanOrEqual(new Date(input.from));
+    } else if (input.to) {
+      createdAtFilter = LessThanOrEqual(new Date(input.to));
+    }
 
     return this.r.find({
       where: {

@@ -84,7 +84,7 @@ export class AlertConfigNatsResponderService
           await this.alertsPersistenceService.findAllAlertConfigs();
         response = configs.map((c) => ({
           tenant_id: c.tenantId,
-          ...(c.gatewayId != null ? { gateway_id: c.gatewayId } : {}),
+          ...(c.gatewayId == null ? {} : { gateway_id: c.gatewayId }),
           timeout_ms: c.gatewayTimeoutMs,
         }));
       } catch (error) {

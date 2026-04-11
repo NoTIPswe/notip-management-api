@@ -25,10 +25,12 @@ const createMockJetStream = (): {
 } => {
   const handlers = new Map<string, JetStreamHandler>();
   const jetStream = {
-    subscribe: jest.fn((subject: string, handler: JetStreamHandler) => {
-      handlers.set(subject, handler);
-      return Promise.resolve();
-    }),
+    subscribe: jest.fn(
+      (_stream: string, subject: string, handler: JetStreamHandler) => {
+        handlers.set(subject, handler);
+        return Promise.resolve();
+      },
+    ),
     subscribeCore: jest.fn(),
     publish: jest.fn(),
     request: jest.fn(),

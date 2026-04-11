@@ -95,10 +95,9 @@ export class UsersService {
       );
     }
 
-    const normalizedUsername =
-      input.username !== undefined
-        ? this.normalizeUsername(input.username)
-        : undefined;
+    const normalizedUsername = input.username
+      ? this.normalizeUsername(input.username)
+      : undefined;
     this.logger.log(`Updating user: ${input.id}`);
     const persistenceInput: UpdateUserPersistenceInput = {
       id: input.id,
@@ -109,7 +108,7 @@ export class UsersService {
       permissions: input.permissions,
     };
     const entity = await this.ps.updateUser(persistenceInput);
-    if (!entity || entity.tenantId !== input.tenantId) {
+    if (entity?.tenantId !== input.tenantId) {
       throw new NotFoundException('User not found');
     }
 
@@ -134,53 +133,15 @@ export class UsersService {
     this.logger.log(`Deleting users: ${input.ids.join(', ')}`);
     const users = await this.ps.getUsersByIds(input.ids, input.tenantId);
 
-    const usersToDelete = users.filter((u) => {
-      // Cannot delete self
-      if (input.requesterId && u.id === input.requesterId) {
-        this.logger.warn(`User ${u.id} tried to delete themselves, skipping.`);
-        return false;
-      }
-      return true;
-    });
-
+    const usersToDelete = this.filterUsersForDeletion(users, input);
     if (usersToDelete.length === 0 && users.length > 0) {
       return 0;
     }
 
-    const keycloakUserIdsToDelete = new Set<string>();
-
-    for (const user of usersToDelete) {
-      if (user.id) {
-        if (
-          user.role === UsersRole.TENANT_ADMIN &&
-          input.requesterRole !== UsersRole.SYSTEM_ADMIN
-        ) {
-          throw new ForbiddenException(
-            'Only SYSTEM_ADMIN can delete TENANT_ADMIN users',
-          );
-        }
-
-        keycloakUserIdsToDelete.add(user.id);
-
-        // If we delete a TENANT_ADMIN, check if it's the last one
-        if (user.role === UsersRole.TENANT_ADMIN) {
-          const allTenantAdmins = await this.ps.getTenantAdmins(user.tenantId);
-          const remainingAdmins = allTenantAdmins.filter(
-            (admin) => !input.ids.includes(admin.id),
-          );
-
-          if (remainingAdmins.length === 0) {
-            // Last admin(s) being deleted: cascade to all Keycloak users of this tenant
-            const allTenantUsers = await this.ps.getUsers(user.tenantId);
-            for (const tenantUser of allTenantUsers) {
-              if (tenantUser.id) {
-                keycloakUserIdsToDelete.add(tenantUser.id);
-              }
-            }
-          }
-        }
-      }
-    }
+    const keycloakUserIdsToDelete = await this.collectKeycloakUserIdsToDelete(
+      usersToDelete,
+      input,
+    );
 
     const keycloakIds = Array.from(keycloakUserIdsToDelete);
     await Promise.all(
@@ -193,6 +154,77 @@ export class UsersService {
     if (idsToDelete.length === 0) return 0;
 
     return this.ps.deleteUsersByIds(idsToDelete, input.tenantId);
+  }
+
+  private filterUsersForDeletion(
+    users: UserModel[],
+    input: DeleteUsersInput,
+  ): UserModel[] {
+    return users.filter((u) => {
+      if (input.requesterId && u.id === input.requesterId) {
+        this.logger.warn(`User ${u.id} tried to delete themselves, skipping.`);
+        return false;
+      }
+      return true;
+    });
+  }
+
+  private async collectKeycloakUserIdsToDelete(
+    usersToDelete: UserModel[],
+    input: DeleteUsersInput,
+  ): Promise<Set<string>> {
+    const keycloakUserIdsToDelete = new Set<string>();
+
+    for (const user of usersToDelete) {
+      if (!user.id) continue;
+
+      this.validateUserDeletionPermission(user, input);
+      keycloakUserIdsToDelete.add(user.id);
+
+      if (user.role === UsersRole.TENANT_ADMIN) {
+        await this.collectTenantUserIdsForCascade(
+          user.tenantId,
+          input.ids,
+          keycloakUserIdsToDelete,
+        );
+      }
+    }
+
+    return keycloakUserIdsToDelete;
+  }
+
+  private validateUserDeletionPermission(
+    user: UserModel,
+    input: DeleteUsersInput,
+  ): void {
+    if (
+      user.role === UsersRole.TENANT_ADMIN &&
+      input.requesterRole !== UsersRole.SYSTEM_ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Only SYSTEM_ADMIN can delete TENANT_ADMIN users',
+      );
+    }
+  }
+
+  private async collectTenantUserIdsForCascade(
+    tenantId: string,
+    deletedAdminIds: string[],
+    keycloakUserIdsToDelete: Set<string>,
+  ): Promise<void> {
+    const allTenantAdmins = await this.ps.getTenantAdmins(tenantId);
+    const remainingAdmins = allTenantAdmins.filter(
+      (admin) => !deletedAdminIds.includes(admin.id),
+    );
+
+    if (remainingAdmins.length !== 0) return;
+
+    const allTenantUsers = await this.ps.getUsers(tenantId);
+    for (const tenantUser of allTenantUsers) {
+      if (tenantUser.id) {
+        keycloakUserIdsToDelete.add(tenantUser.id);
+      }
+    }
   }
 
   private normalizeUsername(username: string): string {

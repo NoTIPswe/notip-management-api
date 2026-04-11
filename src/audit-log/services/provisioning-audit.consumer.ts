@@ -3,6 +3,7 @@ import { JetStreamClient, JetStreamMessage } from '../../nats/jetstream.client';
 import { AuditLogService } from './audit.service';
 
 const PROVISIONING_AUDIT_SUBJECT = 'log.audit.>';
+const PROVISIONING_AUDIT_STREAM = 'AUDIT_LOG';
 const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000000';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -26,6 +27,7 @@ export class ProvisioningAuditConsumer implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.jetStreamClient.subscribe(
+      PROVISIONING_AUDIT_STREAM,
       PROVISIONING_AUDIT_SUBJECT,
       async (msg: JetStreamMessage) => {
         await this.processMessage(msg);

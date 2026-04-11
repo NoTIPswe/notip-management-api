@@ -31,7 +31,7 @@ interface AuditRequest {
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
   constructor(
-    private reflector: Reflector,
+    private readonly reflector: Reflector,
     private readonly auditLog: AuditLogService,
   ) {}
 
@@ -79,8 +79,8 @@ export class AuditInterceptor implements NestInterceptor {
                   : undefined,
               },
             });
-          } catch (e) {
-            void e;
+          } catch {
+            // intentionally ignored
           }
         })();
       }),
