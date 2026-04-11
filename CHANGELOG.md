@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.1...v1.5.2) (2026-04-11)
+
+
+### Bug Fixes
+
+* sonarqube issues ([80656f2](https://github.com/NoTIPswe/notip-management-api/commit/80656f23084ce7999f241761eef4bda0a181acb2))
+
 ## [1.5.1](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.0...v1.5.1) (2026-04-10)
 
 
