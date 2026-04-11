@@ -5,12 +5,13 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import {
+  AckPolicy,
   connect,
   ConnectionOptions,
-  consumerOpts,
-  createInbox,
+  Consumer,
+  DeliverPolicy,
   JetStreamClient as NatsJetStream,
-  JetStreamSubscription,
+  JetStreamManager,
   NatsConnection,
   Subscription as NatsSubscription,
 } from 'nats';
@@ -22,6 +23,11 @@ import {
   NatsMessage,
 } from './jetstream.client';
 
+interface JetStreamConsumerHandle {
+  consumer: Consumer;
+  abortController: AbortController;
+}
+
 @Injectable()
 export class NatsJetStreamClient
   extends JetStreamClient
@@ -30,30 +36,66 @@ export class NatsJetStreamClient
   private readonly logger = new Logger(NatsJetStreamClient.name);
   private connection: NatsConnection | null = null;
   private jetStream: NatsJetStream | null = null;
-  private readonly subscriptions: (JetStreamSubscription | NatsSubscription)[] =
-    [];
+  private jetStreamManager: JetStreamManager | null = null;
+  private readonly subscriptions: (
+    | JetStreamConsumerHandle
+    | NatsSubscription
+  )[] = [];
   private connectingPromise: Promise<void> | null = null;
 
-  async subscribe(subject: string, handler: JetStreamHandler): Promise<void> {
+  async subscribe(
+    stream: string,
+    subject: string,
+    handler: JetStreamHandler,
+  ): Promise<void> {
     await this.ensureConnected();
 
-    if (!this.jetStream) {
+    if (!this.jetStream || !this.jetStreamManager) {
       throw new Error('JetStream client is not connected');
     }
 
-    const options = consumerOpts();
-    options.manualAck();
-    options.ackExplicit();
-    options.deliverTo(createInbox());
-    options.deliverNew();
-    options.maxDeliver(3);
-    options.durable(this.buildDurableName(subject));
+    const durableName = this.buildDurableName(subject);
 
-    const subscription = await this.jetStream.subscribe(subject, options);
-    this.subscriptions.push(subscription);
+    await this.ensureConsumer(stream, durableName, subject);
 
-    this.consumeJetStreamMessages(subscription, handler, subject);
-    this.logger.log(`Subscribed to JetStream subject: ${subject}`);
+    const consumer = await this.jetStream.consumers.get(stream, durableName);
+    const abortController = new AbortController();
+
+    this.consumeJetStreamMessages(consumer, handler, subject, abortController);
+    this.subscriptions.push({ consumer, abortController });
+    this.logger.log(
+      `Subscribed to JetStream subject: ${subject} (stream: ${stream})`,
+    );
+  }
+
+  private async ensureConsumer(
+    stream: string,
+    durableName: string,
+    subject: string,
+  ): Promise<void> {
+    if (!this.jetStreamManager) {
+      throw new Error('JetStreamManager is not available');
+    }
+
+    try {
+      await this.jetStreamManager.consumers.add(stream, {
+        name: durableName,
+        durable_name: durableName,
+        ack_policy: AckPolicy.Explicit,
+        filter_subject: subject,
+        deliver_policy: DeliverPolicy.New,
+        max_deliver: 3,
+      });
+    } catch (error) {
+      const err = error as Error;
+      if (
+        err.message.includes('consumer already exists') ||
+        err.message.includes('50027')
+      ) {
+        return;
+      }
+      throw error;
+    }
   }
 
   async subscribeCore(subject: string, handler: NatsHandler): Promise<void> {
@@ -123,26 +165,43 @@ export class NatsJetStreamClient
   }
 
   private consumeJetStreamMessages(
-    subscription: JetStreamSubscription,
+    consumer: Consumer,
     handler: JetStreamHandler,
     subject: string,
+    abortController: AbortController,
   ): void {
     void (async () => {
-      for await (const message of subscription) {
-        const wrappedMessage: JetStreamMessage = {
-          data: Buffer.from(message.data),
-          subject: message.subject,
-          ack: () => message.ack(),
-        };
+      try {
+        const messages = await consumer.consume();
+        for await (const message of messages) {
+          if (abortController.signal.aborted) {
+            break;
+          }
 
-        try {
-          await handler(wrappedMessage);
-        } catch (error) {
-          this.logger.error(
-            `Unhandled error while processing JetStream message on ${subject}`,
-            error as Error,
-          );
+          const wrappedMessage: JetStreamMessage = {
+            data: Buffer.from(message.data),
+            subject: message.subject,
+            ack: () => message.ack(),
+          };
+
+          try {
+            await handler(wrappedMessage);
+          } catch (error) {
+            this.logger.error(
+              `Unhandled error while processing JetStream message on ${subject}`,
+              error as Error,
+            );
+          }
         }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          this.logger.log(`JetStream consumer for ${subject} was aborted`);
+          return;
+        }
+        this.logger.error(
+          `JetStream consumer for ${subject} encountered an error`,
+          error as Error,
+        );
       }
     })();
   }
@@ -177,9 +236,7 @@ export class NatsJetStreamClient
       return;
     }
 
-    if (!this.connectingPromise) {
-      this.connectingPromise = this.connectInternal();
-    }
+    this.connectingPromise ??= this.connectInternal();
 
     try {
       await this.connectingPromise;
@@ -194,6 +251,7 @@ export class NatsJetStreamClient
 
     this.connection = await connect(connectionOptions);
     this.jetStream = this.connection.jetstream();
+    this.jetStreamManager = await this.connection.jetstreamManager();
 
     this.logger.log(`Connected to NATS servers: ${servers.join(', ')}`);
   }
@@ -263,13 +321,17 @@ export class NatsJetStreamClient
 
   private buildDurableName(subject: string): string {
     const prefix = process.env.NATS_DURABLE_PREFIX ?? 'management-api';
-    const sanitizedSubject = subject.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sanitizedSubject = subject.replaceAll(/[^a-zA-Z0-9_-]/g, '_');
     return `${prefix}_${sanitizedSubject}`;
   }
 
   private async closeConnection(): Promise<void> {
-    for (const subscription of this.subscriptions) {
-      subscription.unsubscribe();
+    for (const handle of this.subscriptions) {
+      if ('abortController' in handle) {
+        handle.abortController.abort();
+      } else {
+        handle.unsubscribe();
+      }
     }
     this.subscriptions.length = 0;
 
@@ -280,5 +342,6 @@ export class NatsJetStreamClient
 
     this.connection = null;
     this.jetStream = null;
+    this.jetStreamManager = null;
   }
 }

@@ -69,7 +69,7 @@ export class KeycloakAdminService {
     const accessToken = await this.getAdminAccessToken();
     const keycloakBaseUrl = this.getRequiredEnv('KEYCLOAK_URL');
     const keycloakRealm = this.getRequiredEnv('KEYCLOAK_REALM');
-    const clientId = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const clientId = name.toLowerCase().replaceAll(/[^a-z0-9]/g, '-');
 
     const createClientRes = await fetch(
       `${keycloakBaseUrl}/admin/realms/${keycloakRealm}/clients`,

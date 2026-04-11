@@ -43,7 +43,7 @@ const normalizeRole = (value?: string): UsersRole | undefined => {
   const normalized = value
     .trim()
     .toLowerCase()
-    .replace(/[\s-]+/g, '_');
+    .replaceAll(/[\s-]+/g, '_');
   return isUsersRole(normalized) ? normalized : undefined;
 };
 

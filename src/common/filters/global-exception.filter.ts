@@ -42,7 +42,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const message = (exceptionResponse as { message: unknown }).message;
 
         if (Array.isArray(message)) {
-          return message.map((item) => String(item)).join('; ');
+          return message.map(String).join('; ');
         }
 
         if (typeof message === 'string') {

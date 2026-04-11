@@ -127,13 +127,20 @@ export class TenantsService {
       );
     }
 
-    const targetStatus =
-      input.status === TenantStatus.ACTIVE || requestedDaysReset
-        ? TenantStatus.ACTIVE
-        : normalizedSuspensionIntervalDays !== undefined &&
-            normalizedSuspensionIntervalDays !== null
-          ? TenantStatus.SUSPENDED
-          : input.status;
+    const isSuspensionIntervalSet =
+      normalizedSuspensionIntervalDays !== undefined &&
+      normalizedSuspensionIntervalDays !== null;
+
+    let targetStatus: TenantStatus;
+    if (input.status === TenantStatus.ACTIVE || requestedDaysReset) {
+      targetStatus = TenantStatus.ACTIVE;
+    } else if (isSuspensionIntervalSet) {
+      targetStatus = TenantStatus.SUSPENDED;
+    } else if (input.status) {
+      targetStatus = input.status;
+    } else {
+      targetStatus = TenantStatus.ACTIVE;
+    }
 
     const targetSuspensionIntervalDays =
       input.status === TenantStatus.ACTIVE || requestedDaysReset

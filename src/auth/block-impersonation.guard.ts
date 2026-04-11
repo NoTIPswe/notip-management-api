@@ -15,7 +15,7 @@ const UUID_REGEX =
 @Injectable()
 export class BlockImpersonationGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
+    private readonly reflector: Reflector,
     private readonly auditLog: AuditLogService,
   ) {}
 

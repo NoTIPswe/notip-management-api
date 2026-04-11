@@ -43,51 +43,67 @@ export class CommandWritingPersistenceService {
       return;
     }
 
+    this.ensureMetadataExists(gateway);
+
     let changed = false;
 
     if (command.type === CommandType.CONFIG) {
-      if (typeof command.requestedSendFrequencyMs === 'number') {
-        if (!gateway.metadata) {
-          gateway.metadata = {
-            gatewayId: gateway.id,
-            gateway,
-            status: GatewayStatus.GATEWAY_OFFLINE,
-            sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
-          } as GatewayEntity['metadata'];
-        }
-        gateway.metadata.sendFrequencyMs = command.requestedSendFrequencyMs;
-        changed = true;
-      }
-
-      const mappedStatus = this.mapCommandGatewayStatus(
-        command.requestedStatus,
-      );
-      if (mappedStatus) {
-        if (!gateway.metadata) {
-          gateway.metadata = {
-            gatewayId: gateway.id,
-            gateway,
-            status: GatewayStatus.GATEWAY_OFFLINE,
-            sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
-          } as GatewayEntity['metadata'];
-        }
-        gateway.metadata.status = mappedStatus;
-        changed = true;
-      }
+      changed = this.applyConfigCommand(command, gateway) || changed;
     }
 
-    if (
-      command.type === CommandType.FIRMWARE &&
-      typeof command.requestedFirmwareVersion === 'string' &&
-      command.requestedFirmwareVersion.trim().length > 0
-    ) {
-      gateway.firmwareVersion = command.requestedFirmwareVersion;
-      changed = true;
-    }
+    changed = this.applyFirmwareCommand(command, gateway) || changed;
 
     if (changed) {
       await this.gatewaysRepository.save(gateway);
     }
+  }
+
+  private ensureMetadataExists(gateway: GatewayEntity): void {
+    if (gateway.metadata) {
+      return;
+    }
+    gateway.metadata = {
+      gatewayId: gateway.id,
+      gateway,
+      status: GatewayStatus.GATEWAY_OFFLINE,
+      sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
+    } as GatewayEntity['metadata'];
+  }
+
+  private applyConfigCommand(
+    command: CommandEntity,
+    gateway: GatewayEntity,
+  ): boolean {
+    let changed = false;
+
+    if (typeof command.requestedSendFrequencyMs === 'number') {
+      gateway.metadata.sendFrequencyMs = command.requestedSendFrequencyMs;
+      changed = true;
+    }
+
+    const mappedStatus = this.mapCommandGatewayStatus(command.requestedStatus);
+    if (mappedStatus) {
+      gateway.metadata.status = mappedStatus;
+      changed = true;
+    }
+
+    return changed;
+  }
+
+  private applyFirmwareCommand(
+    command: CommandEntity,
+    gateway: GatewayEntity,
+  ): boolean {
+    if (
+      command.type !== CommandType.FIRMWARE ||
+      typeof command.requestedFirmwareVersion !== 'string' ||
+      command.requestedFirmwareVersion.trim().length === 0
+    ) {
+      return false;
+    }
+
+    gateway.firmwareVersion = command.requestedFirmwareVersion;
+    return true;
   }
 
   private mapCommandGatewayStatus(status: string | null): GatewayStatus | null {

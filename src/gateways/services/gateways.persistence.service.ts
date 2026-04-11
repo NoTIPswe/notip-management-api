@@ -75,7 +75,10 @@ export class GatewaysPersistenceService {
       return null;
     }
 
-    if (!gateway.metadata) {
+    if (gateway.metadata) {
+      gateway.metadata.status = input.status;
+      gateway.metadata.lastSeenAt = input.lastSeenAt;
+    } else {
       gateway.metadata = {
         gatewayId: gateway.id,
         gateway,
@@ -83,9 +86,6 @@ export class GatewaysPersistenceService {
         status: input.status,
         lastSeenAt: input.lastSeenAt,
       } as GatewayEntity['metadata'];
-    } else {
-      gateway.metadata.status = input.status;
-      gateway.metadata.lastSeenAt = input.lastSeenAt;
     }
 
     return this.r.save(gateway);
@@ -100,14 +100,14 @@ export class GatewaysPersistenceService {
     }
 
     if (typeof input.name === 'string') {
-      if (!gateway.metadata) {
+      if (gateway.metadata) {
+        gateway.metadata.name = input.name;
+      } else {
         gateway.metadata = this.metadataRepo.create({
           gatewayId: gateway.id,
           name: input.name,
           sendFrequencyMs: DEFAULT_GATEWAY_SEND_FREQUENCY_MS,
         } as GatewayEntity['metadata']);
-      } else {
-        gateway.metadata.name = input.name;
       }
     }
 

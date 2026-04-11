@@ -10,7 +10,6 @@ jest.mock('nats', () => {
   return {
     ...actual,
     connect: jest.fn(),
-    consumerOpts: jest.fn(),
     createInbox: jest.fn().mockReturnValue('inbox'),
   };
 });
@@ -18,35 +17,36 @@ jest.mock('nats', () => {
 describe('NatsJetStreamClient', () => {
   let client: NatsJetStreamClient;
   let natsConnectMock: jest.Mock;
-  let consumerOptsMock: jest.Mock;
   let mockConnection: nats.NatsConnection;
   let mockJetStream: nats.JetStreamClient;
+  let mockJetStreamManager: nats.JetStreamManager;
 
   beforeEach(async () => {
     natsConnectMock = nats.connect as jest.Mock;
-    consumerOptsMock = nats.consumerOpts as jest.Mock;
 
-    const mockOpts = {
-      manualAck: jest.fn().mockReturnThis(),
-      ackExplicit: jest.fn().mockReturnThis(),
-      deliverTo: jest.fn().mockReturnThis(),
-      deliverNew: jest.fn().mockReturnThis(),
-      maxDeliver: jest.fn().mockReturnThis(),
-      durable: jest.fn().mockReturnThis(),
+    const mockConsumers = {
+      add: jest.fn().mockResolvedValue({}),
+      get: jest.fn().mockResolvedValue({
+        consume: jest.fn().mockResolvedValue({
+          [Symbol.asyncIterator]: jest.fn().mockReturnValue({
+            next: jest.fn().mockResolvedValue({ done: true }),
+          }),
+        }),
+      }),
     };
-    consumerOptsMock.mockReturnValue(mockOpts);
 
     mockJetStream = {
-      subscribe: jest.fn().mockResolvedValue({
-        [Symbol.asyncIterator]: jest.fn().mockReturnValue({
-          next: jest.fn().mockResolvedValue({ done: true }),
-        }),
-        unsubscribe: jest.fn(),
-      }),
       publish: jest.fn().mockResolvedValue({ ack: true }),
+      consumers: mockConsumers,
     } as unknown as nats.JetStreamClient;
+
+    mockJetStreamManager = {
+      consumers: mockConsumers,
+    } as unknown as nats.JetStreamManager;
+
     mockConnection = {
       jetstream: jest.fn().mockReturnValue(mockJetStream),
+      jetstreamManager: jest.fn().mockResolvedValue(mockJetStreamManager),
       drain: jest.fn().mockResolvedValue(undefined),
       close: jest.fn().mockResolvedValue(undefined),
     } as unknown as nats.NatsConnection;
@@ -83,29 +83,32 @@ describe('NatsJetStreamClient', () => {
 
   it('should subscribe to subjects', async () => {
     const handler = jest.fn();
-    await client.subscribe('test.subject', handler);
+    await client.subscribe('TEST_STREAM', 'test.subject', handler);
 
-    expect(mockJetStream.subscribe).toHaveBeenCalledWith(
-      'test.subject',
-      expect.any(Object) as unknown,
+    const addMock = mockJetStreamManager.consumers.add as jest.Mock;
+    expect(addMock).toHaveBeenCalledWith(
+      'TEST_STREAM',
+      expect.objectContaining({
+        filter_subject: 'test.subject',
+      }),
+    );
+
+    const getMock = mockJetStream.consumers.get as jest.Mock;
+    expect(getMock).toHaveBeenCalledWith(
+      'TEST_STREAM',
+      'management-api_test_subject',
     );
   });
 
   it('should build a sanitized durable name for subscriptions', async () => {
     process.env.NATS_DURABLE_PREFIX = 'prefix';
-    const durableMock = jest.fn().mockReturnThis();
-    consumerOptsMock.mockReturnValue({
-      manualAck: jest.fn().mockReturnThis(),
-      ackExplicit: jest.fn().mockReturnThis(),
-      deliverTo: jest.fn().mockReturnThis(),
-      deliverNew: jest.fn().mockReturnThis(),
-      maxDeliver: jest.fn().mockReturnThis(),
-      durable: durableMock,
-    });
 
-    await client.subscribe('test.subject.with.dots', jest.fn());
+    await client.subscribe('TEST_STREAM', 'test.subject.with.dots', jest.fn());
 
-    expect(durableMock).toHaveBeenCalledWith('prefix_test_subject_with_dots');
+    expect(mockJetStream.consumers.get).toHaveBeenCalledWith(
+      'TEST_STREAM',
+      'prefix_test_subject_with_dots',
+    );
   });
 
   it('should close connection on destroy', async () => {
