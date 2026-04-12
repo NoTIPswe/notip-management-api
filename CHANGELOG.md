@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.2...v2.0.0) (2026-04-12)
+
+
+### Bug Fixes
+
+* update README ([85427dc](https://github.com/NoTIPswe/notip-management-api/commit/85427dc1ba3cfe29c6337989de39ac48c311c06b))
+
+
+### BREAKING CHANGES
+
+* release v2.0.0
+
 ## [1.5.2](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.1...v1.5.2) (2026-04-11)
 
 
