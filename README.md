@@ -1,4 +1,6 @@
-# NoTIP Management API
+# notip-management-api
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=NoTIPswe_notip-management-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=NoTIPswe_notip-management-api)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=NoTIPswe_notip-management-api&metric=coverage)](https://sonarcloud.io/summary/new_code?id=NoTIPswe_notip-management-api)
 
 Servizio `NestJS` per la gestione tenant, utenti, gateway e configurazioni della piattaforma NoTIP.
 
