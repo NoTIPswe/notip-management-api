@@ -33,9 +33,7 @@ export class GatewaysController {
   async addGateway(
     @Body() input: AddGatewayRequestDto,
   ): Promise<AddGatewayResponseDto> {
-    const model = await this.gs.addGateway(
-      GatewaysMapper.toAddGatewayInput(input),
-    );
+    const model = await this.gs.addGateway(input);
     return GatewaysMapper.toAddGatewayResponseDto(model);
   }
 }

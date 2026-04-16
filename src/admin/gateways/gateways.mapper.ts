@@ -1,8 +1,6 @@
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
-import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
 import { AddGatewayResponseDto } from './dto/add-gateway.response.dto';
 import { GatewayResponseDto } from './dto/gateway.response.dto';
-import { AddGatewayInput } from './interfaces/controller-service.interfaces';
 import { GatewayModel } from './models/gateway.model';
 
 export class GatewaysMapper {
@@ -29,15 +27,6 @@ export class GatewaysMapper {
     dto.provisioned = model.provisioned;
     dto.firmwareVersion = model.firmwareVersion;
     return dto;
-  }
-
-  static toAddGatewayInput(dto: AddGatewayRequestDto): AddGatewayInput {
-    return {
-      factoryId: dto.factoryId,
-      tenantId: dto.tenantId,
-      factoryKey: dto.factoryKey,
-      model: dto.model,
-    };
   }
 
   static toAddGatewayResponseDto(model: GatewayModel): AddGatewayResponseDto {

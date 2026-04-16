@@ -1,6 +1,5 @@
 import { GatewaysMapper } from './gateways.mapper';
 import { GatewayEntity } from '../../gateways/entities/gateway.entity';
-import { AddGatewayRequestDto } from './dto/add-gateway.request.dto';
 import { GatewayModel } from './models/gateway.model';
 
 describe('GatewaysMapper', () => {
@@ -48,18 +47,6 @@ describe('GatewaysMapper', () => {
     expect(dto.id).toBe(model.id);
     expect(dto.tenantId).toBe(model.tenantId);
     expect(dto.createdAt).toBe(createdAt.toISOString());
-  });
-
-  it('toAddGatewayInput maps dto to input', () => {
-    const dto: AddGatewayRequestDto = {
-      factoryId: 'f1',
-      tenantId: 't1',
-      factoryKey: 'k1',
-      model: 'M1',
-    };
-    const input = GatewaysMapper.toAddGatewayInput(dto);
-    expect(input.factoryId).toBe(dto.factoryId);
-    expect(input.model).toBe(dto.model);
   });
 
   it('toAddGatewayResponseDto maps model to add response dto', () => {
