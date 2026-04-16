@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/NoTIPswe/notip-management-api/compare/v2.0.0...v2.0.1) (2026-04-16)
+
+
+### Bug Fixes
+
+* mappers wrong connection with interface ([30975e6](https://github.com/NoTIPswe/notip-management-api/commit/30975e62007c51623a6cfb0e1c980f95f3dc5dd9))
+
 # [2.0.0](https://github.com/NoTIPswe/notip-management-api/compare/v1.5.2...v2.0.0) (2026-04-12)
 
 
